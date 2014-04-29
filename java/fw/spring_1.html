@@ -238,7 +238,7 @@ xml 中关于tablename的设置，其中的tablename是在CustomerSqlSessionTemp
 
 <li>
 配置文件，由于数据是根据表中某个特定字段进行hash的，因此需要给每个表标明是用哪个字段hash，由于tablename实在通过程序设计的，需要提供Mapper类对应的表名，方便使用，由于数据库连接时放在hashmap中的，我们需要根据hash的值拼出key的全称。
-<pre class="brush:txt">
+<pre>
 table_Auth=AUTH_
 .....
 keyname_Auth=authKey
