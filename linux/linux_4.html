@@ -1,0 +1,418 @@
+<html>
+<head>
+    <title>Linux系统健康命令</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.0.1">watch</a>
+<ul>
+<li><a href="#toc_0.0.1.1">命令格式</a>
+</ul>
+<li><a href="#toc_0.0.2">参数说明</a>
+<li><a href="#toc_0.0.3">示例</a>
+<li><a href="#toc_0.0.4">mpstat</a>
+<ul>
+<li><a href="#toc_0.0.4.1">命令格式</a>
+<li><a href="#toc_0.0.4.2">命令参数</a>
+<li><a href="#toc_0.0.4.3">示例</a>
+<ul>
+<li><a href="#toc_0.0.4.3.1">字段含义</a>
+</ul>
+</ul>
+<li><a href="#toc_0.0.5">free</a>
+<ul>
+<li><a href="#toc_0.0.5.1">命令格式</a>
+<li><a href="#toc_0.0.5.2">参数说明</a>
+<li><a href="#toc_0.0.5.3">示例</a>
+<ul>
+<li><a href="#toc_0.0.5.3.1">字段说明</a>
+<li><a href="#toc_0.0.5.3.2">buffer与cache的区别</a>
+<li><a href="#toc_0.0.5.3.3">swap</a>
+</ul>
+</ul>
+<li><a href="#toc_0.0.6">vmstat</a>
+<ul>
+<li><a href="#toc_0.0.6.1">示例</a>
+<ul>
+<li><a href="#toc_0.0.6.1.1">字段解释</a>
+</ul>
+</ul>
+<li><a href="#toc_0.0.7">iostat</a>
+<li><a href="#toc_0.0.8">pidstat</a>
+<li><a href="#toc_0.0.9">top</a>
+<li><a href="#toc_0.0.10">lsof</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h3 id="toc_0.0.1">watch</h3>
+<p>
+<code>watch</code>：一个非常实用的空间，帮你来监测一个命令的运行结果，免去了一遍遍手动执行。
+</p>
+<h4 id="toc_0.0.1.1">命令格式</h4>
+<pre>
+$ watch [参数] [命令]
+</pre>
+<h3 id="toc_0.0.2">参数说明</h3>
+<ol>
+<li>
+<code>-n</code>：指定时间间隔，默认为2秒
+
+<li>
+<code>-d</code>
+
+<ul>
+<li>
+-d 会高亮显示变化的区域。
+
+<li>
+-d=cumulative 会把所有变动过的地方都高亮显示
+
+</ul>
+<li>
+<code>-t</code>：关闭顶部的时间输出
+
+</ol>
+<h3 id="toc_0.0.3">示例</h3>
+<pre class="brush:shell">
+# 每隔一秒高亮显示网络连接数的变化情况
+$ watch -n 1 -d netstat -ant 
+
+# 每隔一秒高亮显示http连接数的变化情况
+$ watch -n 1 -d 'pstree|grep http' 
+
+
+# 可以同时运行多个命令，以分号间隔
+$ watch -d -n 1 'df -h;ls -l' 
+</pre>
+<h3 id="toc_0.0.4">mpstat</h3>
+<p>
+<code>mpstat</code>：它是Multiprocessor Statistics的缩写，是实时系统监控工具。它报告与CPU的一些统计信息，这些信息存放在<code>/pro/stat</code>文件中。在多CPU系统中，不但能查看所有CPU的平均状况，而且能查看特定CPU的信息。
+</p>
+<blockquote>
+最大特点：可以查看多核CPU中每个计算核心的统计数据
+</blockquote>
+
+<h4 id="toc_0.0.4.1">命令格式</h4>
+<pre>
+$ mpstat [-P {|ALL}] [internal [count]]
+</pre>
+
+<h4 id="toc_0.0.4.2">命令参数</h4>
+<ol>
+<li>
+<code>-P {|ALL}</code>：表示监控哪个CPU核心，CPU在[0,cpu个数-1]中取值
+
+<li>
+<code>internal</code>：相邻两次采集的间隔时间（秒）
+
+<li>
+<code>count</code>：采样次数
+
+</ol>
+<p>
+当没有参数时，则显示系统自启动后所有信息的平均值。有interval时，第一行信息是自系统启动以来的平均值。 
+</p>
+<h4 id="toc_0.0.4.3">示例</h4>
+<pre class="brush:shell">
+$ mpstat
+
+Linux 2.6.32-279.el6.x86_64 (yudf-204218)       2014年04月28日  _x86_64_        (4 CPU)
+
+14时33分52秒  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest   %idle
+14时33分52秒  all    0.03    0.00    0.04    0.19    0.00    0.00    0.00    0.00   99.74
+
+# 查看每个核心的当前运行情况，2秒刷新一下
+$ mpstat -P ALL 2 
+
+Linux 2.6.32-279.el6.x86_64 (yudf-204218)       2014年04月28日  _x86_64_        (4 CPU)
+
+14时38分27秒  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest   %idle
+14时38分29秒  all    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  100.00
+14时38分29秒    0    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  100.00
+14时38分29秒    1    0.50    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+14时38分29秒    2    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  100.00
+14时38分29秒    3    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  100.00
+
+# 每2秒产生所有核心的统计信息，一共产生3个interval的信息，最后给出平均值
+$ mpstat -P ALL 2 3 
+</pre>
+<h5 id="toc_0.0.4.3.1">字段含义</h5>
+<ol>
+<li>
+<code>%user</code>：在internal时间段里，用户态的CPU时间(%)，不包含nice值为负进程  (usr/total)*100
+
+<li>
+<code>%nice</code>：在internal时间段里，nice值为负进程的CPU时间(%)   (nice/total)*100
+
+<li>
+<code>%sys</code>：在internal时间段里，内核时间(%)       (system/total)*100
+
+<li>
+<code>iowait</code>：在internal时间段里，硬盘IO等待时间(%) (iowait/total)*100
+
+<li>
+<code>irq</code>：在internal时间段里，硬中断时间(%)     (irq/total)*100
+
+<li>
+<code>soft</code>：在internal时间段里，软中断时间(%)     (softirq/total)*100
+
+<li>
+<code>idle</code>：在internal时间段里，CPU除去等待磁盘IO操作外的因为任何原因而空闲的时间闲置时间(%) (idle/total)*100
+
+</ol>
+<h3 id="toc_0.0.5">free</h3>
+<p>
+<code>free</code>：linux下用来查看内存状态的命令。
+</p>
+<h4 id="toc_0.0.5.1">命令格式</h4>
+<pre>
+$ free [-bkmotV] [-s &lt;间隔秒数&gt;]
+</pre>
+<h4 id="toc_0.0.5.2">参数说明</h4>
+<ol>
+<li>
+<code>-b</code>：以Byte为单位显示内存使用情况
+
+<li>
+<code>-k</code>：以KB为单位显示内存使用情况
+
+<li>
+<code>-m</code>：以MB为单位显示内存使用情况
+
+<li>
+<code>-o</code>：不显示缓冲区调节列
+
+<li>
+<code>-s&lt;间隔秒数&gt;</code>
+
+<li>
+<code>-t</code>：显示内存总和列
+
+<li>
+<code>-V</code>：显示版本信息
+
+</ol>
+<h4 id="toc_0.0.5.3">示例</h4>
+<pre class="brush:shell">
+$ free
+
+             total       used       free     shared    buffers     cached
+Mem:       1020236     916560     103676          0     370464     233604
+-/+ buffers/cache:     312492     707744
+Swap:      4296696      27868    4268828
+</pre>
+<h5 id="toc_0.0.5.3.1">字段说明</h5>
+<ol>
+<li>
+第一列
+
+<ul>
+<li>
+<code>total</code>：总计物理内存大小
+
+<li>
+<code>user</code>：已使用的内存大小
+
+<li>
+<code>free</code>：可用的内存大小
+
+<li>
+<code>shared</code>：多进程空闲的内存大小
+
+<li>
+<code>buffers</code>：系统分配但未被使用的buffers数量
+
+<li>
+<code>cached</code>：系统分配但未被使用的cached数量
+
+</ul>
+<li>
+第二列（<code>Mem</code>）：该行是从操作系统角度看，used=内核(kernel)+appliactions+buffers+cached  ，也有说是物理内存统计 
+
+<li>
+第三列（<code>-/+ buffers/cache</code>）：该行是从应用程序交单看，free=操作系统used+buffers+cached，也有说是物理内存的缓存统计
+
+</ol>
+<h5 id="toc_0.0.5.3.2">buffer与cache的区别</h5>
+<p>
+a <code>buffer</code> is someting that has yet to be " <strong>written</strong> " to disk.
+</p>
+
+<p>
+a <code>cache</code> is someting that has been " <strong>read</strong> " from the disk and stored for later use.
+</p>
+
+<p>
+也就是说buffer是存放要输出到disk的数据，而cache是存放从disk读出的数据，都是为了提供IO性能。
+</p>
+
+<p>
+对于应用程序来说，buffers/cached是等于可用的，因为buffer/cached是为了提高文件读取的性能，当应用程序需要用到内存是，buffer/cached就会很快被回收。
+</p>
+
+<h5 id="toc_0.0.5.3.3">swap</h5>
+<p>
+可以通过<code>/proc/meminfo</code>来查看进行swap的各种额定值（什么时候内存会被交换，交换方式等等）
+</p>
+<blockquote>
+一般来说，linux开始使用交换分区，就可以考虑加物理内存了。
+</blockquote>
+
+<h3 id="toc_0.0.6">vmstat</h3>
+<p>
+<code>vmstat</code>：用于查看内核线程、虚拟内存、磁盘、swap、CPU活动的统计信息，它可以反映出系统的负载情况。
+</p>
+<h4 id="toc_0.0.6.1">示例</h4>
+<pre class="brush:shell">
+# 每秒输出一条信息，三条后退出
+$ vmstat 1 3
+
+procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 0  0  27868 103164 371072 233736    0    0     1     4    1    1  0  0 100  0  0
+ 0  0  27868 103164 371072 233736    0    0     0     0  145  226  0  0 100  0  0
+ 0  0  27868 103164 371072 233736    0    0     0    44  144  246  0  0 99  1  0
+</pre>
+<h5 id="toc_0.0.6.1.1">字段解释</h5>
+<ol>
+<li>
+<code>procs</code>进程相关信息
+
+<ul>
+<li>
+<code>r</code>：在就绪状态（运行队列，真正分配到了CPU）的进程数 
+
+<li>
+<code>b</code>：在等待状态（阻塞）的进程数
+
+</ul>
+<li>
+<code>memory</code>内存相关信息
+
+<ul>
+<li>
+<code>swpd</code>：虚拟内存使用的大小，如果大于0，说明机器物理内存不足了 
+
+<li>
+<code>free</code>：空闲的物理内存大小
+
+<li>
+<code>buff</code>：
+
+<li>
+<code>cache</code>：
+
+</ul>
+<li>
+<code>swap</code>页面交换空间相关信息
+
+<ul>
+<li>
+<code>si</code>：每秒从磁盘读入虚拟内存的大小，如果大于0，说明机器物理内存不足 
+
+<li>
+<code>so</code>：每秒从虚拟内存写入磁盘的大小，如果大于0，同上
+
+</ul>
+<li>
+<code>io</code>IO块设备相关信息
+
+<ul>
+<li>
+<code>bi</code>：从块设备读入的数据总量（读磁盘）（KB/s）
+
+<li>
+<code>bo</code>：写入到块设备的数据总量（写磁盘）（KB/s）
+
+</ul>
+<li>
+<code>system</code>系统相关信息
+
+<ul>
+<li>
+<code>in</code>：每秒CPU中断的次数 
+
+<li>
+<code>sy</code>：每秒CPU系统调用的次数
+
+<li>
+<code>cs</code>：每秒CPU上下文切换的次数
+
+</ul>
+<li>
+<code>cpu</code>cpu相关信息
+
+<ul>
+<li>
+<code>us</code>：用户进程执行时间 
+
+<li>
+<code>sy</code>：系统进程执行时间
+
+<li>
+<code>id</code>：空闲时间（包括IO等待时间）
+
+<li>
+<code>wa</code>：IO等待时间
+
+</ul>
+</ol>
+<h3 id="toc_0.0.7">iostat</h3>
+<h3 id="toc_0.0.8">pidstat</h3>
+<h3 id="toc_0.0.9">top</h3>
+<h3 id="toc_0.0.10">lsof</h3>
+<hr />
+<p>
+<code>日期</code>：2014-04-28
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.cnblogs.com/peida/archive/2012/12/31/2840241.html">每天一个linux命令（48）：watch命令</a>、<a href="http://blog.sina.com.cn/s/blog_3dbab2840100j4ey.html">mpstat使用详解 </a>、<a href="http://www.cnblogs.com/stephen-liu74/archive/2011/12/05/2257887.html">和系统运行状况相关的Shell命令</a>、<a href="http://www.taobaotesting.com/blogs/qa?bid=2265">linux命令free详解</a>、<a href="http://os.51cto.com/art/201004/193160.htm">Linux系统内存监控全面讲解：free命令</a>、<a href="http://www.cnblogs.com/ggjucheng/archive/2012/01/05/2312625.html">Linux vmstat命令实战详解</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

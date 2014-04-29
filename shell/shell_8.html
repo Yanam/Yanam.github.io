@@ -1,0 +1,261 @@
+<html>
+<head>
+    <title>shell笔记8</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">find</a>
+<ul>
+<li><a href="#toc_0.1.1">find 命令格式</a>
+<li><a href="#toc_0.1.2">find 命令的参数</a>
+<li><a href="#toc_0.1.3">find命令选项</a>
+<li><a href="#toc_0.1.4">示例</a>
+</ul>
+<li><a href="#toc_0.2">locate</a>
+<ul>
+<li><a href="#toc_0.2.1">示例</a>
+</ul>
+<li><a href="#toc_0.3">whereis</a>
+<ul>
+<li><a href="#toc_0.3.1">示例</a>
+</ul>
+<li><a href="#toc_0.4">which</a>
+<ul>
+<li><a href="#toc_0.4.1">示例</a>
+</ul>
+<li><a href="#toc_0.5">zip</a>
+<ul>
+<li><a href="#toc_0.5.1">zip命令格式</a>
+<li><a href="#toc_0.5.2">命令参数</a>
+<li><a href="#toc_0.5.3">示例</a>
+</ul>
+<li><a href="#toc_0.6">unzip命令</a>
+<ul>
+<li><a href="#toc_0.6.1">命令格式</a>
+<li><a href="#toc_0.6.2">命令参数</a>
+<li><a href="#toc_0.6.3">示例</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">find</h2>
+<h3 id="toc_0.1.1">find 命令格式</h3>
+<pre class="brush:shell">
+$ find pathname -options [-print -exec -ok ....]
+</pre>
+
+<h3 id="toc_0.1.2">find 命令的参数</h3>
+<ul>
+<li>
+<code>pathname</code>：find命令查找的目录地址。例如“.”来表示当前目录，“/”表示系统根目录。
+    find默认搜索当前目录及其子目录 
+
+<li>
+<code>-print</code>：find命令将匹配的文件打印到标准输出（控制台）。
+
+<li>
+<code>-exec</code>：find命令对匹配的文件执行该参数所给出shell命令。形式为'command' {} ;注意{}和；直接的空格。
+
+<li>
+<code>-ok</code>：与-exec相同，不过执行每个命令之前，都会提示，让用户确定是否执行。
+
+</ul>
+
+<h3 id="toc_0.1.3">find命令选项</h3>
+<ol>
+<li>
+<code>-name</code> ：按文件名查找
+
+<li>
+<code>-mtime -n +n</code>：按文件的更改时间来查找文件，-n表示更改时间距现在n天以内，+n表示文件更改时间距现在n天以前。
+
+<li>
+<code>-mmin n</code>：查找最后n文章被改变的文件
+
+<li>
+<code>-newer file1 ! file2</code>：查找更改时间比文件file1新 但比文件file2旧的文件。
+
+<li>
+<code>-type</code>：查找某一类型文件。f 为普通文件
+
+<li>
+<code>-size</code>：查找文件长度为n块的文件
+
+</ol>
+<p>
+还有一些其他选项就不一一列举了 。
+</p>
+<h3 id="toc_0.1.4">示例</h3>
+<p>
+本人常用的find命令就是对日志文件的定时清理。
+</p>
+<pre class="brush:shell">
+# 删除/usr/local/tomcat/logs/文件夹下14天以前的问题。
+find /usr/local/tomcat/logs/ -type f -mtime +14 -exec rm {} \;
+
+# 打包14天前的log文件并删除
+find /data/apache-tomcat-7.0.37/logs -name “*.log” -mtime +14 -exec zip -m $(date -d "today" +"%Y-%m-%d").zip {} \;
+
+# 搜索当前目录中，所有过去10分钟中更新过的普通文件
+find . -type f -mmin -10
+</pre>
+<h2 id="toc_0.2">locate</h2>
+<p>
+它其实是"find -name"的另一种写法，但速度要更快，原因在于它不搜索具体目录，而是查询数据库(/var/lib/locatedb)。该数据库含有本地所有文件信息，并且每日自动更新一次，所以该命令可能查不到最新变动过的文件。
+</p>
+<blockquote>
+为避免上面这种情况，可以在执行locate之前，先执行 {{{ updatedb }}}，手动更新数据库 。
+</blockquote>
+<h3 id="toc_0.2.1">示例</h3>
+<pre class="brush:shell">
+# 搜索etc目录下所有以sh开头的文件
+$ locate /etc/sh
+
+# 搜索用户主目录下，所有以m开头的文件，并忽略大小写
+$ locate -i ~/m
+</pre>
+
+<h2 id="toc_0.3">whereis</h2>
+<p>
+该命令只能用于程序名的搜索
+</p>
+<h3 id="toc_0.3.1">示例</h3>
+<pre class="brush:shell">
+$ whereis mysql
+</pre>
+
+<h2 id="toc_0.4">which</h2>
+<p>
+该命令是在PATH变量制定的路径中，搜索某个系统命令的位置，并返回 <strong>第一个</strong> 搜索结果。也就是说使用which命令，可以看到某个系统命令是否存在，已经执行的到底是哪个位置的命令。
+</p>
+<h3 id="toc_0.4.1">示例</h3>
+<pre class="brush:shell">
+$ which grep
+</pre>
+
+<h2 id="toc_0.5">zip</h2>
+<h3 id="toc_0.5.1">zip命令格式</h3>
+<pre class="brush:shell">
+zip [参数][打包后的文件名][打包的目录]
+</pre>
+<h3 id="toc_0.5.2">命令参数</h3>
+<ol>
+<li>
+<code>-m</code>：将文件压缩并加入压缩文件后，删除原始文件
+
+<li>
+<code>-r</code>：递归处理，将制定目录下的所有文件和子目录一并处理
+
+<li>
+<code>-q</code>：安静模式，不显示指令执行过程
+
+<li>
+<code>n&lt;字尾字符串&gt;</code>：不压缩具有特定字尾字符串的文件
+
+<li>
+<code>-S</code>：包含系统文件和隐藏文件
+
+</ol>
+<h3 id="toc_0.5.3">示例</h3>
+<pre class="brush:shell">
+#在安静模式下，将/home/liu/这个目录下所有文件和文件夹打包为 test.zip
+zip -qr test.zip /home/liu
+
+#将文件abc.txt和一个目录/home/liu打包为 test.zip
+zip -r test.zip abc.txt /home/liu
+
+</pre>
+<h2 id="toc_0.6">unzip命令</h2>
+<h3 id="toc_0.6.1">命令格式</h3>
+<pre class="brush:shell">
+unzip [参数]
+</pre>
+<h3 id="toc_0.6.2">命令参数</h3>
+<ol>
+<li>
+<code>-n</code>：解压时不覆盖原有文件
+
+<li>
+<code>-q</code>：安静模式
+
+<li>
+<code>-d</code>：制定文件解压后要存储的目录
+
+<li>
+<code>-l</code>：显示压缩文件内包含的文件
+
+<li>
+<code>-t</code>：检查压缩文件是否正确
+
+<li>
+<code>-j</code>：不处理压缩文件原有目录，子目录文件也全都解压到一个目录下
+
+</ol>
+<h3 id="toc_0.6.3">示例</h3>
+<pre class="brush:shell">
+#把文件解压到当前目录
+unzip test.zip
+
+#把文件解压到制定目录
+unzip -d /temp test.zip
+
+#只查看压缩包内包含哪些文件，不进行解压缩
+unzip -l test.zip
+
+#检查压缩文件是否下载完全
+unzip -t test.zip
+</pre>
+<hr />
+<p>
+<code>日期</code>：2014-03-03
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://os.51cto.com/art/200908/141119_all.htm">linux find命令格式及find命令详解</a>、<a href="http://www.ruanyifeng.com/blog/2009/10/5_ways_to_search_for_files_using_the_terminal.html">Linux的五个查找命令</a>、<a href="http://www.linuxso.com/command/zip.html">linux zip命令参数及用法详解--linux压缩zip文件命令</a>、<a href="http://www.cnblogs.com/chinareny2k/archive/2010/01/05/1639468.html">Linux 下zip包的压缩与解压</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

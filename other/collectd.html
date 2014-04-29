@@ -1,0 +1,216 @@
+<html>
+<head>
+    <title>collectd 使用心得</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">部署安装</a>
+<li><a href="#toc_0.3">rrd画图</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+最近在做分布式KV存储的节点监控，需要收集节点的CPU、IO、Disk等信息，由于springside4的wiki中提到过一个叫Collectd的信息收集工具，这次正好用上，没想到它功能还挺强大的。
+</p>
+<h2 id="toc_0.2">部署安装</h2>
+<p>
+由于初期节点较少，我们选择多client单server的部署方式来部署Collectd程序，节点通过udp将监控数据发送到server端，server端将其写入到rrd文件。
+</p>
+
+<p>
+collectd的安装很简单，把源码包下来，按通常的步骤安装即可，需要注意的是，写rrd文件的节点需要安装rrdtool工具，如果rrdtool是从源码安装，需要在安装collectd时用--with-rrdtool=rrdtool目录来指定。
+</p>
+
+<p>
+client端配置文件：
+</p>
+<pre>
+Hostname    "clientserver1"
+FQDNLookup   true
+BaseDir     "/data/collectd-5.4.1/var/lib/collectd"
+PIDFile     "/data/collectd-5.4.1/var/run/collectd.pid"
+PluginDir   "/data/collectd-5.4.1/lib/collectd"
+TypesDB     "/data/collectd-5.4.1/share/collectd/types.db"
+
+Interval     60
+
+LoadPlugin "logfile"
+&lt;Plugin "logfile"&gt;
+  LogLevel "info"
+  File "/data/collectd-5.4.1/var/log/collectd.log"
+  Timestamp true
+&lt;/Plugin&gt;
+
+
+LoadPlugin "cpu"
+LoadPlugin "df"
+LoadPlugin "disk"
+LoadPlugin "load"
+LoadPlugin "memory"
+LoadPlugin "network"
+
+&lt;Plugin "network"&gt;
+#       # client setup:
+        Server "172.30.204.218" "25826"
+&lt;/Plugin&gt;
+</pre>
+
+<p>
+server端配置文件：
+</p>
+<pre>
+Hostname    "server"
+FQDNLookup   true
+BaseDir     "/data/collectd-5.4.1/var/lib/collectd"
+PIDFile     "/data/collectd-5.4.1/var/run/collectd.pid"
+
+PluginDir   "/data/collectd-5.4.1/lib/collectd"
+TypesDB     "/data/collectd-5.4.1/share/collectd/types.db"
+
+#AutoLoadPlugin false
+
+Interval     10
+
+LoadPlugin "logfile"
+&lt;Plugin "logfile"&gt;
+  LogLevel "info"
+  File "/data/collected-5.4.1/var/log/collectd.log"
+  Timestamp true
+&lt;/Plugin&gt;
+
+LoadPlugin "network"
+LoadPlugin "rrdtool"
+#LoadPlugin "csv"
+
+&lt;Plugin "network"&gt;
+#       # server setup:
+        Listen "172.30.204.218" "25826"
+&lt;/Plugin&gt;
+
+&lt;Target "write"&gt;
+  Plugin "rrdtool"
+&lt;/Target&gt;
+
+
+&lt;Plugin "rrdtool"&gt;
+       DataDir "/data/collectd-5.4.1/var/lib/collectd/rrd"
+       CacheTimeout 120
+       CacheFlush 900
+&lt;/Plugin&gt;
+
+#&lt;Plugin "csv"&gt;
+#  DataDir "/data/collectd-5.4.1/var/lib/collectd/csv"
+#  StoreRates true
+#&lt;/Plugin&gt;
+
+# server端设置报警阀值，可以直接通过email插件发出报警邮件，或者通过NotificationExec 调用脚本进行其他操作
+LoadPlugin "threshold"
+
+&lt;Plugin "threshold"&gt;
+
+     &lt;Type "cpu"&gt;
+       Instance "user"
+        WarningMax 85
+        Hits 1
+     &lt;/Type&gt;
+
+     &lt;Plugin "memory"&gt;
+       &lt;Type "memory"&gt;
+         Instance "free"
+        # 400MB
+         WarningMin 400000000
+        Persist true
+       &lt;/Type&gt;
+     &lt;/Plugin&gt;
+
+     &lt;Type "load"&gt;
+        FailureMax 4
+        Hits 3
+        Hysteresis 3
+     &lt;/Type&gt;
+
+&lt;/Plugin&gt;
+
+LoadPlugin "exec"
+&lt;Plugin "exec"&gt;
+# 接到报警信息后执行
+    NotificationExec    "linux-username" "/data/collectd-5.4.1/etc/test.sh"
+&lt;/Plugin&gt;
+
+</pre>
+
+<p>
+报警信息处理shell(/data/collectd-5.4.1/etc/test.sh)
+</p>
+<pre class="shell">
+#!/bin/bash
+
+cat &gt;&gt; /data/collectd-5.4.1/var/log/threshold.log
+</pre>
+
+<h2 id="toc_0.3">rrd画图</h2>
+<p>
+至此只试用了collectd-web这个组件进行监控图的展示。
+</p>
+
+<p>
+Java有JRobin等纯Java实现的rrdtool，但是它们基本都处理不了rrd文件，需要将rrdtool生成的rrd文件转换成jrd文件，使用了JRobin没有成功，放弃了。
+</p>
+
+
+<hr />
+<p>
+<code>日期</code>：2014-03-13、2014-3-18、2014-03-20
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.taobaotesting.com/blogs/2519">工欲善其事必先利其器——第三弹用云存储实现对云计算的监控</a>、<a href="http://mxleon.com/collectd">collectd使用</a>、<a href="http://habrahabr.ru/post/162087/">一个俄文的博客，主要是看配置</a>、<a href="http://www.cnblogs.com/coldplayerest/archive/2010/02/09/1666413.html">rrdtool的完整例子</a>、<a href="http://bbs.chinaunix.net/forum.php?mod=viewthread&amp;tid=864861&amp;page=2">RRDtool简体中文教程 v1.01</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

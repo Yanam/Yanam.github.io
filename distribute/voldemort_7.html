@@ -1,0 +1,316 @@
+<html>
+<head>
+    <title>voldemrot 0.90的新特性：client-side failure detector</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">client-side failure detector</a>
+<ul>
+<li><a href="#toc_0.1.1">背景</a>
+<li><a href="#toc_0.1.2">FailureDetector API</a>
+<li><a href="#toc_0.1.3">当前实现</a>
+<ul>
+<li><a href="#toc_0.1.3.1">公共配置</a>
+<li><a href="#toc_0.1.3.2">JMX</a>
+</ul>
+<li><a href="#toc_0.1.4">BannagePeriodFailureDetector</a>
+<ul>
+<li><a href="#toc_0.1.4.1">配置</a>
+<li><a href="#toc_0.1.4.2">JMX</a>
+</ul>
+<li><a href="#toc_0.1.5">AsyncRecoveryFailureDetector</a>
+<ul>
+<li><a href="#toc_0.1.5.1">配置</a>
+</ul>
+<li><a href="#toc_0.1.6">ThresholdFailureDetector</a>
+<li><a href="#toc_0.1.7">配置</a>
+<ul>
+<li><a href="#toc_0.1.7.1">LinkedIn生成环境的配置</a>
+</ul>
+<li><a href="#toc_0.1.8">JMX</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<p>
+文章翻译自voldemort的wiki，原文连接连接见参考资料。
+</p>
+<h2 id="toc_0.1">client-side failure detector</h2>
+<p>
+为了让Voldemort成为有一个有错误恢复、一致性hash、平衡等能力的系统。在客户端维护每个存储节点的可用状态是十分重要的。Voldemort的客户端需要知道哪些节点可用来正确路由请求。而这就是failure detector个工作。
+</p>
+<h3 id="toc_0.1.1">背景</h3>
+<p>
+之前的解决方案，错误检测是通过<code>RoutedStore</code>和<code>NodeStatus</code>两个类实现的。逻辑也很简单：当在一个远程节点执行某个操作（get，put等）失败时，UnreachableStoreException会被抛出。RoutedStore的实现类会捕获该异常，然后将该节点下线N秒钟（默认为30秒）。在止损期间(bannage period)不会有请求到离线的节点。在止损期间过后，该节点又会作为下次操作的候选节点。然而，这并不能保证节点真的恢复可用，反而可能导致节点更频繁的失败，因为该节点可能是因为临时负载过高而不是真的下线了。
+</p>
+
+<p>
+这种方案有如下缺点：
+</p>
+<ol>
+<li>
+节点会由于的临时小问题而被强制下线一段时间。
+
+<li>
+如果节点是真正的下线（比如系统断电，重启等），每N秒的重连尝试，每次都会导致Voldemort客户端线程阻塞数分钟。
+
+<li>
+几乎没有任何了解当前内部状态的错误检测逻辑，对操作人员是个黑盒。 
+
+<li>
+只有一个配置选项就是：止损时间 N
+
+<li>
+从代码结构的角度看，错误检测的逻辑和RoutedStore关系太紧密，导致扩展困难。
+
+<li>
+只有少量单元测试来验证错误检测代码的正确性
+
+</ol>
+
+<p>
+Voldemort决定提供一种更好地解决方案来实现下面功能：
+</p>
+<ol>
+<li>
+允许间歇性的临时失败；例如，在一定时间窗口内的确定错误类型，或确定错误次数是可以接受的。
+
+<li>
+异步恢复节点可用。如果一个节点持续下线一段时间，说明它正在被重新配置、重启或替换，应该在后台处理这些来减少对与可用节点通信的客户端的影响。
+
+<li>
+通过JMX等工具来增加内部监控、验证和其他错误检测的可见性。为外部工具提供可选的统计信息
+
+<li>
+提供合理的配置参数来优化站点的故障检测和恢复。
+
+<li>
+提供接口和实现分离的API。允许多实现共存，可以根据特定的环境选择特定的实现。但最主要的目的是允许有一个最优方案可以实现、调整、测试等相分离。
+
+<li>
+新的接口促进更深层的单元测试。
+
+</ol>
+<h3 id="toc_0.1.2">FailureDetector API</h3>
+<p>
+从上所述，最重要的工作就是分离错误检测的逻辑与实现到一个API。它现在用<code>voldemort.cluster.failuredetector.FailureDetector</code>来展示。下面是错误检测器API中最重要的一部分：
+</p>
+<pre class="brush:java">
+public interface FailureDetector {
+
+    public boolean isAvailable(Node node);
+
+    public void recordSuccess(Node node, long requestTime);
+
+    public void recordException(Node node, long requestTime, UnreachableStoreException e);
+}
+</pre>
+
+<p>
+FialureDetector API用来决定集群节点的可用性。机器和服务可以随时下线，然后使用这些API可以避免请求被路由到不可用的节点上。
+</p>
+
+<p>
+对于给定的集群来说，每个FailureDetector应该在每个集群每个JVM只有一个实例。
+</p>
+
+<p>
+在处理怎么样确定节点有效性的问题上各种实现方式可能有很大不同。一些实现方式可能严重依赖于recordException()和recordSuccess()方法的调用来决定可用性。这就导致FailureDetector的实现类处理做记录以外还要执行一小段逻辑代码，隐式得信任API的用户。然而，其他实现可能选择使用外部用户调用recordException()和recordSuccess()方法后的结果。各种实现可以使用error/success来作为提示，或者彻底忽略它们。
+</p>
+
+<p>
+两种实现方案的对比：
+</p>
+<ol>
+<li>
+<code>基于外部的实现方案</code>验证依赖于用户使用算法的正确性。例如：假设我们尝试连接一个节点失败了。调用者就负责执行recordException API来通知FailureDetector有一个节点发生错误了。FailureDetector本身是不能决定可用性的。如果调用者是错误的，那么也会影响FailureDetector的准确性。
+
+<li>
+<code>基于内部的实现方案</code>依赖于他们自身的节点可用性检测。例如：通过心跳检测来监听recordException 或 recordSuccess方法被外部调用。
+
+</ol>
+ 
+<h3 id="toc_0.1.3">当前实现</h3>
+<p>
+尽管事实上上面的API已经有插件式的实现，但是目标并不是让用户写自己的实现。最终目的是有一个适用于大多数用户的最优实现。当前Voldemort用户默认使用的是<code>voldemort.cluster.failuredetector.ThresholdFailureDetector</code>
+</p>
+
+<h4 id="toc_0.1.3.1">公共配置</h4>
+<p>
+错误检测的属性定义是在客户端配置的。每种实现都有自己的配置项，但是公共的配置属性是：
+</p>
+<ul>
+<li>
+<code>failuredetector_implementation</code>：错误检测实现类的完整名称
+
+</ul>
+<h4 id="toc_0.1.3.2">JMX</h4>
+<p>
+所有的实现都支持下面这些JMX参数：
+</p>
+<ul>
+<li>
+<code>availableNodes</code> ：一个以逗号分隔的节点（错误检测器认为有效的）id列表
+
+<li>
+<code>unavailableNodes</code>：一个以逗号分隔的节点（错误检测器认为无效的）id列表
+
+<li>
+<code>availableNodeCount</code>：节点总数（错误检测器认为有效的）
+
+<li>
+<code>nodeCount</code>：集群所有节点数
+
+</ul>
+ 
+<h3 id="toc_0.1.4">BannagePeriodFailureDetector</h3>
+<p>
+BannagePeriodFailureDetector依赖于外部调用者通过recordException方法通知它，尝试访问某个节点store失败了。当recordException方法被调用，节点就会被标记为下线一段时间（时间长度根据客户端或者服务端的配置决定）。一旦超过时间，节点就会被认为有效。然而BannagePriodFailureDetectord对于有效性的定义非常宽泛。它是尝试访问这个动作有效了（也就是说可以进行尝试访问了），而不是认为这个节点是真的可以访问的有效。真正的节点可能还在下线状态，然而，它只是简单的循环 ”标记下线N秒，重新尝试请求“这个过程。如果节点真的可用了，调用者会调用recordSuccess方法，然后将该节点标记为名副其实的可用。
+</p>
+
+<h4 id="toc_0.1.4.1">配置</h4>
+<p>
+除了通用配置，BannagePeriodFailureDetector还支持下面这个可选参数：
+</p>
+<ul>
+<li>
+<code>failuredetector_bannage_period</code>：止损时间（单位毫秒）
+
+</ul>
+<h4 id="toc_0.1.4.2">JMX</h4>
+<p>
+BannagePeriodFailureDetector新增了JMX参数：
+</p>
+<ul>
+<li>
+<code>unavailableNodesBannageExpiration</code>：一个以逗号分隔的各失效节点的当前止损过期时间的列表
+
+</ul>
+<h3 id="toc_0.1.5">AsyncRecoveryFailureDetector</h3>
+<p>
+AsyncRecoveryFailureDetector检测到失败，然后通过尝试与失败节点的store建立连接来确定是否可用。
+</p>
+
+<p>
+当一个节点挂掉，尝试与其连接会花费数秒时间。为了不导致线程阻塞，我们通过后台线程执行check。
+</p>
+<h4 id="toc_0.1.5.1">配置</h4>
+<p>
+AsyncRecoveryFailureDetector新增了如下可选配置参数：
+</p>
+<ul>
+<li>
+<code>failuredetector_asyncscan_interval</code>：检测之前失效节点的等待时间（单位毫秒）
+
+</ul>
+
+<h3 id="toc_0.1.6">ThresholdFailureDetector</h3>
+<p>
+ThresholdFailureDetector是基于AsyncRecoveryFailureDetector实现的，提供对于标记节点不可用的标准更加宽容。基本上，对于每个节点，ThresholdFailureDetector都会保有一个”成功率(success ratio)“（成功的操作数和总的操作数的比例）的记录，并要求其达到或超过某个阀值。因此，每次调用recordException或recordSuccess都会增加操作总数，只有调用recordSuccess会增加成功操作数，提高成功率。调用recordException会降低成功率。
+</p>
+
+<p>
+如果节点的成功率达到阀值要求，就会被认为可用。一旦低于阀值要求，就会被标记为不可用。由于这个类是继承自AsyncRecoveryFailureDetector，所以这个失效节点只有在后台线程异步的与其成功连接后才会被标记为有效。
+</p>
+
+<p>
+在使用成功率与阀值对比进行可用性校验之前，请求必须要先达到一定数量。防止出现第一次请求就失败然后成功就成了0%。还需要一个阀值有效时间间隔，以防止请求数量太大，而失败次数无法体现出来。
+</p>
+
+<p>
+另外，当有一类叫“灾难(catastrophic)”的错误发生时，ThresholdFailureDetector会立刻将该节点置为失效。这类错误包括<code>java.net.ConnectException</code>，<code>java.net.UnknownHostException</code>和<code>java.net.NoRouteToHostException</code>。它可以通过配置文件的“failuredetector_catstrophic_error_types”参数进行继承/修改。
+</p>
+
+<h3 id="toc_0.1.7">配置</h3>
+<p>
+ThresholdFailureDetector新增了如下配置：
+</p>
+<ul>
+<li>
+<code>failuredetector_threshold</code>：必须达到或超过的成功率阀值（百分比整数）
+
+<li>
+<code>failuredetector_threshold_interval</code>：阀值有效时长（毫秒）；超过后会reset
+
+<li>
+<code>faliuredetector_threshold_countminimum</code>：开始成功率检测之前要达到的错误发生最小数。
+
+<li>
+<code>failuredetector_asyncscan_interval</code>：检测失效节点是否恢复的间隔时间（毫秒）
+
+<li>
+<code>failuredetector_catastrophic_error_types</code>：被认为是“灾难”的异常完整类名的列表
+
+<li>
+<code>failuredetector_request_length_threshold</code>：请求(get,put,delete,等)的最大时间，如果超过就会被认为是“error”；发生这种情况不会立即将节点置为失效，但是会影响该节点的成功率。
+
+</ul>
+<h4 id="toc_0.1.7.1">LinkedIn生成环境的配置</h4>
+<pre>
+failuredetector_threshold_countminimum=30
+failuredetector_threshold_interval=300000
+failuredetector_threshold=95
+</pre>
+<h3 id="toc_0.1.8">JMX</h3>
+<p>
+ThresholdFailureDetector新增了如下JMX属性：
+</p>
+<ul>
+<li>
+<code>nodeThresholdStats</code>：每个节点的状态（有效/失效）和成功率
+
+</ul>
+<hr />
+<p>
+<code>日期</code>：2014-04-16
+</p>
+
+<p>
+<code>参考资料</code>：<a href="https://github.com/voldemort/voldemort/wiki/Client-side-failure-detector-implementations">Client side failure detector implementations</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

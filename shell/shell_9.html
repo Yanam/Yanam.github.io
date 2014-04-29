@@ -1,0 +1,230 @@
+<html>
+<head>
+    <title>tar、make、configure命令等源码安装时要用到的命令</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">第一步：tar</a>
+<ul>
+<li><a href="#toc_0.2.1">tar命令格式</a>
+<li><a href="#toc_0.2.2">必选参数</a>
+<li><a href="#toc_0.2.3">示例</a>
+</ul>
+<li><a href="#toc_0.3">第二步：configure</a>
+<li><a href="#toc_0.4">可选参数</a>
+<li><a href="#toc_0.5">示例</a>
+<li><a href="#toc_0.6">第三步：make</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+使用linux时安装各种文件是不可避免的，而下载源码包手动编译安装是很多人的首选，因为在编译过程中可以指定各种参数，使用起来更加方便。
+</p>
+
+<p>
+一般从源码安装的过程为：
+</p>
+<pre class="brush:shell">
+# 安装
+$ tar zxvf collectd-5.4.1.tar.gz 
+$ cd collectd
+$ ./configure --prefix=/data/collectd-5.4.1
+$ make all install
+
+# 安装完成，清理临时文件
+$ make clean 
+
+# 卸载
+$ make uninstall 
+</pre>
+
+<p>
+下面就详细介绍一下几个在编译安装源码包时常用的命令。
+</p>
+
+
+<h2 id="toc_0.2">第一步：tar</h2>
+<p>
+<code>tar</code>是linux 上最常用的 <strong>打包</strong> 程序，本身不具有压缩功能，它是调用压缩命令实现的。
+</p>
+<blockquote>
+因为很多压缩程序只能针对单个文件进行压缩，所以想要压缩一堆文件时，必须要先将其打成一个包（例如tar命令），在用压缩程序进行压缩（例如gzip、bzip2命令）。
+</blockquote>
+
+<p>
+从官网下载的源代码包，大多是tar.gz、tar.bz2格式，解压就必不可少了。
+</p>
+
+<h3 id="toc_0.2.1">tar命令格式</h3>
+<pre class="brush:shell">
+$ tar [必选参数][可选参数][文件]
+</pre>
+<h3 id="toc_0.2.2">必选参数</h3>
+<ul>
+<li>
+<code>-c</code>：创建tar文件
+
+<li>
+<code>-x</code>：解压tar文件
+
+<li>
+<code>-r</code>：向归档文件追加文件 
+
+<li>
+<code>-u</code>：更新原压缩包中的文件
+
+</ul>
+ 
+<ul>
+<li>
+<code>-t</code>：查看tar文件的内容
+
+<li>
+<code>-z</code>：使用gzip，*.gz* 格式的文件
+
+<li>
+<code>-j</code>：使用bzip2，*.bz2* 格式的文件
+
+<li>
+<code>-Z</code>：使用compress,古老的压缩命令，基本可以无视
+
+<li>
+<code>-v</code>：显示操作过程
+
+</ul>
+
+<ul>
+<li>
+<code>-p</code>：打包后保持原文件的属性（权限等）
+
+<li>
+<code>-f</code> 指定tar文件的文件名称，此参数后面必须接文档名称
+
+</ul>
+ 
+ 
+<h3 id="toc_0.2.3">示例</h3>
+<pre class="brush:shell">
+# 将temp.log 压缩后，打包成一个test.tgz压缩文件，例子中是单个文件temp.log，也可以是目录
+$ tar -czvf test.tgz  temp.log
+
+$ tar -czvf test.tgz temp/
+
+# 将多个文件打包，文件来源用空格分隔
+$ tar -czvf test.tgz temp.log temp2.log temp3.log 
+
+# 向test.tgz中添加文件
+$ tar -rf test.tgz other.log
+
+# 更新test.tgz中的文件
+$ tar -uf test.tgz other.log 
+
+# 解压一个文件，到当前目录
+$ tar -xzvf test.tgz 
+
+# 解压一个tar.gz文件
+$ tar -zxvf collcted.tar.gz 
+
+# 解压一个tar.bz2文件
+$ tar -jxvf collected.tar.bz2 
+
+# 指定路径（~/img）、排除目录（test）
+$ tar -czvpf test.tar.gz --directory ~/img --exclude=test 
+</pre>
+<blockquote>
+源码包解压后，进入解压目录，一般都会有个INSTALL文本文件，里面是安装的详细说明，可以打开看一下。
+</blockquote>
+<h2 id="toc_0.3">第二步：configure</h2>
+<p>
+执行./configure后，系统会根据实际情况生成config.h和多个Makefile。其中Makefile是运行make时所用的模板；而config.h则以宏的形式记录用户的自定义参数。
+</p>
+<h2 id="toc_0.4">可选参数</h2>
+<ul>
+<li>
+<code>--prefix</code>：制定安装的目录
+
+<li>
+<code>--disable-FEATURE</code>：禁用某些特性，FEATURE指代特定名称，如：--disable-gui
+
+<li>
+<code>--enable-FEATURE</code>：和上面相反
+
+<li>
+<code>--with-PACKAGE</code>：使用某个已安装的软件包。如：--with-rrdtool
+
+<li>
+<code>--without-PACKAGE</code>：和上面相反
+    其他设置可以使用./configure --help 查看。 
+
+</ul>
+<h2 id="toc_0.5">示例</h2>
+<pre class="brush:shell">
+$ cd collectd-1.5.4
+$ ./configure --prefix=/data/collectd-1.5.4 --with-rrdtool=/data/rrdtool-1.3.8
+</pre>
+
+<h2 id="toc_0.6">第三步：make</h2>
+<p>
+<code>make</code>：这一步就是进行编译，如果make过程中出现error，可能是你的系统缺少一些依赖库，请仔细研究错误代码。
+</p>
+
+<p>
+<code>make install</code>：这一步是进行安装
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2014-03-13、2014-04-02
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.vixual.net/blog/archives/127">tar 指令的常用語法</a>、<a href="http://www.cnblogs.com/peida/archive/2012/11/30/2795656.html">每天一个linux命令（28）：tar命令</a>、<a href="http://www.cnblogs.com/jyaray/archive/2011/04/30/2033362.html">tar压缩解压缩命令详解</a>、<a href="http://bigdoudou.blog.51cto.com/636381/297605">linux下configure，make，make install的意义</a>、<a href="http://blog.csdn.net/jackylin520/article/details/3221586">linux configure使用方法</a>、<a href="http://blog.const.net.cn/a/9463.htm">Linux中configure/makefile的用法</a>、<a href="http://www.cnblogs.com/huangfenghit/archive/2011/02/17/1957057.html">linux下源码安装软件</a>、<a href="http://hilinux.com/man/debian/ch09s53.html">9.53. 使用tar备份文件</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

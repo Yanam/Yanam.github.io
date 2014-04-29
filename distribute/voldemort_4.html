@@ -1,0 +1,251 @@
+<html>
+<head>
+    <title>voldemort 0.90新特性：Topology awareness capability</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">Zones</a>
+<ul>
+<li><a href="#toc_0.1.1">示例</a>
+<ul>
+<li><a href="#toc_0.1.1.1">基于机架感知(rack aware)</a>
+<li><a href="#toc_0.1.1.2">基于已知数据中心(data center aware)</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<p>
+文章翻译自voldemort的wiki，原文连接连接见参考资料。
+</p>
+<h2 id="toc_0.1">Zones</h2>
+<p>
+许多NoSQL系统都有基于网络拓扑的特别复制机制。例如Cassandra就有Rack aware和DataCenter aware routing 插件。voldemore自己抽象了一个基于网络的概念叫<code>zones</code>。zone就是一组在网络中彼此非常近的节点，例如处于同一机房/机架或同一个数据中心。
+</p>
+
+<p>
+由于不同zone之间的可能存在高延迟，我们想让客户端的路由策略能够选择最近的zone。为了帮助路由策略做出这个决定，我们需要在cluster.xml中添加额外的配置。
+</p>
+
+<ol>
+<li>
+首先也是最重要的，我们需要定义<code>zone</code>，每个zone有两个参数：唯一的id和临近zone的列表，示例如下：
+<pre class="brush:xml">
+&lt;zone&gt;
+   &lt;zone-id&gt;0&lt;/zone-id&gt;
+   &lt;proximity-list&gt;1,2&lt;/proximity-list&gt;
+&lt;/zone&gt;
+</pre>
+    配置的临近zone列表(proximity-list)，是根据其距该zone距离由近及远排列的。
+
+<li>
+第二，我们需要将zones和每个server关联起来。如果没有特别制定，则默认设置 zone id 为0
+<pre class="brush:xml">
+&lt;server&gt;
+	&lt;id&gt;0&lt;/id&gt;
+	&lt;host&gt;zoo.rack0.node1&lt;/host&gt;
+	&lt;zone-id&gt;0&lt;/zone-id&gt;
+&lt;/server&gt;
+</pre>
+  网络分区划分好后，由于每个store在每个zone都有冗余数据，因此可以使得系统仅靠单个网络分区就能提供服务。为了实现这种zone间数据的冗余，我们可以通过在stores.xml添加设置来提供支持。
+  我们还需要修改store的配置来支持每次操作返回时需要等待zone的数量。
+<pre class="brush:xml">
+&lt;stores&gt;
+	&lt;store&gt;
+		&lt;name&gt;test&lt;/name&gt;
+		&lt;!-- global replication factor --&gt;
+		&lt;!-- 复制的总份数 --&gt;
+		&lt;replication-factor&gt;4&lt;/replication-factor&gt;
+		&lt;!-- zone specific replication factors --&gt;
+		&lt;zone-replication-factor&gt;
+			&lt;!-- zone 0 会总份数4中的2份 --&gt;
+			&lt;replication-factor zone-id="0"&gt;2&lt;/replication-factor&gt;
+			&lt;replication-factor zone-id="1"&gt;1&lt;/replication-factor&gt;
+			&lt;replication-factor zone-id="2"&gt;1&lt;/replication-factor&gt;
+		&lt;/zone-replication-factor&gt;
+		&lt;!-- zone-count* 的概念与request-writes/reads的概念一样 --&gt;
+		&lt;zone-count-reads&gt;2&lt;/zone-count-reads&gt;
+		&lt;zone-count-reads&gt;2&lt;/zone-count-writes&gt;
+	&lt;/store&gt;
+&lt;/stores&gt;
+</pre>
+
+</ol>
+<h3 id="toc_0.1.1">示例</h3>
+<p>
+让我们通过一个例子来更好地理解上面的概念。
+</p>
+
+<p>
+假设我们有两个数据中心（zoo和jungle），每个数据中心有两个机架（rack0和rack1），每个机架都有两个服务器节点（node0和node1）。
+</p>
+
+<h4 id="toc_0.1.1.1">基于机架感知(rack aware)</h4>
+<p>
+这里我们是基于机架层面定制路由机制。
+</p>
+
+<p>
+cluster.xml配置如下：
+</p>
+<pre class="brush:xml">
+&lt;cluster&gt;
+  &lt;name&gt;mycluster&lt;/name&gt;
+  &lt;zone&gt;
+    &lt;zone-id&gt;0&lt;/zone-id&gt;
+    &lt;!-- Indicating the closest zone in the start --&gt;
+    &lt;proximity-list&gt;1,2&lt;/proximity-list&gt;
+  &lt;/zone&gt;
+  &lt;zone&gt;
+    &lt;zone-id&gt;1&lt;/zone-id&gt;
+    &lt;proximity-list&gt;0,2&lt;/proximity-list&gt;
+  &lt;/zone&gt;
+  &lt;zone&gt;
+    &lt;zone-id&gt;2&lt;/zone-id&gt;
+    &lt;proximity-list&gt;1,0&lt;/proximity-list&gt;
+  &lt;/zone&gt;
+  &lt;server&gt;
+    &lt;id&gt;0&lt;/id&gt;
+    &lt;host&gt;zoo.rack0.node0&lt;/host&gt;
+    &lt;!-- zone-id should be a value from among the ids mentioned above --&gt;
+    &lt;zone-id&gt;0&lt;/zone-id&gt;
+    &lt;partitions&gt;0,1,2&lt;/partitions&gt;
+  &lt;/server&gt;
+  &lt;server&gt;
+    &lt;id&gt;1&lt;/id&gt;
+    &lt;host&gt;zoo.rack0.node1&lt;/host&gt;
+    &lt;zone-id&gt;0&lt;/zone-id&gt;
+    &lt;partitions&gt;3,4&lt;/partitions&gt;
+  &lt;/server&gt;
+  &lt;server&gt;
+    &lt;id&gt;2&lt;/id&gt;
+    &lt;host&gt;jungle.rack0.node0&lt;/host&gt;
+    &lt;zone-id&gt;1&lt;/zone-id&gt;
+    &lt;partitions&gt;5&lt;/partitions&gt;
+  &lt;/server&gt;
+  &lt;server&gt;
+    &lt;id&gt;3&lt;/id&gt;
+    &lt;host&gt;jungle.rack1.node0&lt;/host&gt;
+    &lt;zone-id&gt;2&lt;/zone-id&gt;
+    &lt;partitions&gt;6,7,8&lt;/partitions&gt;
+  &lt;/server&gt;
+&lt;/cluster&gt;
+
+</pre>
+
+<p>
+stores.xml配置如下：
+</p>
+<pre class="brush:xml">
+&lt;stores&gt;
+    &lt;store&gt;
+       &lt;name&gt;test&lt;/name&gt;
+       &lt;replication-factor&gt;4&lt;/replication-factor&gt;
+       &lt;zone-replication-factor&gt;
+           &lt;replication-factor zone-id="0"&gt;2&lt;/replication-factor&gt;
+           &lt;replication-factor zone-id="1"&gt;1&lt;/replication-factor&gt;
+           &lt;replication-factor zone-id="2"&gt;1&lt;/replication-factor&gt;
+       &lt;/zone-replication-factor&gt;
+       &lt;zone-count-reads&gt;2&lt;/zone-count-reads&gt;
+       &lt;zone-count-writes&gt;2&lt;/zone-count-writes&gt;
+    &lt;/store&gt;
+&lt;/stores&gt;
+
+</pre>
+<h4 id="toc_0.1.1.2">基于已知数据中心(data center aware)</h4>
+<p>
+和上面不同的是，我们只需要修改zone-ids就可以实现数据中心感知
+</p>
+
+<pre class="brush:xml">
+&lt;cluster&gt;
+  &lt;name&gt;mycluster&lt;/name&gt;
+  &lt;zone&gt;
+    &lt;zone-id&gt;0&lt;/zone-id&gt;
+    &lt;proximity-list&gt;1&lt;/proximity-list&gt;
+  &lt;/zone&gt;
+  &lt;zone&gt;
+    &lt;zone-id&gt;1&lt;/zone-id&gt;
+    &lt;proximity-list&gt;0&lt;/proximity-list&gt;
+  &lt;/zone&gt;
+  &lt;server&gt;
+    &lt;id&gt;0&lt;/id&gt;
+    &lt;host&gt;zoo.rack0.node0&lt;/host&gt;
+    &lt;zone-id&gt;0&lt;/zone-id&gt;
+    &lt;partitions&gt;0,1,2&lt;/partitions&gt;
+  &lt;/server&gt;
+  &lt;server&gt;
+    &lt;id&gt;1&lt;/id&gt;
+    &lt;host&gt;zoo.rack0.node1&lt;/host&gt;
+    &lt;zone-id&gt;0&lt;/zone-id&gt;
+    &lt;partitions&gt;3,4&lt;/partitions&gt;
+  &lt;/server&gt;
+  &lt;server&gt;
+    &lt;id&gt;2&lt;/id&gt;
+    &lt;host&gt;jungle.rack0.node0&lt;/host&gt;
+    &lt;zone-id&gt;1&lt;/zone-id&gt;
+    &lt;partitions&gt;5&lt;/partitions&gt;
+  &lt;/server&gt;
+  &lt;server&gt;
+    &lt;id&gt;3&lt;/id&gt;
+    &lt;host&gt;jungle.rack1.node0&lt;/host&gt;
+    &lt;zone-id&gt;1&lt;/zone-id&gt;
+    &lt;partitions&gt;6,7,8&lt;/partitions&gt;
+  &lt;/server&gt;
+&lt;/cluster&gt;
+
+</pre>
+<hr />
+<p>
+<code>日期</code>：2014-04-15
+</p>
+
+<p>
+<code>参考资料</code>：<a href="https://github.com/voldemort/voldemort/wiki/Topology-awareness-capability">https://github.com/voldemort/voldemort/wiki/Topology-awareness-capability</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

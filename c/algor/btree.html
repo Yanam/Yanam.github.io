@@ -1,0 +1,132 @@
+<html>
+<head>
+    <title>多路查找树、B树、B+树</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">m-way search trees(多路查找树)</a>
+<li><a href="#toc_0.3">B-tree</a>
+<li><a href="#toc_0.4">B+ tree</a>
+<li><a href="#toc_0.5">B* tree</a>
+<li><a href="#toc_0.6">总结</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+<code>节点的度</code>(degree)：一个节点含有的子树的个数。
+</p>
+
+<h2 id="toc_0.2">m-way search trees(多路查找树)</h2>
+<p>
+m-way search tree(多路查找树)：就是一颗每个节点的度都小于等于m的树。
+</p>
+
+<p>
+单个节点可以这样描述：
+</p>
+<pre class="brush:c">
+int m;//这是一个 3路查找树
+struct mnode{
+	int in_use;//实际使用的key的个数
+	Key keys[m-1];
+	mnode *children[m];
+}
+</pre>
+<h2 id="toc_0.3">B-tree</h2>
+<p>
+B-tree 是一种平衡多路查找树(balanced M-way search tree)，而且M≥2。
+</p>
+
+<p>
+单个节点可以这样描述：
+</p>
+<pre class="brush:c">
+int m=1024;
+typedef struct BTNode *PBTNode;
+struct BTNode{
+	int keyNum;//实际使用key的个数
+	PBTNode parent;//指向父节点
+	PBTNode *children;//指针向量：children[0].....children[keyNum]
+	KeyType	*key;//关键字向量：key[0]....key[keyNum-1]
+}
+</pre>
+<p>
+示例图如下：
+<img src="img/btree.jpg" />
+</p>
+<h2 id="toc_0.4">B+ tree</h2>
+<p>
+B+树是B树的一种变形，
+</p>
+
+<p>
+示例图如下：
+<img src="img/b+tree.jpg" />
+</p>
+<h2 id="toc_0.5">B* tree</h2>
+<p>
+B*树是B+树的一种变形，
+</p>
+<h2 id="toc_0.6">总结</h2>
+<p>
+<code>B树</code>：有序数组+平衡多叉树
+<code>B+树</code>：有序数组链表+平衡多叉树
+<code>B*树</code>：一颗丰满的B+树
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2014-03-05
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://zh.wikipedia.org/wiki/%E6%A0%91_(%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)">维基百科（树）</a>、<a href="http://web.eecs.umich.edu/~sugih/courses/eecs281/f11/lectures/10-Mway.pdf">Multi-way trees </a>、<a href="http://blog.csdn.net/v_JULY_v/article/details/6530142">从B树、B+树、B*树谈到R 树</a>(其中b+tree的示例图有问题)、<a href="http://wenku.baidu.com/link?url=xVAFFBv1cIxioWgC3Nw9fj7DMDJrFwGdNqYHjyHcB51zXdEi64dqrMAYw5NfDs_89XDHOH3GUdVmm3jIccyj7k73vDvHfCl49gKL5FUvIJG">Chapter 9 B+Tree A Dynamic Index Structure</a>、<a href="http://stackoverflow.com/questions/870218/b-trees-b-trees-difference">B trees, B+ trees difference</a>、<a href="http://stackoverflow.com/questions/6105387/whats-a-btree">What's a B*Tree?</a>、
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<html>
+<head>
+    <title> Java 8 带来的变化</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">HotSpot:Removal of PermGen(移除永生代)</a>
+<ul>
+<li><a href="#toc_0.2.1">PermGen的情况</a>
+<li><a href="#toc_0.2.2">Metaspace内存分配模型</a>
+<li><a href="#toc_0.2.3">Metaspace的容量大小</a>
+<li><a href="#toc_0.2.4">Metaspace的垃圾回收</a>
+<li><a href="#toc_0.2.5">对Java堆空间的影响</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+Java 8 终于发布了，说实话Java 7、Java 6 等每次更新带来了哪些新特性，都还不是很清楚，这也导致了虽然开发JDK一直在升级，但是用到的语法没有太大变化，很多时候没有感受到更新带来的好处，究其原因：1）每次更新没有关注具体有哪些变化，及时有些了解只限于知道，并没有在工作中使用。2）关于新特性的第一手资料还是英文居多，英文水平堪忧。
+</p>
+
+<h2 id="toc_0.2">HotSpot:Removal of PermGen(移除永生代)</h2>
+<p>
+在最新的JDK 8 HotSpot JVM中PermGen 被移除了，取而代之的是<code>Metaspace</code>，
+</p>
+
+<h3 id="toc_0.2.1">PermGen的情况</h3>
+<ul>
+<li>
+该内存空间完全被移除了。
+
+<li>
+PermSize 和 MaxPermSize 两个JVM参数会被忽略，如果发现了该设置会在JVM启动时发出警告。
+
+</ul>
+<h3 id="toc_0.2.2">Metaspace内存分配模型</h3>
+<ul>
+<li>
+大多数类元数据(class metaspace)被分配到本地内存(native memory)
+
+<li>
+The klasses that were used to describe class metadata have been removed.(用来描述类元数据的klasses被移除了，klasses是啥？)
+
+</ul>
+
+<h3 id="toc_0.2.3">Metaspace的容量大小</h3>
+<ul>
+<li>
+默认大小取决于本机可用内存大小
+
+<li>
+新的JVM参数<code>MaxMetaspaceSize</code>，允许你限制类元数据使用本地内存(native memory)的大小。如果你不设置该参数，Metaspace会动态扩容。
+
+</ul>
+<h3 id="toc_0.2.4">Metaspace的垃圾回收</h3>
+<ul>
+<li>
+当类元数据的量达到"MaxMetaspaceSize" 时会触发垃圾回收。
+
+<li>
+建议监控和调节Metasapce来减少垃圾回收的频率和延时时间。Metaspace进行垃圾回收，可能是内存泄露或者是制定的容量不足的信号。
+
+</ul>
+<h3 id="toc_0.2.5">对Java堆空间的影响</h3>
+<ul>
+<li>
+一些各类数据(以前存在与PermGen)被移动到Java堆空间中。这意味着如果更新到JDK8 你需要观察一些Java堆空间的增长。 
+
+</ul>
+<p>
+== 
+<hr />
+<code>日期</code>：2014-03-19
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://winterbe.com/posts/2014/03/16/java-8-tutorial/">Java 8 Tutorial</a>、<a href="http://www.infoq.com/news/2013/03/java-8-permgen-metaspace">Will Java 8 Solve PermGen OutOfMemoryError?</a>、<a href="http://www.oracle.com/technetwork/java/javase/8-whats-new-2157071.html">What's New in JDK 8</a>、<a href="http://java.dzone.com/articles/java-8-permgen-metaspace">java-8-permgen-metaspace</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<html>
+<head>
+    <title>voldemort 0.90的新特性：Server side transforms</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">Server side transforms</a>
+<ul>
+<li><a href="#toc_0.1.1">View涉及到的修改</a>
+<li><a href="#toc_0.1.2">Store涉及到的修改</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<p>
+文章翻译自voldemort的wiki，原文连接连接见参考资料。
+</p>
+<h2 id="toc_0.1">Server side transforms</h2>
+<p>
+<code>Server-side transforms</code>：是一种在传输数据到客户端之前改造或过滤key对应的values的方法。
+</p>
+
+<p>
+Voldemort当前是不支持这个功能的，因为没有办法把过滤查询发送到服务端。由于这个功能的缺失，我们需要通过get()API取得数据然后在客户端进行过滤，这样不必要的数据传输浪费了带宽，增加了get API的延迟。对于Put() API存在同样的问题。
+</p>
+
+<p>
+如果应用想要store支持Server-side transforms，那它需要在这个store上定义一个<code>view</code>。为了在get() API时过滤，storeToView()方法会在从store获取数据时执行values的改造。为了在put() API时过滤，viewToStore()方法会在向store写数据时执行old+value数据的改造。
+</p>
+<h3 id="toc_0.1.1">View涉及到的修改</h3>
+<p>
+viewToStore()和storeToView() API都需要做修改
+</p>
+<ul>
+<li>
+public V storeToView(Store&lt;K,S&gt; targetStore,K k,S s,T t)throws UnsupportedViewOperationException;
+
+<li>
+public S viewToStore(Store&lt;K,S&gt; targetStore,K k,S s,T t)throws UnsupportedViewOperationException;
+
+</ul>
+<h3 id="toc_0.1.2">Store涉及到的修改</h3>
+<p>
+将现有的StoreClient&lt;K,V&gt;接口改为StoreClient&lt;K,V,T&gt;并添加如下API方法：
+</p>
+<ul>
+<li>
+public Versioned get(K key,T transforms);
+
+<li>
+pubilc Map&lt;K,Versioned&gt; getAll(Iterable keys,Map&lt;K,T&gt; transforms);
+
+<li>
+public void put(K key,V value,T transforms);
+
+</ul>
+ 
+<p>
+对Store&lt;K,V&gt;接口的API做如下修改：
+</p>
+<ul>
+<li>
+public List&lt;Versioned&gt; get(K key, T transforms) throws VoldemortException;
+
+<li>
+public Map&lt;K,List&lt;Versioned&gt;&gt; getAll(Iterable keys,Map&lt;K,T&gt; transforms) throws VoldemortException;
+
+</ul>
+ 
+<hr />
+<p>
+<code>日期</code>：2014-04-16
+</p>
+
+<p>
+<code>参考资料</code>：<a href="https://github.com/voldemort/voldemort/wiki/Server-side-transforms-in-Voldemort">Server side transforms in Voldemort</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

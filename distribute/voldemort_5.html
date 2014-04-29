@@ -1,0 +1,183 @@
+<html>
+<head>
+    <title>voldemort 0.90的新特性：Pipeline Routed Store</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">RoutedStore</a>
+<li><a href="#toc_0.2">Pipeline</a>
+<ul>
+<li><a href="#toc_0.2.1">配置</a>
+<li><a href="#toc_0.2.2">涉及到的类和接口</a>
+<ul>
+<li><a href="#toc_0.2.2.1">Action</a>
+<li><a href="#toc_0.2.2.2">Pipeline</a>
+<li><a href="#toc_0.2.2.3">PipelineData</a>
+<li><a href="#toc_0.2.2.4">Response</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<p>
+文章翻译自voldemort的wiki，原文连接连接见参考资料。
+</p>
+<h2 id="toc_0.1">RoutedStore</h2>
+<p>
+<code>RoutedStore</code>：它是Voldemort客户端实现分布式设计的重要组成部分。就是它的名字那样，RoutedStore内含有将客户端请求路由到给定store的逻辑；可能需要一个或多个节点来满足请求。对于每个请求，RoutedStore处理这它与正确节点间的通信。对于每个节点，RoutedStore都会启动然后执行请求，等待响应，验证收到的响应是否正确，执行辅助记录和恢复逻辑。它在每个节点上并行执行这些操作。
+</p>
+
+<p>
+上面这种基于线程池实现的RoutedStore面临这样两个问题：
+</p>
+<ol>
+<li>
+逻辑过于复杂
+
+<li>
+由于慢服务器引起的慢请求可能会导致线程池耗尽
+
+</ol>
+ 
+<p>
+Voldemort为解决上面的问题2，在socket层重新设计了基于NIO的非阻塞模型的客户端请求，具体可以查看SocketStore的源码。
+</p>
+
+<p>
+为解决问题1，Voldemort希望通过处理管线(<code>processing pipeline</code>)将这些操作（get,getVersion,getAll,delete,and put)模块化，通过拆分这些操作使得整个处理流程能够定义清晰、便于理解和重用。
+</p>
+
+<h2 id="toc_0.2">Pipeline</h2>
+<h3 id="toc_0.2.1">配置</h3>
+<p>
+客户端：
+</p>
+<pre>
+enable_pipeline_routed_store=true
+</pre>
+<p>
+服务端： 
+</p>
+<pre>
+enable_pipeline_routed_store=true
+</pre>
+<blockquote>
+注意：0.90已经将这两项参数默认设置为true了
+</blockquote>
+<h3 id="toc_0.2.2">涉及到的类和接口</h3>
+<h4 id="toc_0.2.2.1">Action</h4>
+<p>
+<code>Action</code>：该接口是作为处理给定操作的整个逻辑过程的一部分。
+</p>
+<h4 id="toc_0.2.2.2">Pipeline</h4>
+<p>
+<code>Pipeline</code>：它是Action运行的主要通道。Action会应答Pipeline收到事件。大部分事件是在Pipeline内部产生的。只有在response to asynchronous responses from server才会有外部实体产生事件。Response实例是在一个异步请求完成后创建的，然后被反馈给有合适'response handler'动作会被执行的Pipeline。
+</p>
+
+<p>
+每次请求都会实例一个Pipeline对象。这是因为它包含了具体每次调用（get，getAll，getVersion，put and delete）的内部状态。
+</p>
+
+<p>
+<code>Pipeline.Event</code>：它是一个简单的枚举类，描述了会发生的各种事件。
+</p>
+
+<h4 id="toc_0.2.2.3">PipelineData</h4>
+<p>
+<code>PipelineData</code>：包含一组通用数据来表示管道(pipeline)内从一个action到另一个action移动时的状态。
+<code>Pipeline</code>和<code>PipelineData</code>会进行一对一通信，但是Pipeline中并没有把PipelineData作为一个实例变量。
+</p>
+
+<p>
+<code>Action</code>的实现类们在创建时通常会包含一个PipelineData作为实例变量。
+</p>
+
+<p>
+还有少量PipelineData的子类用来处理不同类型的操作。
+</p>
+<h4 id="toc_0.2.2.4">Response</h4>
+<p>
+<code>Response</code>：表示一个调用一个远程Voldemore节点执行一些操作（get，put等）后得到的响应。
+它内部包装如下信息：
+</p>
+<ul>
+<li>
+Node node
+
+<li>
+K key
+
+<li>
+V value
+
+<li>
+long requestTime
+
+</ul>
+<p>
+上面包含的Node和请求时间是用于Response使用者的故障检测器(FailureDetector)的。 
+</p>
+
+<p>
+Response通常以callback机制的方式和异步请求联合使用，虽然并一定如此。当使用异步的情况下，它会作为异步请求的结果，NonblockingStore会调用NonblockingStoreCallback实例的requestComplete方法，该方法会把数据打包到Response对象，然后通过Event.RESPONSE_RECEIVED 事件发送到Pipeline。
+</p>
+
+<p>
+Response实例被存储在PipelineData中来表示请求在Pipeline执行期间的响应。
+</p>
+
+<p>
+Response使用泛型的返回值来支持不同操作。通常情况下key是ByteArray类型，但是在执行“get all”操作时，key实际是一个迭代器。
+<hr />
+<code>日期</code>：2014-04-16
+</p>
+
+<p>
+<code>参考资料</code>：<a href="https://github.com/voldemort/voldemort/wiki/RoutedStore-redesign">New state machine based routing layer – Pipeline routed store</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

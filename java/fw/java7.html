@@ -1,0 +1,416 @@
+<html>
+<head>
+    <title>Java7新特性回顾</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.0.1">前言</a>
+<li><a href="#toc_0.0.2">Type inference（类型推断）</a>
+</ul>
+<li><a href="#toc_0.1">String in Switch（Switch中使用String）</a>
+<ul>
+<li><a href="#toc_0.1.1">Automatic Resource Management（自动资源管理）</a>
+<li><a href="#toc_0.1.2">Fork Join Framework（并行计算框架fork/join）</a>
+<li><a href="#toc_0.1.3">Underscore in Numeric literals（使用下划线对数字进行分割表达）</a>
+<li><a href="#toc_0.1.4">Catching Multiple Exception Type in Single Catch Block（同时捕获多个异常）</a>
+<li><a href="#toc_0.1.5">Binary LIterals with prefix "0b"（二进制数字表达方式）</a>
+<li><a href="#toc_0.1.6">Java NIO 2.0</a>
+<li><a href="#toc_0.1.7">G1 Garbage Collector</a>
+<li><a href="#toc_0.1.8">More Precise Rethrowing of Exception</a>
+<li><a href="#toc_0.1.9">Objects Class</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h3 id="toc_0.0.1">前言</h3>
+<p>
+Java8已经退出了，网上出现了很多介绍Java8新特性的文章，在尝试这些新功能的时候，想到了这样一个问题：“Java7的新特性你知道多少？”
+</p>
+
+<h3 id="toc_0.0.2">Type inference（类型推断）</h3>
+<p>
+Java&amp;引入了新操作符<code>&lt;&gt;</code>，被称为钻石操作符(diamond operator)，它使得构造方法也可以进行类型推断。
+</p>
+<blockquote>
+以前类型推断只对方法可用。
+</blockquote>
+
+
+<p>
+Java7以前：
+</p>
+<pre class="brush:java">
+Map&lt;String, List&lt;String&gt;&gt; employeeRecords = new HashMap&lt;String, List&lt;String&gt;&gt;();
+List&lt;Integer&gt; primes = new ArrayList&lt;Integer&gt;();
+</pre>
+
+<p>
+Java7：
+</p>
+<pre class="brush:java">
+Map&lt;String, List&lt;String&gt;&gt; employeeRecords =  new HashMap&lt;&gt;();
+List&lt;Integer&gt; primes = new ArrayList&lt;&gt;();
+</pre>
+
+<h2 id="toc_0.1">String in Switch（Switch中使用String）</h2>
+<p>
+Java7之后Switch终于支持String作为选择因子了，再也不用写一堆if else了。
+</p>
+
+<p>
+Java7：
+</p>
+<pre class="brush:java">
+String state = "NEW";
+ 
+switch (day) {
+   case "NEW": System.out.println("Order is in NEW state"); break;
+   case "CANCELED": System.out.println("Order is Cancelled"); break;
+   case "REPLACE": System.out.println("Order is replaced successfully"); break;
+   case "FILLED": System.out.println("Order is filled"); break;
+   default: System.out.println("Invalid");
+ }
+
+</pre>
+<blockquote>
+比较时用到了String的equals和hashCode()方法，因此是大小写敏感的。
+</blockquote>
+<h3 id="toc_0.1.1">Automatic Resource Management（自动资源管理）</h3>
+<p>
+以前我们为了确保资源被释放，只能通过finally块来解决。
+</p>
+
+<p>
+Java7以前：
+</p>
+<pre class="brush:java">
+public static void main(String args[]) {
+        FileInputStream fin = null;
+        BufferedReader br = null;
+        try {
+            fin = new FileInputStream("info.xml");
+            br = new BufferedReader(new InputStreamReader(fin));
+            if (br.ready()) {
+                String line1 = br.readLine();
+                System.out.println(line1);
+            }
+        } catch (FileNotFoundException ex) {
+            System.out.println("Info.xml is not found");
+        } catch (IOException ex) {
+            System.out.println("Can't read the file");
+        } finally {
+            try {
+                if (fin != null) fin.close();
+                if (br != null) br.close();
+            } catch (IOException ie) {
+                System.out.println("Failed to close files");
+            }
+        }
+    }
+</pre>
+
+
+<p>
+Java7:
+</p>
+<pre class="brush:java">
+	public static void main(String args[]) {
+		try (FileInputStream fin = new FileInputStream("info.xml");
+				BufferedReader br = new BufferedReader(new InputStreamReader(
+						fin));) {
+			if (br.ready()) {
+				String line1 = br.readLine();
+				System.out.println(line1);
+			}
+		} catch (FileNotFoundException ex) {
+			System.out.println("Info.xml is not found");
+		} catch (IOException ex) {
+			System.out.println("Can't read the file");
+		}
+	}
+</pre>
+<blockquote>
+在Java7中，只要是实现了<code>java.lang.AutoCloseable</code>或者<code>java.io.Closeable</code>接口的都可以使用 <code>try-with-resource</code>的特性来自动关闭资源。像Stream、File、Socket、数据库连接等都已经实现了。
+</blockquote>
+<h3 id="toc_0.1.2">Fork Join Framework（并行计算框架fork/join）</h3>
+<p>
+这个单独一篇来讲
+</p>
+<h3 id="toc_0.1.3">Underscore in Numeric literals（使用下划线对数字进行分割表达）</h3>
+<p>
+Java7中，可以在数字中使用“_”来提示可读性。
+Java7：
+</p>
+<pre class="brush:java">
+int billion = 1_000_000_000;  // 10^9
+long creditCardNumber =  1234_4567_8901_2345L; //16 digit number
+long ssn = 777_99_8888L;
+double pi = 3.1415_9265;
+float  pif = 3.14_15_92_65f;
+</pre>
+<blockquote>
+注意：不能在小数点后面，数字开始和结束的地方用下划线。
+</blockquote>
+<p>
+错误例子：
+</p>
+<pre class="brush:java">
+double pi = 3._1415_9265; // underscore just after decimal point
+long creditcardNum = 1234_4567_8901_2345_L; //underscore at the end of number
+long ssn = _777_99_8888L; //undersocre at the beginning
+</pre>
+
+<h3 id="toc_0.1.4">Catching Multiple Exception Type in Single Catch Block（同时捕获多个异常）</h3>
+<p>
+Java7以前：
+</p>
+<pre class-"brush:java">
+try {
+    ......
+ 
+} catch(ClassNotFoundException ex) {
+   ex.printStackTrace();
+} catch(SQLException ex) {
+   ex.printStackTrace();
+}
+</pre>
+
+<p>
+Java7：
+</p>
+<pre class="brush:java">
+try {
+   ......
+ 
+} catch(ClassNotFoundException|SQLException ex) {
+    ex.printStackTrace();
+ 
+}
+</pre>
+
+<p>
+使用同时捕获多个异常时，不能包括异常的子类型
+</p>
+
+<p>
+错误例子：
+</p>
+<pre class="brush:java">
+try { 
+   ......
+
+} catch (FileNotFoundException | IOException ex) {
+   ex.printStackTrace();
+}
+</pre>
+
+<p>
+上面的代码编译时或出错：“java.io.FileNotFoundException is a subclass of alternative java.io.IOException at .......”，因为FileNotFoundException是IOException的子类。
+</p>
+
+<h3 id="toc_0.1.5">Binary LIterals with prefix "0b"（二进制数字表达方式）</h3>
+<p>
+我们知道，对于整数类型（byte、short、int、long）想表明8进制可以用前缀<code>0</code>，16进制用前缀<code>0x</code>或<code>0X</code>。Java7之后，二进制也有专门的前缀（<code>0b</code>或者<code>0B</code>）了。
+</p>
+
+<p>
+Java7：
+</p>
+<pre class="brush:java">
+int mask = 0b01010000101;
+</pre>
+
+<h3 id="toc_0.1.6">Java NIO 2.0</h3>
+<h3 id="toc_0.1.7">G1 Garbage Collector</h3>
+<h3 id="toc_0.1.8">More Precise Rethrowing of Exception</h3>
+<p>
+Java7以前：
+</p>
+<pre class="brush:java">
+public void obscure() throws Exception{
+    try {
+        new FileInputStream("abc.txt").read();
+        new SimpleDateFormat("ddMMyyyy").parse("12-03-2014");       
+    } catch (Exception ex) {
+        System.out.println("Caught exception: " + ex.getMessage());
+        throw ex;
+    }
+}
+</pre>
+
+<p>
+Java7：
+</p>
+<pre class="brush:java">
+public void precise() throws ParseException, IOException {
+    try {
+        new FileInputStream("abc.txt").read();
+        new SimpleDateFormat("ddMMyyyy").parse("12-03-2014");       
+    } catch (Exception ex) {
+        System.out.println("Caught exception: " + ex.getMessage());
+        throw ex;
+    }
+}
+</pre>
+
+<h3 id="toc_0.1.9">Objects Class</h3>
+<p>
+API是这样介绍<code>Objects</code>的，“它是由操作Object的静态工具方法组成的”。（google的guava中也有类似的的Objects对象）
+</p>
+
+<p>
+它提供了如下方法：
+</p>
+<ol>
+<li>
+<code>public static boolean equals(Object a, Object b)</code>
+
+<li>
+<code>public static boolean deepEquals(Object a, Object b)</code>
+
+<li>
+<code>public static int hashCode(Object o)</code>
+
+<li>
+<code>public static int hash(Object... values)</code>
+
+<li>
+<code>public static String toString(Object o)</code>
+
+<li>
+<code>public static String toString(Object o, String nullDefault)</code>
+
+<li>
+<code>public static &lt;T&gt; int compare(T a, T b, Comparator&lt;? super T&gt; c)</code>
+
+<li>
+<code>public static &lt;T&gt; T requireNonNull(T obj)</code>
+
+<li>
+<code>public static &lt;T&gt; T requireNonNull(T obj, String message)</code>
+
+</ol>
+
+<p>
+它提供的以上这些方法，使得我们可以在自己的代码中方便的实现 <strong>hashCode()</strong> 、 <strong>equals(Object)</strong> 等方法。
+</p>
+
+<p>
+Java7：
+</p>
+<pre class="brush:java">
+public class Person  
+{  
+   private String lastName;  
+  
+   private String firstName;  
+
+   //这里使用了Objects的requireNonNull方法
+   public Person(final String newLastName, final String newFirstName)  
+   {  
+      this.lastName = Objects.requireNonNull(newLastName, "Last name cannot be null.");  
+      this.firstName = Objects.requireNonNull(newFirstName, "First name cannot be null.");  
+   }  
+  
+   public String getLastName()  
+   {  
+      return this.lastName;  
+   }  
+  
+   public String getFirstName()  
+   {  
+      return this.firstName;  
+   }  
+
+   //这里使用了Objects的equals方法
+   public boolean equals(Object obj)  
+   {  
+      if (obj == null)  
+      {  
+         return false;  
+      }  
+      if (getClass() != obj.getClass())  
+      {  
+         return false;  
+      }  
+      final Person other = (Person) obj;  
+      if (!Objects.equals(this.lastName, other.lastName))  
+      {  
+         return false;  
+      }  
+      if (!Objects.equals(this.firstName, other.firstName))  
+      {  
+         return false;  
+      }  
+      return true;  
+   }  
+
+   //这里使用了Objects的hashCode方法
+   public int hashCode()  
+   {  
+      int hash = 5;  
+      hash = 97 * hash + Objects.hashCode(this.lastName);  
+      hash = 97 * hash + Objects.hashCode(this.firstName);  
+      return hash;  
+   }  
+  
+   @Override  
+   public String toString()  
+   {  
+      return this.firstName + " " + this.lastName;  
+   }  
+}  
+</pre>
+<hr />
+<p>
+<code>日期</code>：2014-04-25、2014-04-28
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://it.deepinmind.com/java/2014/04/21/10-jdk-7-features-to-revisit-before-you-welcome-java-8.html">Java 8?还记得那年大明湖畔的Java 7吗?</a>、<a href="http://javarevisited.blogspot.sg/2014/04/10-jdk-7-features-to-revisit-before-you.html">JDK 7 Features to Revisit, Before You Welcome Java 8 Read more</a>、<a href="http://www.oracle.com/technetwork/java/javase/jdk7-relnotes-418459.html">Java SE 7 Features and Enhancements</a>、<a href="http://www.oschina.net/news/20119/new-features-of-java-7">Java 7 的新特性一览表</a>、<a href="http://docs.oracle.com/javase/7/docs/api/java/util/Objects.html">Java 7 api--Class Objects</a>、<a href="http://marxsoftware.blogspot.com/2011/03/jdk-7-new-objects-class.html">JDK 7: The New Objects Class</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

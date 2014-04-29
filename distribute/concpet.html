@@ -1,0 +1,141 @@
+<html>
+<head>
+    <title>分布式技术常见概念名词解释</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">CAP定理</a>
+<li><a href="#toc_0.2">DHT</a>
+<li><a href="#toc_0.3">NRW</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">CAP定理</h2>
+<ol>
+<li>
+<code>Consistency(一致性)</code>：所有节点在同一时间具有相同的数据。
+
+<li>
+<code>Availability(可用性)</code>：保证每个请求不管成功或者失败都有响应。
+
+<li>
+<code>Partition-tolerance(分区容错性)</code>：系统中任意信息的丢失或者失败不影响系统的继续运行。
+    根据定理，分布式系统只可能满足CAP三项中的两项。
+
+</ol>
+
+<h2 id="toc_0.2">DHT</h2>
+<p>
+<code>DHT(分布式哈希表)</code>：是一种提供像哈希表一样的查询服务的去中心化分布式系统，它的键值对(key,value)存储在DHT中，可以通过给定的值(key)查到存储在某个节点上的值(value)。
+</p>
+<blockquote>
+对于一个key/value对，DHT在分布式集群中，提供像哈希表一样的服务
+</blockquote>
+<p>
+<a href="img/dht.gif.html">img/dht.gif</a>
+</p>
+<blockquote>
+DHT不是算法，不是实现，而是一个概念。
+</blockquote>
+
+
+<p>
+一致性哈希(consistent hashing)是一种特殊DHT
+</p>
+<h2 id="toc_0.3">NRW</h2>
+<p>
+<code>NRW</code>：在amazon的Dynamo系统中，第一次提出这个NRW方法。
+</p>
+<ul>
+<li>
+<code>N</code>：复制的次数(同一份数据复制(replicate)的份数)
+
+<li>
+<code>W</code>：写成功的最小分区数(更新一个数据对象时，需要确保更新成功的份数)
+
+<li>
+<code>R</code>：读数据的最小节点数(读取一个数据需要读取的副本(replicate)份数)
+
+</ul>
+ 
+<p>
+NRW的不同组合会产生不同的一致性效果：
+</p>
+<ol>
+<li>
+<code>&lt;N,W,R&gt;=&lt;1,1,1&gt;</code>：和单点运行的数据库是一样的
+
+<li>
+<code>&lt;N,W,R&gt;=&lt;2,1,1&gt;</code>：相当于Slave-Master模式，由于1+1不大于2，所以这种情况可能会读到非最新数据。
+
+</ol>
+
+<p>
+W越大，写的性能就越差。R越大，读的性能就越差。N越大，数据可靠性就越强。
+</p>
+
+<p>
+为了保障<code>一致性</code>，平衡读写性能，通常的配置是：<code>W=Q,R=Q,Q=N/2+1</code>。
+</p>
+
+<ol>
+<li>
+<code>&lt;N,W,R&gt;=&lt;3,2,2&gt;</code>：该配置就满足上面公式。
+
+</ol>
+
+
+<hr />
+<p>
+<code>日期</code>：2014-03-07
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.infoq.com/cn/articles/nosql-dynamo">解读NoSQL技术代表之作Dynamo</a>、<a href="http://zh.wikipedia.org/wiki/CAP%E5%AE%9A%E7%90%86">维基百科-CAP定理</a>、<a href="http://en.wikipedia.org/wiki/Distributed_hash_table">维基百科-分布式哈希表</a>、<a href="http://blog.csdn.net/yfkiss/article/details/6977509">Distributed hash table</a>、<a href="http://www.kongch.com/2011/08/dynamo-related/">Dynamo琐碎</a>、
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<html>
+<head>
+    <title>voldemort 0.90的新特性：Admin Tool</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">Admin Tool</a>
+<ul>
+<li><a href="#toc_0.1.1">支持的命令</a>
+<ul>
+<li><a href="#toc_0.1.1.1">元数据修改</a>
+<li><a href="#toc_0.1.1.2">添加/删除store</a>
+<li><a href="#toc_0.1.1.3">导出数据</a>
+<li><a href="#toc_0.1.1.4">只读操作</a>
+<li><a href="#toc_0.1.1.5">异步任务</a>
+<li><a href="#toc_0.1.1.6">其他</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<p>
+文章翻译自voldemort的wiki，原文连接连接见参考资料。
+</p>
+<h2 id="toc_0.1">Admin Tool</h2>
+<p>
+Voldemort的<code>admin tool</code>允许我们通过管理员命令执行像：分区迁移、元数据修改、添加新机器到集群中、添加新store。
+</p>
+
+<h3 id="toc_0.1.1">支持的命令</h3>
+<h4 id="toc_0.1.1.1">元数据修改</h4>
+<ol>
+<li>
+从所有节点<code>获取</code>全部元数据
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --get-metadata --url [url]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh --get-metadata --url tcp://172.30.204.218:6667 
+</pre>
+
+<li>
+从所有节点<code>获取</code>指定的元数据
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --get-metadata [cluster.xml, stores.xml, server.stat, node.id,rebalancing.steal.info.key] --url [url]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh --get-metadata cluster.xml  --url tcp://172.30.204.218:6667
+</pre>
+
+<li>
+从特定节点<code>获取</code>元数据并存储到指定目录
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --get-metadata [cluster.xml, stores.xml, server.state, node.id , rebalancing.steal.info.key] --url [url] --outdir [directory]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh --get-metadata cluster.xml --url tcp://172.30.204.218:6667 --outdir /temp 
+</pre>
+
+<li>
+给所有节点<code>设置</code>元数据
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --set-metadata [cluster.xml, server.state, stores.xml, rebalancing.steal.info.key] --set-metadata-value [metadata-value]  --url [url]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh --set-metadata cluster.xml 
+</pre>
+
+<li>
+给特定节点<code>设置</code>元数据
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --set-metadata [cluster.xml, server.state, stores.xml, reblancing.steal.info.key] --set-metadata-value [metadata-value]  --url [url]  --node [node-id]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh --set-metadta 
+</pre>
+
+<li>
+<code>检测</code>所有节点的元数据是否一致
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --check-metadata [cluster.xml, server.state, stores.xml] --url [url]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh --check-metadata cluster.xml --url tcp://172.30.204.218:6667 
+</pre>
+
+<li>
+<code>清除</code>所有节点上的再平衡的元数据[server.state,rebalancing.steal.info.key]
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --clear-rebalancing-metadata --url [url]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh --clear-rebalancing-metadata --url tcp://172.30.204.218:6667 
+</pre>
+
+<li>
+<code>清除</code>特定节点上的再平衡元数据[server.state, rebalncing.steal.info.key]
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --clear-rebalancing-metadata --url [url]  --node [node-id]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh --clear-rebalancing-metadata --url tcp://172.30.204.218:6667 --node 0 
+</pre>
+
+</ol>
+<h4 id="toc_0.1.1.2">添加/删除store</h4>
+<ol>
+<li>
+在所有节点上<code>增加</code>store
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --add-stores [xml file with store(s) to add] --url [url]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh  
+</pre>
+
+<li>
+在特定节点上<code>增加</code>store
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --add-stores [xml file with store(s) to add] --node [node-id]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh 
+</pre>
+
+<li>
+在所有节点上<code>删除</code>store
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --delete-store [store-name] --url [url]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh 
+</pre>
+
+<li>
+在特定节点上<code>删除</code>store
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --delete-store [store-name] --url [url] --node [node-id]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh 
+</pre>
+
+<li>
+在所有节点上<code>删除</code>store的内容 
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --truncate [store-name] --url [url]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh 
+</pre>
+
+<li>
+在特定节点上<code>删除</code>store的内容
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --truncate [store-name] --url [url] --node [node-id]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh 
+</pre>
+
+<li>
+在特定节点上<code>删除</code>特定分区的内容
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --delete-partitions [comma-separated list of partitions] --url [url] --node [node-id]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh 
+</pre>
+
+<li>
+在特定节点上<code>删除</code>特定store的特定分区的内容
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --delete-partitions [comma-separated list of partitions] --url [url] --node [node-id] --stores [comma-separated list of store names]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh 
+</pre>
+
+</ol>
+<h4 id="toc_0.1.1.3">导出数据</h4>
+<ol>
+<li>
+在特定节点的上获取某个分区集合[所有stores]的keys（二进制形式导出(binary dump)）
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --fetch-keys [comma-separated list of partitions with no space] --url [url] --node [node-id]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh 
+</pre>
+
+<li>
+在特定节点上获取某个区分集合[所有stores]的keys（ascii码形式）
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --fetch-keys [comma-separated list of partitions with no space] --url [url] --node [node-id] --ascii
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh 
+</pre>
+
+<li>
+在特定节点上获取某个分区集合[所有stores]的记录(entry)（二进制形式）
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --fetch-entries [comma-separated list of partitions with no space] --url [url] --node [node-id]
+
+# 示例
+$ ./bin/voldemort-admin-tool.sh 
+</pre>
+
+<li>
+在特定节点获取某个分区集合[所有stores]的记录（ascii码形式）
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --fetch-entries [comma-separated list of partitions with no space] --url [url] --node [node-id] --ascii
+</pre>
+
+<li>
+在特定节点获取某个分区集合[所有stores]的记录（ascii码形式）并导出到某个路径下
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --fetch-entries [comma-separated list of partitions with no space] --url [url] --node [node-id] --ascii --outdir [directory]
+</pre>
+
+<li>
+在特定节点获取某个分区集合的某些store的记录（ascii吗形式）
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --fetch-entries [comma-separated list of partitions with no space] --url [url] --node [node-id] --ascii --stores [comma-separated list of store names]
+</pre>
+
+<li>
+从特定节点获取所有key
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --fetch-keys --url [url] --node [node-id]
+</pre>
+
+<li>
+从特定节点获取所有记录
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --fetch-entries --url [url] --node [node-id]
+</pre>
+
+<li>
+在特定节点更新某个集合的store上的记录，使用导出的二级制记录文件
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --update-entries [folder path from output of --fetch-entries --outdir] --url [url] --node [node-id]
+</pre>
+
+</ol>
+<h4 id="toc_0.1.1.4">只读操作</h4>
+<ol>
+<li>
+从特定节点的所有store获取只读的元数据信息
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --ro-metadata [current|max|storage-format] --url [url] --node [node-id]
+</pre>
+
+<li>
+从全部节点的一组store上获取只读的元数据信息
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --ro-metadata [current|max|storage-format] --url [url] --store [comma-separated list of store names]
+</pre>
+
+</ol>
+<h4 id="toc_0.1.1.5">异步任务</h4>
+<ol>
+<li>
+获取所有节点的异步任务列表
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --async get --url [url]
+</pre>
+
+<li>
+获取特定节点的异步任务列表
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --async get --url [url] --node [node-id]
+</pre>
+
+<li>
+停止特定节点的异步任务列表
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --async stop --async-id [comma-separated list of async job id] --url [url] --node [node-id]
+</pre>
+
+</ol>
+<h4 id="toc_0.1.1.6">其他</h4>
+<ol>
+<li>
+从其他备份中恢复特定节点
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --restore --url [url] --node [node-id]
+</pre>
+
+<li>
+从其他备份中恢复特定节点（使用n个并发）
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --restore 10 --url [url] --node [node-id]
+</pre>
+
+<li>
+基于节点生成key的分布[both store wise and overall]
+<pre class="brush:shell">
+$ ./bin/voldemort-admin-tool.sh --key-distribution --url [url]
+</pre>
+
+</ol>
+<hr />
+<p>
+<code>日期</code>：2014-04-17
+</p>
+
+<p>
+<code>参考资料</code>：<a href="https://github.com/voldemort/voldemort/wiki/Voldemort-Admin-tool">Voldemort Admin Tool</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

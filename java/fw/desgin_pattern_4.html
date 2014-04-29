@@ -1,0 +1,350 @@
+<html>
+<head>
+    <title>Pipeline管道模型</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">Pipeline</a>
+<li><a href="#toc_0.3">chain of responsibility</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+由于最近在看Voldemort的wiki和源码，其中涉及到了Pipeline，该模式使用广泛，在众多软件如：Tomcat、Netty、Voldemort等组件中有使用，十分有必要了解一下。
+</p>
+
+<h2 id="toc_0.2">Pipeline</h2>
+<p>
+<code>pipeline</code>：它是由多个成员组成的一个链式结构，其中每个成员的输出是其下一个成员的输入。
+</p>
+
+<p>
+模式中的角色：
+</p>
+<ol>
+<li>
+<code>Command</code>：需要被处理的命令
+
+<li>
+<code>PipelineManager</code>：模式的核心类。定义了如下属性和方法：
+
+<ul>
+<li>
+<code>handlers</code>：有顺序的handler列表
+
+<li>
+<code>doPipeline(Command object)</code>：
+
+</ul>
+<li>
+<code>Handler</code>：一个定义了process(Command object)方法的接口
+
+</ol>
+ 
+<p>
+我们以voldemort的 <strong>Pipeline</strong> 部分的源码为例，它为了解决客户端逻辑过于复杂的问题，使用了pipeline模式，将一个操作（get、getVersion、put等）分解成不同部分进行处理，分解后操作的更易理解和重用。
+</p>
+
+<p>
+源码涉及到的主要角色有：
+</p>
+<ol>
+<li>
+<code>Event</code>：列出了可能会发生事件的枚举
+
+<li>
+<code>Pipeline</code>：该模式的核心类，定义了如下关键属性与方法：
+
+<ul>
+<li>
+<code>eventQueue</code>：待处理Event的有序队列queue
+
+<li>
+<code>eventAction</code>：存放Event和Action的对应关系的map
+
+<li>
+<code>execute()</code>：按顺序处理收到的Event
+
+</ul>
+<li>
+<code>PipelineData</code> ：记录pipiline执行过程中的各种状态的pojo  
+
+<li>
+<code>Action</code>：一个定义了 <strong>excute(Pipeline pipeline)</strong> 方法的接口
+
+</ol>
+ 
+<p>
+类图：
+<img src="images/pipeline.jpg" />
+</p>
+ 
+<p>
+源码片段：
+</p>
+<pre class="brush:java">
+// PipelineRoutedStore.java
+    public List&lt;Versioned&lt;byte[]&gt;&gt; get(final ByteArray key,
+                                       final byte[] transforms,
+                                       final long getOpTimeout) {
+
+
+        final Pipeline pipeline = new Pipeline(Operation.GET, getOpTimeout, TimeUnit.MILLISECONDS);
+
+        AbstractConfigureNodes&lt;ByteArray, List&lt;Versioned&lt;byte[]&gt;&gt;, BasicPipelineData&lt;List&lt;Versioned&lt;byte[]&gt;&gt;&gt;&gt; configureNodes = makeNodeConfigurationForGet(pipelineData,
+                                                                                                                                                            key);
+        pipeline.addEventAction(Event.STARTED, configureNodes);
+
+        pipeline.addEventAction(Event.CONFIGURED,
+                                new PerformParallelRequests&lt;List&lt;Versioned&lt;byte[]&gt;&gt;, BasicPipelineData&lt;List&lt;Versioned&lt;byte[]&gt;&gt;&gt;&gt;(pipelineData,
+                                                                                                                                 allowReadRepair ? Event.RESPONSES_RECEIVED
+                                                                                                                                                : Event.COMPLETED,
+                                                                                                                                 key,
+                                                                                                                                 transforms,
+                                                                                                                                 failureDetector,
+                                                                                                                                 storeDef.getPreferredReads(),
+                                                                                                                                 storeDef.getRequiredReads(),
+                                                                                                                                 getOpTimeout,
+                                                                                                                                 nonblockingStores,
+                                                                                                                                 Event.INSUFFICIENT_SUCCESSES,
+                                                                                                                                 Event.INSUFFICIENT_ZONES));
+        pipeline.addEventAction(Event.INSUFFICIENT_SUCCESSES,
+                                new PerformSerialRequests&lt;List&lt;Versioned&lt;byte[]&gt;&gt;, BasicPipelineData&lt;List&lt;Versioned&lt;byte[]&gt;&gt;&gt;&gt;(pipelineData,
+                                                                                                                               allowReadRepair ? Event.RESPONSES_RECEIVED
+                                                                                                                                              : Event.COMPLETED,
+                                                                                                                               key,
+                                                                                                                               failureDetector,
+                                                                                                                               innerStores,
+                                                                                                                               storeDef.getPreferredReads(),
+                                                                                                                               storeDef.getRequiredReads(),
+                                                                                                                               blockingStoreRequest,
+                                                                                                                               null));
+
+
+
+        pipeline.addEvent(Event.STARTED);
+
+
+        try {
+            pipeline.execute();
+        } catch(VoldemortException e) {
+            stats.reportException(e);
+            throw e;
+        }
+
+        if(pipelineData.getFatalError() != null)
+            throw pipelineData.getFatalError();
+
+        List&lt;Versioned&lt;byte[]&gt;&gt; results = new ArrayList&lt;Versioned&lt;byte[]&gt;&gt;();
+
+        for(Response&lt;ByteArray, List&lt;Versioned&lt;byte[]&gt;&gt;&gt; response: pipelineData.getResponses()) {
+            List&lt;Versioned&lt;byte[]&gt;&gt; value = response.getValue();
+
+            if(value != null)
+                results.addAll(value);
+        }
+
+
+        return results;
+    }
+	
+	
+// Pipeline.java
+
+    public enum Event {
+
+        STARTED,
+        CONFIGURED,
+        COMPLETED,
+        INSUFFICIENT_SUCCESSES,
+        INSUFFICIENT_ZONES,
+        RESPONSES_RECEIVED,
+        ERROR,
+        MASTER_DETERMINED,
+        ABORTED,
+        HANDOFF_FINISHED;
+
+    }
+
+    private final BlockingQueue&lt;Event&gt; eventQueue;
+
+    private final Map&lt;Event, Action&gt; eventActions;
+	
+    public void addEventAction(Event event, Action action) {
+        eventActions.put(event, action);
+    }
+    public void addEvent(Event event) {
+        if(event == null)
+            throw new IllegalStateException("event must be non-null");
+
+        if(logger.isTraceEnabled())
+            logger.trace("Adding event " + event);
+
+        eventQueue.add(event);
+    }
+	
+	public void execute() {
+        try {
+            while(true) {
+                Event event = null;
+
+                try {
+                    event = eventQueue.poll(timeout, unit);
+                } catch(InterruptedException e) {
+                    throw new InsufficientOperationalNodesException(operation.getSimpleName()
+                                                                    + " operation interrupted!", e);
+                }
+
+                if(event.equals(Event.ERROR)) {
+                    if(logger.isTraceEnabled())
+                        logger.trace(operation.getSimpleName()
+                                     + " request, events complete due to error");
+
+                    break;
+                } else if(event.equals(Event.COMPLETED)) {
+                    if(logger.isTraceEnabled())
+                        logger.trace(operation.getSimpleName() + " request, events complete");
+
+                    break;
+                }
+
+                Action action = eventActions.get(event);
+
+
+                action.execute(this);
+            }
+        } finally {
+            finished = true;
+        }
+    }
+// GetAllConfigureNodes.java
+
+    public void execute(Pipeline pipeline) {
+        Map&lt;Node, List&lt;ByteArray&gt;&gt; nodeToKeysMap = Maps.newHashMap();
+        Map&lt;ByteArray, List&lt;Node&gt;&gt; keyToExtraNodesMap = Maps.newHashMap();
+
+        for(ByteArray key: keys) {
+            List&lt;Node&gt; nodes = null;
+            List&lt;Node&gt; originalNodes = null;
+
+            try {
+                originalNodes = getNodes(key);
+            } catch(VoldemortException e) {
+                pipelineData.setFatalError(e);
+                pipeline.addEvent(Event.ERROR);
+                return;
+            }
+        }
+
+        pipelineData.setKeyToExtraNodesMap(keyToExtraNodesMap);
+        pipelineData.setNodeToKeysMap(nodeToKeysMap);
+        pipelineData.setTransforms(transforms);
+
+        pipeline.addEvent(completeEvent);
+    }
+
+</pre>
+ 
+<p>
+voldemort客户端的每次操作（get、put、delete等）都是一次Pipeline的执行过程，我们以get操作为例， 客户端通过StoreClient接口执行一个get操作---》实际是通过PipelineRoutedStore对象执行的get---》PipelineRoutedStore的get方法内部构建一个Pipeline对象---》执行该Pipeline的excute方法---》返回结果。 
+</p>
+
+<p>
+从源码中可以看出Pipeline的构成过程，主要可以分为两步；1）定义各种Event对应的Action，并将其存入eventActions中。2）向eventQueue存入一个Event.STARTED，并执行Pipeline的excute。
+</p>
+
+<p>
+和常见的Pipeline模式不同的是，voldemort中Pipeline的处理流程不是直接定义好的，而是由Action控制的，每个Action根据其执行结果动态控制。
+</p>
+
+<h2 id="toc_0.3">chain of responsibility</h2>
+<p>
+the idea of <code>the Chain of responsibility</code> is that it aviods coupling the sender of the request to the receiver,giving more than one object the opportunity to handle the request.（责任链模式的目的在于，避免请求发送方和接收方的耦合，使得至少一个对象有机会处理请求。）
+</p>
+
+<p>
+责任链模式特点：
+</p>
+<ol>
+<li>
+请求发送方不知道是链中哪个对象会处理请求
+
+<li>
+链中的每个节点都有权决定是否处理当前请求
+
+<li>
+如果节点决定推进请求，它应该有能力选择下一个节点然后推进它。
+
+<li>
+可能会出现没有任何节点处理该请求
+
+</ol>
+
+<p>
+该模式中涉及到角色：
+</p>
+<ol>
+<li>
+<code>Command</code>：要处理的对象
+
+<li>
+<code>Handler</code>：
+
+</ol>
+
+<hr />
+<p>
+<code>日期</code>：2014-04-21
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://en.wikipedia.org/wiki/Pipeline_(software)">wikipedia-Pipeline (software)</a>、<a href="http://doanduyhai.wordpress.com/2012/07/08/design-pattern-the-pipeline/">Design Pattern: the Pipeline</a>、<a href="http://java.dzone.com/articles/design-patterns-uncovered-chain-of-responsibility">The Chain Of Responsibility Pattern</a>、<a href="http://javapapers.com/design-patterns/chain-of-responsibility-design-pattern/">http://javapapers.com/design-patterns/chain-of-responsibility-design-pattern/</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

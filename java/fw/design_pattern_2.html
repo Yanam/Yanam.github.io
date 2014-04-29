@@ -1,0 +1,219 @@
+<html>
+<head>
+    <title>设计模式--代理模式(proxy)、委托模式(delegate)</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">委托模式</a>
+<ul>
+<li><a href="#toc_0.2.1">示例</a>
+</ul>
+<li><a href="#toc_0.3">代理模式</a>
+<ul>
+<li><a href="#toc_0.3.1">定义</a>
+<li><a href="#toc_0.3.2">静态代理-示例</a>
+<li><a href="#toc_0.3.3">动态代理-示例</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+在介绍代理模式之前，先说一下两个词：<code>代理(proxy)</code>、<code>委托(delegate)</code>，这两个词非常容易让人搞错，其中代理是名称，它说明了若干个对象实现了一个共同的接口；委托是动词，它说明了一个对象引用了另一个对象，并不涉及到接口。
+</p>
+<h2 id="toc_0.2">委托模式</h2>
+<p>
+<code>委托模式</code>：有两个对象参与处理同一个请求，接受请求的对象将请求委托给另一个对象来处理，它使得我们可以用 <strong>聚合</strong> 来代替继承。
+</p>
+
+<p>
+委托是一种对类的功能进行扩展和复用所采取的方式，使用范围比继承更加普遍。
+</p>
+
+<h3 id="toc_0.2.1">示例</h3>
+<pre class="brush:java">
+ class RealPrinter { // the "delegate"
+     void print() { 
+       System.out.print("something"); 
+     }
+ }
+ 
+ class Printer { // the "delegator"
+     RealPrinter p = new RealPrinter(); // create the delegate 
+     void print() { 
+       p.print(); // delegation
+     } 
+ }
+ 
+ public class Main {
+     // to the outside world it looks like Printer actually prints.
+     public static void main(String[] args) {
+         Printer printer = new Printer();
+         printer.print();
+     }
+ }
+</pre>
+<h2 id="toc_0.3">代理模式</h2>
+<h3 id="toc_0.3.1">定义</h3>
+<p>
+<code>代理模式</code>：对其他对象提供一种代理以控制对这个对象的访问。
+<img src="images/proxy-pattern.jpg" />
+</p>
+
+<p>
+它的作用是：在某些情况下，一个对象不想或者不能直接引用另一个对象，而且代理对象可以在调用者和目标对象直接起到中介的作用。
+</p>
+
+<p>
+代理模式又可以分为：
+</p>
+<ol>
+<li>
+静态代理：由人或者工具生成源代码，在运行前就已经存在.class文件。
+
+<li>
+动态代理：程序运行过程中，通过反射机制创建而成。
+
+</ol>
+ 
+<p>
+代理模式涉及到的三个角色：
+</p>
+<ol>
+<li>
+抽象接口：
+
+<li>
+委托类：
+
+<li>
+代理类：
+
+</ol>
+<h3 id="toc_0.3.2">静态代理-示例</h3>
+<p>
+代理模式最常见的应用就是aop拦截器
+</p>
+<pre class="brush:java">
+public class StaticProxyPattern {
+	public static void main(String[] args) {
+		IService print = new PrintService();
+		IService proxy = new ProxyService(print);
+		proxy.execute();
+	}
+}
+//抽象接口
+interface IService{
+	void execute();
+}
+//委托类
+class PrintService implements IService{
+	@Override
+	public void execute() {
+		System.out.println("进行打印");
+	}
+}
+//代理类
+class ProxyService implements IService{
+	private IService service;
+	public ProxyService(IService service){
+		this.service = service;
+	}
+	@Override
+	public void execute() {
+		doBefore();
+		service.execute();
+		doAfter();
+	}
+	private void doBefore(){
+		System.out.println("before");
+	}
+	private void doAfter(){
+		System.out.println("after");
+	}
+}
+</pre>
+<h3 id="toc_0.3.3">动态代理-示例</h3>
+<pre class="brush:java">
+public class DynamicProxyPattern {
+	public static void main(String[] args) {
+		IService print = new PrintService();
+		IService proxy = Proxyfactory.getService(print);
+		proxy.execute();
+	}
+}
+
+class Proxyfactory{
+	public static IService getService(final IService service){
+		InvocationHandler  inovcationHandler = new InvocationHandler(){
+			@Override
+			public Object invoke(Object proxy, Method method, Object[] args)
+					throws Throwable {
+				doBefore();
+				Object result = method.invoke(service, args);
+				doAfter();
+				return result;
+			}
+			
+		};
+		return (IService) Proxy.newProxyInstance(IService.class.getClassLoader(),new Class[]{IService.class}, inovcationHandler);
+	}
+	public static void doBefore(){};
+	public static void doAfter(){};
+}
+</pre>
+
+<hr />
+<p>
+<code>日期</code>：2014-03-28
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://zh.wikipedia.org/wiki/%E5%A7%94%E6%89%98%E6%A8%A1%E5%BC%8F">委托模式</a>、<a href="http://www.cnblogs.com/wangrui-techbolg/p/3487630.html">iOS中 Proxy和的delegate区别</a>、<a href="http://hi.baidu.com/thinkinginlamp/item/8b54ea0b54eaea10addc70e8">代理（Proxy）和委派（Delegate）的区别</a>、<a href="http://blog.csdn.net/ygdljg19820801/article/details/2132842">模式：委托模式</a>、<a href="http://my.oschina.net/D04540214/blog/97953">代理模式</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

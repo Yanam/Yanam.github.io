@@ -1,0 +1,233 @@
+<html>
+<head>
+    <title>CLOSE_WAIT状态的连接不断增加问题的总结</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">使用netty产生大量CLOSE_WAIT</a>
+<ul>
+<li><a href="#toc_0.2.1">系统概况</a>
+<li><a href="#toc_0.2.2">问题描述</a>
+<li><a href="#toc_0.2.3">原因分析</a>
+<li><a href="#toc_0.2.4">解决办法</a>
+</ul>
+<li><a href="#toc_0.3">使用HttpClient3.1产生大量CLOSE_WAIT</a>
+<ul>
+<li><a href="#toc_0.3.1">系统概况</a>
+<li><a href="#toc_0.3.2">问题描述</a>
+<li><a href="#toc_0.3.3">原因分析</a>
+<li><a href="#toc_0.3.4">解决方法</a>
+<li><a href="#toc_0.3.5">总结</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+Java开发过程中时不时会遇到网络的问题，尤其是近期遇到多次CLOSE_WAIT不断增加导致系统连接数跑满而导致web系统无法提供服务的问题，这里对近期遇到的问题进行一些总结。
+</p>
+
+<h2 id="toc_0.2">使用netty产生大量CLOSE_WAIT</h2>
+<h3 id="toc_0.2.1">系统概况</h3>
+<p>
+这是同事遇到的问题，由于解决过程我也参与了，所以就记录一下，给自己提个醒。
+</p>
+
+<p>
+出现问题的系是一个以netty为网络框架对外提供接口服务，内部涉及到了数据库，redis等外部依赖，已经一些列业务代码。
+</p>
+<h3 id="toc_0.2.2">问题描述</h3>
+<p>
+系统放到测试服务器给业务部门使用时，发现大概不到长则一天短则个把消失系统就出现无法访问的问题，重启后恢复。查询服务器网络状态，发现有大量<code>CLOSE_WAIT</code>状态的tcp连接产生，并且一直增长。
+</p>
+<h3 id="toc_0.2.3">原因分析</h3>
+<p>
+由于是服务端CLOSE_WAIT，所以怀疑是由于服务端处理完请求后未断开连接，检查开代码发现，程序对包含keepalive头的请求做了特殊处理，保持连接不关闭，对于普通请求注册了关闭事件。
+</p>
+
+<p>
+为了排除是keepalive导致的问题，将所有请求都作为普通请求处理，使用完毕后关闭连接，上线运行一段时间同样的问题又产生了。
+</p>
+
+<p>
+怀疑是客户端异常关闭而服务端未关闭导致，因此给服务端添加了心跳检查，10秒查看一次在线客户端channel是否空闲，空闲则关闭，但是问题依然没有解决。
+</p>
+
+<p>
+最后跟踪系统代码发现接口数据库连接未关闭。
+</p>
+<h3 id="toc_0.2.4">解决办法</h3>
+<p>
+修改程序，及时关闭数据库连接。
+</p>
+
+<p>
+事后看来问题的原因很简单，但是我们的第一反应基本上都是去其他人身上找问题，比如自己系统依赖的其他系统，服务器参数之类的原因，其实大多数情况都是自身带代码出了问题。
+</p>
+<h2 id="toc_0.3">使用HttpClient3.1产生大量CLOSE_WAIT</h2>
+<h3 id="toc_0.3.1">系统概况</h3>
+<p>
+出现问题的系统是一个简单的proxy服务，将前台请求的内容进行解析包装后发送给后端服务接口，然后将接口返回结果。依赖的外部资源只有后台的接口系统，应该说从结构到逻辑都是很简单的。
+</p>
+<h3 id="toc_0.3.2">问题描述</h3>
+<p>
+4月11日，机房发生短暂断网情况，之后业务部门反映网站用户无法登陆，这时其他同事先登上服务器重启Tomcat恢复服务，第二天12日下午，业务部门又反映说网站用户无法登陆，临时解决方法还是重启tomcat。
+</p>
+<h3 id="toc_0.3.3">原因分析</h3>
+<p>
+在第一次系统拒绝服务发送时，在重启tomcat的代码中发现触发了Tomcat 7的内存泄露检查，然后有如下log产生：
+</p>
+<pre>
+     1） “SEVERE: The web application [/webs] is still processing a request that has yet to finish. This is very likely to create a memory leak. You can control the ti
+me allowed for requests to finish by using the unloadDelay attribute of the standard Context implementation.
+”  该条日志攻打印200次
+     
+
+     3）“SEVERE: The web application [/webs] created a ThreadLocal with key of type [org.springframework.core.NamedThreadLocal] (value [Locale context]) and a value o
+f type [org.springframework.context.i18n.SimpleLocaleContext] (value [en_US]) but failed to remove it when the web application was stopped. Threads are going
+ to be renewed over time to try and avoid a probable memory leak.” 该条日志攻打印200次
+
+</pre>
+<p>
+其中webs为该服务的根目录，看到有200个线程无法关闭，首先查了一下Tomcat的配置文件，发现这个配置<code>maxThread＝200</code>，也就是说Tomcat的线程池最大连接数默认为200。
+在结合运维同事反馈的机房曾出现短暂断网情况，怀疑问题产生的原因是因为网络中断导致程序请求后台接口发送了阻塞，200个线程全部占满导致Tomcat无法为新请求提供服务。
+</p>
+
+<p>
+检查代码怀疑HttpClient是未设置超时时间导致，这时以为原因找到，发送完问题报告邮件后安心睡觉了。
+</p>
+
+
+<p>
+第二天下午，系统再次出现无法提供服务问题，当登陆到服务器后发现Tomcat已经重启，和运维同事沟通后发现这次问题出现时机房未出现断网情况（昨天的找到的原因看来不靠谱啊），这时分析Tomcat和系统日志，未发现异常情况。检查服务器网络状态发现<code>CLOSE_WAIT</code>的数量很大，重启没多长时间已经超过500了,持续观察发现数量一致在增长，到晚上已经达到3000多，查看socket情况发现都是webs和接口服务之间连接产生的CLOSE_WAIT，怀疑问题由于服务器CLOSE_WAIT一直增长，达到了Linux的单个进程能够打开的最大文件描述符数量导致的。
+</p>
+
+<p>
+鉴于webs是作为客户端，接口服务作为服务端，而客户端产生<code>CLOSE_WAIT</code>是由于服务端主动断开连接，如果客户端不主动发送FIN包,那么客户端就一直会处在CLOSE_WAIT状态，直至达到系统设定的超时时间后连接关闭。
+</p>
+
+<p>
+webs作为客户端使用的HttpClient 3.1发送的请求，检查代码发现PostMethod都进行了releaseConnection()操作。
+其代码如下：
+</p>
+<pre class="brush:java">
+	public static String sendRequest(NameValuePair[] parametersBody,String path) throws Exception{
+		HttpClient client = new HttpClient();
+		PostMethod method = new PostMethod(path);
+		method.setRequestBody(parametersBody);
+		String responseContent = "";
+		try {
+			client.executeMethod(method);
+			
+			Header h = method.getResponseHeader("Location");
+			if(h != null &amp;&amp; !h.equals("")){
+				method.releaseConnection();
+				String r = h.getValue();
+				PostMethod method2 = new PostMethod(r);
+				try {
+					method2.setRequestHeader("Content-Type", "text/html;charset=UTF-8"); 
+					client.executeMethod(method2);
+					responseContent = method2.getResponseBodyAsString();
+					method2.releaseConnection();
+				} catch (Exception e) {
+					throw(e);
+				}finally{
+					method2.releaseConnection();
+				}
+
+			}else{
+				responseContent = method.getResponseBodyAsString();
+				method.releaseConnection();
+			}
+		} catch (Exception e) {
+			throw(e);
+		}finally{
+			method.releaseConnection();
+		}
+
+		return responseContent;
+	}
+
+</pre>
+
+<h3 id="toc_0.3.4">解决方法</h3>
+<p>
+这时在网上看到一篇文章（参考文档里有提到），说默认情况下，releaseConnection()方法并不会关闭连接的Socket，目的是重用这个连接，看来问题的原因找到了。立刻更新程序去测试服务器验证了一下，发现修改后的确不会出现CLOSE_WAIT了，问题解决。
+</p>
+
+<p>
+更新的代码：
+</p>
+
+<pre class="brush:java">
+		//这里其实是把alwaysClose属性设为了true
+		HttpClient client = new HttpClient(new SimpleHttpConnectionManager(true));
+		PostMethod method = new PostMethod(path);
+		//设置超时30000毫秒，为了保险还是加上吧
+		client.getHttpConnectionManager().getParams().setConnectionTimeout(30000);
+		client.getHttpConnectionManager().getParams().setSoTimeout(30000);
+
+</pre>
+<h3 id="toc_0.3.5">总结</h3>
+<p>
+对于使用别人代码尤其是内部非开源的，一定要慎重，另外就是涉及到外部服务的访问一定要确认是否使用完毕后得到了正确释放。
+</p>
+
+<p>
+这次的问题还有一个诡异的现象，webs部署在两台服务器上（运维人员说服务器配置都一样），其中一台出现了上面CLOSE_WAIT的问题并且一直持续出现，另一台服务器出现短暂CLOSE_WAIT后恢复正常并且一直未出现问题。不过真正的问题原因不一定确定，但上面的代码还是有隐患，应该做修改。
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2014-04-12、2014-04-15
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://guoyong.me/dev/%E5%86%8D%E8%B0%88%E4%BD%BF%E7%94%A8commons-httpclient%E4%BA%A7%E7%94%9F%E5%A4%A7%E9%87%8Fclose_wait/">再谈使用Commons HttpClient产生大量CLOSE_WAIT</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

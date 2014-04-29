@@ -1,0 +1,184 @@
+<html>
+<head>
+    <title>Linux笔记10--touch、stat、grep</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">inode</a>
+<li><a href="#toc_0.2">stat命令</a>
+<ul>
+<li><a href="#toc_0.2.1">示例</a>
+</ul>
+<li><a href="#toc_0.3">grep</a>
+<ul>
+<li><a href="#toc_0.3.1">示例</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">inode</h2>
+
+<h2 id="toc_0.2">stat命令</h2>
+<p>
+<code>stat</code>：显示 <strong>inode</strong> 内容。
+可选参数：
+</p>
+<ol>
+<li>
+<code>-L</code>：如果是链接文件，则获取源文件信息
+
+<li>
+<code>-f</code>：显示文件所在文件系统的状态
+
+</ol>
+<h3 id="toc_0.2.1">示例</h3>
+<pre class="brush:shell">
+# 查看/etc/sysctl.conf 的文件状态
+$ stat /etc/sysctl.conf
+  File: `/etc/sysctl.conf'
+  Size: 800             Blocks: 8          IO Block: 4096   regular file
+Device: 802h/2050d      Inode: 1710092     Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2014-04-12 16:30:16.546125077 +0800
+Modify: 2014-04-12 16:30:14.508163191 +0800
+Change: 2014-04-12 16:30:14.516152458 +0800
+
+# 查看/etc/sysctl.conf 的文件系统状态
+$ stat -f /etc/sysctl.conf
+  File: "/etc/sysctl.conf"
+    ID: 9244736784c29db5 Namelen: 255     Type: ext2/ext3
+Block size: 4096       Fundamental block size: 4096
+Blocks: Total: 15481855   Free: 14330331   Available: 13543899
+Inodes: Total: 3932160    Free: 3765319
+
+</pre>
+
+<h2 id="toc_0.3">grep</h2>
+<p>
+<code>grep</code>：是Linux下的一种强大的文本搜索工具，它能使用正则表达式进行文本搜索，并把匹配的结果打印出来。
+</p>
+
+<p>
+命令格式：
+</p>
+<pre>
+$ grep [options] pattern [file...]
+</pre>
+
+<p>
+主要参数：
+</p>
+<ol>
+<li>
+<code>-c</code>：只输出匹配的行数
+
+<li>
+<code>-v</code>：显示不匹配的所有行
+
+<li>
+<code>-I</code>：不区分大小写（只试用于单字符）
+
+<li>
+<code>-n</code>：显示匹配行及其行号
+
+<li>
+<code>-l</code>：查询多个文件时，只输出匹配字符串的文件名
+
+<li>
+<code>-s</code>：不显示不存在或无匹配文本的错误信息
+
+</ol>
+ 
+<p>
+正在表达式主要参数（就是一般正则表达式的规则）：
+</p>
+<ol>
+<li>
+<code>^</code>：匹配以表达式开始的行
+
+<li>
+<code>$</code>：匹配正以表达式结束的行
+
+<li>
+<code>[ ]</code>：匹配一个指定范围内的字符，如：'[Tt]est'会匹配Test和test
+
+<li>
+<code>[^ ]</code>：匹配一个不再范围内的字符，如：'[^T]est' 不会匹配Test
+
+<li>
+<code>\&lt;</code>：锚定单词的开始，如：'\&lt;est' 会匹配包含以est开头的单词的行
+
+<li>
+<code>\&gt;</code>：锚定单词的结束，如：'est\&gt;' 会匹配保皇呢以est结尾的单词的行
+
+</ol>
+ 
+<h3 id="toc_0.3.1">示例</h3>
+<pre class="brush:shell">
+# 显示所有以d开头的文件中 包含test的行
+$ grep 'test' d*
+
+# 显示a.log b.log c.log 中含有test的行
+$ grep 'test' a.log b.log c.log
+
+# 显示 匹配 '127.0.0.1'或'localhost' 的行
+$ grep '127.0.0.1'|'localhost' test.log
+
+# 显示以 a开头的行
+$ grep '^a' tes.log
+
+</pre>
+<hr />
+<p>
+<code>日期</code>：2014-04-12
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://hi.baidu.com/luolired/item/40be05c57809031fb77a24f4">Linux stat命令使用详解</a>、<a href="http://www.linuxso.com/command/stat.html">linux stat命令参数及用法详解</a>、<a href="http://www.cnblogs.com/skynet/archive/2010/12/25/1916873.html">linux中强大且常用命令：find、grep</a>、<a href="http://www.cnblogs.com/end/archive/2012/02/21/2360965.html">linux grep命令</a>、<a href="http://www.cnblogs.com/itech/archive/2012/05/15/2502284.html">Linux的inode的理解</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

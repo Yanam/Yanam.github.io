@@ -1,0 +1,98 @@
+<html>
+<head>
+    <title>Voldemort使用Berkeley DB的调优技巧</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+
+<p>
+文章翻译自voldemort的wiki，原文连接连接见参考资料。
+</p>
+
+<p>
+Voldemort默认使用Berkeley DB Java Engine作为后端存储引擎，而BDB的java版本只支持B tree结构。
+</p>
+<ol>
+<li>
+推荐配置：
+  可以在<code>config/prod_single_node_cluster/config/server.properties</code>找到
+
+<li>
+如果你的JVM有很大内存，建议把60%分配给BDB的cache。
+  修改配置文件<code>server.properties</code>的 <strong>bdb.cache.size</strong> 参数，它使得BDB可以在内存中保留更多索引，会大大提升操作性能。
+  线上服务配置可以参考：<code>bin/voldemort-pord-server.sh</code>
+
+<li>
+关注底层的BDB-JE传感器内容。
+  可以通过JMX查看下面这些mbean：
+
+<ul>
+<li>
+voldemort.stroe.bdb.stats:type=&lt;store-name&gt;
+
+<li>
+voldemort.stroe.bdb.stats:type=aggregated-bdb  
+  可以运行<code>getEnvStatsAsString()</code> 来查看bdb的运行情况，结果具体解释可以参考 <code>com.sleepycat.je.EnvironmentStats</code>的javadoc。
+  如果现在系统读请求很高，就可以重点关注一下<code>nCacheMiss</code>的数值，它反映了数据访问时未内存命中而直接访问硬盘的情况。
+  如果现在系统硬盘空间一直在增长，可以关注一下<code>cleanerbacklog</code>的利用率。如果一个cleaner不够，可以多增加几个。
+
+</ul>
+<li>
+经常去Oracle Berkeley DB Java Edition 论坛<a href="https://community.oracle.com/community/developer/english/berkeley_db_family/berkeley_db_java_edition/content?start=150">link</a>
+
+<li>
+估算需要的BDB cache大小。
+  可以通过berkeley DB jar文件中包含的工具<a href="http://docs.oracle.com/cd/E17277_02/html/java/com/sleepycat/je/util/DbCacheSize.html">DbCacheSize</a>。来估算需要的内存大小。
+
+</ol>
+ 
+<hr />
+<p>
+<code>日期</code>：2014-04-17
+</p>
+
+<p>
+<code>参考资料</code>：<a href="https://github.com/voldemort/voldemort/wiki/Berkeley-DB-Java-Engine-Tuning-Tips">https://github.com/voldemort/voldemort/wiki/Berkeley-DB-Java-Engine-Tuning-Tips</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

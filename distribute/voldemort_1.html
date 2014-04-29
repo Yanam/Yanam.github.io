@@ -1,0 +1,415 @@
+<html>
+<head>
+    <title>voldemort源码分析1---client</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">源码分析</a>
+<ul>
+<li><a href="#toc_0.2.1">建立SocketStoreClientFactory</a>
+<li><a href="#toc_0.2.2">取得相应的StoreClient</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+先看一下官方的客户端示例
+</p>
+<pre class="brush:java">
+public class ClientExample {
+
+    public static void main(String[] args) {
+
+        // In real life this stuff would get wired in
+        String bootstrapUrl = "tcp://localhost:6666";
+        StoreClientFactory factory = new SocketStoreClientFactory(new ClientConfig().setBootstrapUrls(bootstrapUrl));
+
+        StoreClient&lt;String, String&gt; client = factory.getStoreClient("my_store_name");
+
+        // get the value
+        Versioned&lt;String&gt; version = client.get("some_key");
+
+        // modify the value
+        version.setObject("new_value");
+
+        // update the value
+        client.put("some_key", version);
+    }
+
+}
+
+</pre>
+
+<p>
+这是源码example包中唯一的一个例子，可以看到如果我们作为普通调用者来使用voldemort是非常简单的，基本操作接口跟memchached类似。但如果想以voldemort为基础进行扩展或者定制化开发的开发人员来说，熟悉它的源码才能更好地使用它。
+</p>
+
+<h2 id="toc_0.2">源码分析</h2>
+<p>
+从上面的代码可以看到，客户端使用voldemort大概分为这几个步骤：
+</p>
+<ol>
+<li>
+创建StoreClientFactory
+
+<li>
+从storeClientFactory中得到想要操作store的StoreClient
+
+<li>
+使用StoreClient进行存取操作
+
+</ol>
+<p>
+下面我们一步一步来分析，它是怎么实现的。
+</p>
+<h3 id="toc_0.2.1">建立SocketStoreClientFactory</h3>
+<p>
+时序图：
+<img src="images/socketStoreClientFactory.jpg" />
+</p>
+
+<p>
+涉及到的代码：
+</p>
+<pre class="brush:java">
+// client example
+StoreClientFactory factory = new SocketStoreClientFactory(new ClientConfig().setBootstrapUrls(bootstrapUrl));
+
+
+// ClientQuestExecutorPool.java
+public SocketStoreClientFactory(ClientConfig config) {
+     super(config);
+     this.requestRoutingType = RequestRoutingType.getRequestRoutingType(RoutingTier.SERVER.equals(config.getRoutingTier()), false);
+
+     this.storeFactory = new ClientRequestExecutorPool(config.getSelectors(), config.getMaxConnectionsPerNode(), config.getConnectionTimeout(TimeUnit.MILLISECONDS), config.getSocketTimeout(TimeUnit.MILLISECONDS), config.getSocketBufferSize(), config.getSocketKeepAlive(), config.isJmxEnabled(), jmxId);
+}  
+
+
+// ClientRequestExecutorPool.java
+
+public ClientRequestExecutorPool(int selectors, int maxConnectionsPerNode, int connectionTimeoutMs, int soTimeoutMs, int socketBufferSize, boolean socketKeepAlive, boolean jmxEnabled, int jmxId) {
+
+     ResourcePoolConfig config = new ResourcePoolConfig().setIsFair(true) .setMaxPoolSize(maxConnectionsPerNode) .setMaxInvalidAttempts(maxConnectionsPerNode) .setTimeout(connectionTimeoutMs, TimeUnit.MILLISECONDS);
+
+     this.jmxEnabled = jmxEnabled;
+     this.jmxId = jmxId;
+     if(this.jmxEnabled) {
+          stats = new ClientSocketStats(jmxId);
+          JmxUtils.registerMbean(new ClientSocketStatsJmx(stats), JmxUtils.createObjectName(JmxUtils.getPackageName(this.getClass()), "aggregated" + JmxUtils.getJmxId(this.jmxId)));
+     } else {
+          stats = null;
+     }
+
+     this.factory = new ClientRequestExecutorFactory(selectors, connectionTimeoutMs, soTimeoutMs, socketBufferSize, socketKeepAlive, stats);
+
+     this.queuedPool = new QueuedKeyedResourcePool&lt;SocketDestination, ClientRequestExecutor&gt;(factory, config);
+     if(stats != null) {
+          this.stats.setPool(queuedPool);
+     }
+}
+
+// ClientRequestExecutorFactory.java
+public ClientRequestExecutorFactory(int selectors, int connectTimeoutMs, int soTimeoutMs, int socketBufferSize, boolean socketKeepAlive, ClientSocketStats stats) {
+
+     this.connectTimeoutMs = connectTimeoutMs;
+     this.soTimeoutMs = soTimeoutMs;
+     this.created = new AtomicInteger(0);
+     this.destroyed = new AtomicInteger(0);
+     this.socketBufferSize = socketBufferSize;
+     this.socketKeepAlive = socketKeepAlive;
+     this.stats = stats;
+
+     this.selectorManagers = new ClientRequestSelectorManager[selectors];
+     this.selectorManagerThreadPool = Executors.newFixedThreadPool(selectorManagers.length, new DaemonThreadFactory("voldemort-niosocket-client-")); 
+
+     for(int i = 0; i &lt; selectorManagers.length; i++) {
+         selectorManagers[i] = new ClientRequestSelectorManager();
+         selectorManagerThreadPool.execute(selectorManagers[i]);
+     }
+
+     this.lastClosedTimestamps = new ConcurrentHashMap&lt;SocketDestination, Long&gt;();
+}
+
+
+// QueueKeyedResourcePool&lt;K,V&gt;
+public QueuedKeyedResourcePool(ResourceFactory&lt;K, V&gt; objectFactory, ResourcePoolConfig config) {
+     super(objectFactory, config);
+     requestQueueMap = new ConcurrentHashMap&lt;K, Queue&lt;AsyncResourceRequest&lt;V&gt;&gt;&gt;();
+}
+
+</pre>
+<p>
+查看源码可以知道，在我们执行“new SocketStoreClientFactory(...)”时，做了两部操作：
+</p>
+<ol>
+<li>
+调用父类AbstractStoreClientFactory的构造函数，它内部做了两个重要操作
+
+<ol>
+<li>
+创建了一个ClientThreadPool对象
+
+<li>
+创建另一个RoutedStoreFactory对象
+
+</ol>
+<li>
+确定客户端请求路由类型
+
+<li>
+创建了一个ClientRequestExecutorPool对象，然后它内部有进行了如下操作：
+
+<ol>
+<li>
+注册JMX的Mbean（如果开启JMX的话）
+
+<li>
+创建了一个ClientRequestExecutorFactory对象，它内部做了如下操作：
+
+<ol>
+<li>
+新建一个线程池，默认大小为2
+
+<li>
+向线程池提交任务（ClientRequestSelectorManager） ,默认两个。
+
+</ol>
+<li>
+创建一个QueuedKeyedResourcePool&lt;SocketDestination,ClientRequestExecutor&gt;对象（注意配置泛型），它内部做了如下操作：
+
+<ol>
+<li>
+创建了一个以SocketDestination为key，以Queue&lt;AsyncResourceRequest&lt;ClinetRequestExecutor&gt;&gt;为value的HashMap。
+
+</ol>
+</ol>
+</ol>
+  
+<h3 id="toc_0.2.2">取得相应的StoreClient</h3>
+<p>
+时序图：
+<img src="images/storeClient.jpg" />
+</p>
+
+<p>
+涉及代码：
+</p>
+<pre class="brush:java">
+// SocketStoreClientFactory.java
+@Override
+public &lt;K, V&gt; StoreClient&lt;K, V&gt; getStoreClient(final String storeName, final InconsistencyResolver&lt;Versioned&lt;V&gt;&gt; resolver) {
+     if(getConfig().isLazyEnabled())
+         return new LazyStoreClient&lt;K, V&gt;(new Callable&lt;StoreClient&lt;K, V&gt;&gt;() {
+
+             public StoreClient&lt;K, V&gt; call() throws Exception {
+                 return getParentStoreClient(storeName, resolver);
+             }
+         });
+
+     return getParentStoreClient(storeName, resolver);
+}
+
+private &lt;K, V&gt; StoreClient&lt;K, V&gt; getParentStoreClient(String storeName, InconsistencyResolver&lt;Versioned&lt;V&gt;&gt; resolver) {
+     return super.getStoreClient(storeName, resolver);
+}
+
+// AbstractStoreClientFactory.java
+@Override
+public &lt;K, V&gt; StoreClient&lt;K, V&gt; getStoreClient(String storeName) {
+    return getStoreClient(storeName, null);
+}
+
+@Override
+public &lt;K, V&gt; StoreClient&lt;K, V&gt; getStoreClient(String storeName, InconsistencyResolver&lt;Versioned&lt;V&gt;&gt; resolver) {
+
+     DefaultStoreClient&lt;K, V&gt; client = null;
+
+        // If configured to cache store clients, check if we have a StoreClient
+        // created already
+     Pair&lt;String, Object&gt; cacheKey = Pair.create(storeName, (Object) resolver);
+     if(this.config.getCacheStoreClients() &amp;&amp; storeClientCache.containsKey(cacheKey)) {
+         return (DefaultStoreClient&lt;K, V&gt;) storeClientCache.get(cacheKey);
+     }
+
+        // Else, we move on and create a store client object accordingly
+     if(this.config.isDefaultClientEnabled()) {
+         client = new DefaultStoreClient&lt;K, V&gt;(storeName, resolver, this, MAX_METADATA_REFRESH_ATTEMPTS);
+     } else if(this.bootstrapUrls.length &gt; 0 &amp;&amp; this.bootstrapUrls[0].getScheme().equals(HttpStoreClientFactory.URL_SCHEME)) {
+         client = new DefaultStoreClient&lt;K, V&gt;(storeName, resolver, this, MAX_METADATA_REFRESH_ATTEMPTS);
+     } else {
+
+            // Lazily intialize the resources needed for ZenStore clients.
+         if(!isZenStoreResourcesInited.get()) {
+              initZenStoreResourcesIfNeeded();
+         }
+
+         client = new ZenStoreClient&lt;K, V&gt;(storeName, resolver, this, MAX_METADATA_REFRESH_ATTEMPTS, clientContextName, clientSequencer.getAndIncrement(), config, scheduler, sysRepository);
+     }
+
+        // if configured to cache store clients, populate the cache
+     if(config.getCacheStoreClients()) {
+            // Note: We could potentially create the store client more than once
+            // from multiple threads. But, they will all eventually pick up the
+            // first created store client and let go off the instances they
+            // created
+         StoreClient&lt;K, V&gt; oldValue = (StoreClient&lt;K, V&gt;) storeClientCache.putIfAbsent(cacheKey,
+                                                                                          client);
+         if(oldValue != null) {
+                // Losing thread(s) also pick up the winning value
+                client = (DefaultStoreClient&lt;K, V&gt;) storeClientCache.get(cacheKey);
+         }
+     }
+     client.setBeforeRebootstrapCallback(this.storeRebootstrapCallback);
+
+     return client;
+}
+
+// DefaultStoreClient.java
+public DefaultStoreClient(String storeName, InconsistencyResolver&lt;Versioned&lt;V&gt;&gt; resolver, StoreClientFactory storeFactory, int maxMetadataRefreshAttempts) {
+     this.storeName = Utils.notNull(storeName);
+     this.resolver = resolver;
+     this.storeFactory = Utils.notNull(storeFactory);
+     this.metadataRefreshAttempts = maxMetadataRefreshAttempts;
+
+        // Registering self to be able to bootstrap client dynamically via JMX
+     JmxUtils.registerMbean(this, JmxUtils.createObjectName(JmxUtils.getPackageName(this.getClass()), JmxUtils.getClassName(this.getClass()) + "." + storeName));
+
+     bootStrap();
+}
+
+@JmxOperation(description = "bootstrap metadata from the cluster.")
+public void bootStrap() {
+     if(beforeRebootstrapCallback != null) {
+         try {
+             beforeRebootstrapCallback.call();
+         } catch (Exception e) {
+             logger.warn("Exception caught when running callback before bootstrap", e);
+         }
+     }
+     logger.info("Bootstrapping metadata for store " + this.storeName);
+     this.store = storeFactory.getRawStore(storeName, resolver);
+}
+
+// AbstractStoreClientFactory.java
+
+
+</pre>
+
+<p>
+客户端程序调用了factory的getStoreClient方法，其实内部执行了如下操作：
+</p>
+<ol>
+<li>
+调用AbstractStoreClientFactory的getStoreClient方法
+
+<ol>
+<li>
+一般情况会创建一个DefaultStoreClient对象然后返回
+
+<ol>
+<li>
+注册JMX 的Mbean
+
+<li>
+调用bootStrap方法
+
+<ol>
+<li>
+调用StoreClientFactory的getRawStore方法，实际上调用的AbstractStoreClientFactory的getRawStore方法
+
+<ol>
+<li>
+获取cluster和store的元数据信息
+
+<li>
+根据cluster配置中node信息构造nonblockingStores、nonblockingSlopStores、slopStores、clientMapping等
+
+<ol>
+<li>
+调用getStore方法，得到普通store对象，实际上是调用的ClientRequestExecuotPool的create方法
+
+<ol>
+<li>
+创建一个SocketStore对象，并返回
+
+</ol>
+<li>
+调用getStore方法，得到rawSlopStore对象，进行序列化包装后得到slopStore。
+
+</ol>
+<li>
+使用上一步构造的信息，调用RoutedStoreFactory的create方法，得到Store对象。
+
+<ol>
+<li>
+构造并返回了一个PipelineRoutedStore对象
+
+</ol>
+<li>
+对上一步的Store对象进行序列化保证得到最终结果
+
+</ol>
+</ol>
+</ol>
+</ol>
+</ol>
+         
+<p>
+这一步涉及到一个非常重要的类的创建<code>PipelineRoutedStore</code>，官方wiki提到，他们为了解决以前RoutedStore逻辑过于复杂的问题才引入的PipelineRoutedStore。
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2014-04-04
+</p>
+
+<p>
+<code>参考资料</code>：
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

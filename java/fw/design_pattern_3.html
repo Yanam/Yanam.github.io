@@ -1,0 +1,207 @@
+<html>
+<head>
+    <title>java回调机制</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">callback</a>
+<li><a href="#toc_0.3">Java中的回调</a>
+<ul>
+<li><a href="#toc_0.3.1">异步回调</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+程序模块之间存在一定的接口，从调用方式上可以分为三类：
+</p>
+<ol>
+<li>
+<code>同步调用</code>：阻塞的 <strong>单向</strong> 调用
+
+<li>
+<code>回调</code>： <strong>双向</strong> 调用
+
+<li>
+<code>异步调用</code>：
+    回调与异步调用的关系非常紧密，我们通常使用回调来实现异步消息的注册，通过异步调用实现消息的通知。 
+
+</ol>
+<h2 id="toc_0.2">callback</h2>
+<p>
+先看一下维基百科的定义
+</p>
+<blockquote>
+In computer programming, <code>a callback is a piece of executable code that is passed as an argument to other code</code>, which is expected to call back (execute) the argument at some convenient time. The invocation may be immediate as in a synchronous callback or it might happen at later time, as in an asynchronous callback.
+</blockquote>
+<p>
+<img src="images/callback.png" />
+</p>
+
+<p>
+从上图可以看到，在涉及到第三方包调用时，callback是个很好的方式，Spring各种插件也经常采用这种方式封装第三方包。
+</p>
+
+<p>
+C、C++可以通过传递函数指针(function pointers)给其他函数。
+python、JavaScript 可以通过传递函数名
+</p>
+<h2 id="toc_0.3">Java中的回调</h2>
+<p>
+Java是通过回调接口，实现回调函数的
+</p>
+
+<pre class="brush:java">
+public class TemplateMethodPatternCallback {
+	private ICallBack callBack;
+	
+	public TemplateMethodPatternCallback(ICallBack callBack){
+		this.callBack = callBack;
+	}
+	
+	public void invokeCallBack(){
+		System.out.println("不拉不拉不了");
+		callBack.callback();
+		System.out.println("已经执行完回调");
+	}
+	
+	public static void main(String[] args) {
+		TemplateMethodPatternCallback tm = new TemplateMethodPatternCallback(new ICallBack(){
+
+			@Override
+			public void callback() {
+				System.out.println("执行回调");
+			}
+			
+		});
+		
+		tm.invokeCallBack();
+	}
+	
+}
+interface ICallBack{
+	void callback();
+}
+</pre>
+
+<p>
+可以看到上面回调的例子，很像模板方法模式，但是他们还是有一些区别的：
+</p>
+<ol>
+<li>
+模板方法模式借助于 <strong>继承</strong> ，对抽象方法在子类中进行实现\扩展，是在编译期间静态决定的，是类级关系；而Java回调方法，利用动态绑定技术在运行期间动态决定，是对象级关系
+
+<li>
+回调机制更灵活，基于接口方便扩展。
+
+<li>
+模板方法模式，更加简单，因为父类可以提供默认的实现方法，子类如果不想扩展，可以不管。
+
+</ol>
+ 
+<h3 id="toc_0.3.1">异步回调</h3>
+<pre class="brush:java">
+public class CallbackClass2 implements Runnable{
+
+	private String mess;
+	private TempCallBack cb;
+	
+	public CallbackClass2(TempCallBack cb) {
+		this.cb = cb;
+	}
+	
+	@Override
+	public void run() {
+		System.out.println("run start");
+		try {
+			Thread.currentThread().sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		cb.excute(mess);
+		System.out.println("run end");
+	}
+	
+	public void sendMess(String mess){
+		this.mess = mess;
+		System.out.println("sendMess start");
+		Thread thread = new Thread(this);
+		thread.start();
+		System.out.println("sendMess end");
+	}
+	
+	public static void main(String[] args) {
+		CallbackClass2 cb = new CallbackClass2(new TempCallBack(){
+			@Override
+			public void excute(String mess) {
+				System.out.println("回调函数得到消息："+mess);
+			}
+			
+		});
+		cb.sendMess("213123sd");
+		System.out.println("主线程做其他事情");
+	}
+	
+}
+
+interface TempCallBack{
+	void excute(String mess);
+}
+
+</pre>
+
+<hr />
+<p>
+<code>日期</code>：2014-03-28、2014-03-31
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://kim-miao.iteye.com/blog/1669310">Java回调与模板方法模式</a>、<a href="http://hellosure.iteye.com/blog/1130176">深入浅出Java回调机制</a>、<a href="http://www.zhihu.com/question/19801131">回调函数（callback）是什么？</a>、<a href="http://zhxing.iteye.com/blog/650625">Java 回调机制及其Spring 中HibernateTemplate的源码分析</a>、<a href="http://en.wikipedia.org/wiki/Callback_%28computer_science%29">Callback (computer programming)</a>、<a href="http://jiangzhengjun.iteye.com/blog/658354">13、内部类（闭包与回调）</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

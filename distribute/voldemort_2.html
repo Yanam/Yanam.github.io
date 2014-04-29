@@ -1,0 +1,274 @@
+<html>
+<head>
+    <title> voldemort的试用</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">配置</a>
+<ul>
+<li><a href="#toc_0.1.1">示例</a>
+</ul>
+<li><a href="#toc_0.2">zone</a>
+<li><a href="#toc_0.3">服务启动</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">配置</h2>
+<p>
+voldmort的每个节点中包含三个配置文件：
+</p>
+<ol>
+<li>
+<code>cluster.xml</code>：保存了集群(cluster)中所有节点的信息（每个节点都相同）。
+
+<li>
+<code>store.xml</code>：保存了集群(cluster)中所有store的信息（每个节点都相同）。
+
+<li>
+<code>server.properties</code>：保存了各种可调节(tunning)参数（每个节点都不同）。
+    还有一个环境变量<code>VOLDEMORT_HOME</code> ,它是用来指定数据和配置存放的位置。
+
+</ol>
+<h3 id="toc_0.1.1">示例</h3>
+<p>
+cluster.xml：
+</p>
+<pre class="brush:xml">
+&lt;cluster&gt;
+  &lt;name&gt;voldemort&lt;/name&gt;
+  &lt;server&gt;
+    &lt;id&gt;0&lt;/id&gt;
+    &lt;host&gt;172.30.204.181&lt;/host&gt;
+    &lt;http-port&gt;6665&lt;/http-port&gt;
+    &lt;socket-port&gt;6666&lt;/socket-port&gt;
+    &lt;admin-port&gt;6667&lt;/admin-port&gt;
+    &lt;partitions&gt;1, 6, 7, 8, 9, 11, 19, 21, 22, 23, 26, 28, 35, 38, 47, 50, 52, 53, 55, 57, 59, 61, 68, 71, 73, 75, 79, 82, 84, 87, 89, 98, 102, 106, 109, 114, 116, 119, 121, 131, 132, 136, 145, 150, 151, 152, 153, 156, 169, 172, 173, 182, 183, 184, 187, 188, 193, 198, 199, 202, 206, 207, 213, 216, 217, 219, 221, 222, 224, 232, 238, 242, 247, 249, 250, 254, 265, 266, 270, 279, 280, 286, 288, 290, 292, 293, 295, 305, 306, 312, 313, 317, 319, 320, 322, 331, 332, 333, 336, 342, 344, 346, 347, 348, 352, 353, 358, 359, 364, 370, 372, 377, 383, 388, 389, 394, 401, 402, 405, 406, 407, 408, 409, 411, 412, 413, 418, 424, 427, 431, 434, 440, 441, 445, 448, 452, 455, 457, 459, 461, 465, 471, 474, 477, 481, 482, 483, 485, 486, 487, 488, 489, 490, 491, 493, 497, 499, 500, 505, 507, 508, 509, 514, 517, 521, 523, 524, 525, 528, 530, 537, 538, 539, 540, 543, 544, 545, 546, 547, 548, 555, 557, 560, 561, 562, 563, 564, 570, 575, 576, 585, 586, 589, 593, 596, 599, 603, 608, 609, 613, 614, 617, 621, 622, 624, 627, 628, 631, 632, 633, 639, 642, 646, 649, 654, 655, 658, 665, 667, 668, 669, 671, 677, 679, 680, 683, 686, 690, 692, 694, 696, 701, 703, 706, 708, 713, 714, 724, 726, 728, 729, 730, 731, 737, 742, 748, 754, 755, 759, 762, 767, 770, 772, 774, 778, 781, 785, 787, 792, 795, 797, 798, 799, 800, 802, 803, 805, 806, 808, 809, 810, 812, 813, 815, 816, 817, 821, 823, 827, 828, 829, 836, 841, 842, 844, 848, 855, 856, 857, 863, 865, 871, 880, 881, 883, 884, 885, 887, 894, 895&lt;/partitions&gt;
+  &lt;/server&gt;
+  &lt;server&gt;
+    &lt;id&gt;1&lt;/id&gt;
+    &lt;host&gt;172.30.204.194&lt;/host&gt;
+    &lt;http-port&gt;6665&lt;/http-port&gt;
+    &lt;socket-port&gt;6666&lt;/socket-port&gt;
+    &lt;admin-port&gt;6667&lt;/admin-port&gt;
+    &lt;partitions&gt;5, 13, 16, 24, 25, 30, 32, 34, 37, 40, 44, 45, 49, 51, 58, 60, 64, 65, 69, 72, 74, 78, 83, 88, 90, 91, 93, 94, 95, 99, 101, 105, 107, 110, 111, 115, 118, 120, 122, 123, 126, 128, 130, 135, 137, 138, 141, 142, 144, 148, 149, 154, 155, 157, 158, 159, 160, 161, 164, 166, 168, 170, 175, 176, 177, 180, 181, 186, 189, 191, 192, 194, 196, 197, 201, 204, 209, 212, 215, 226, 227, 228, 229, 231, 233, 234, 239, 243, 245, 246, 251, 256, 260, 268, 269, 271, 272, 276, 281, 282, 283, 284, 287, 291, 294, 298, 299, 301, 304, 307, 310, 311, 318, 321, 323, 324, 325, 326, 328, 329, 330, 334, 338, 339, 340, 341, 343, 349, 360, 361, 366, 367, 368, 369, 371, 376, 378, 380, 381, 382, 385, 387, 390, 391, 395, 398, 415, 416, 419, 422, 423, 425, 428, 429, 436, 447, 449, 454, 458, 462, 466, 469, 479, 480, 492, 494, 498, 502, 510, 515, 516, 519, 520, 526, 529, 531, 534, 541, 549, 551, 554, 558, 559, 567, 569, 571, 572, 573, 579, 583, 592, 594, 597, 601, 604, 606, 610, 611, 612, 616, 618, 623, 625, 629, 630, 637, 638, 641, 643, 644, 645, 647, 648, 650, 656, 659, 663, 666, 672, 673, 674, 675, 685, 687, 689, 693, 697, 699, 700, 702, 705, 707, 715, 716, 720, 722, 732, 733, 736, 739, 741, 743, 744, 745, 746, 747, 751, 756, 757, 758, 761, 763, 768, 769, 771, 773, 776, 777, 779, 780, 783, 790, 796, 801, 804, 807, 811, 814, 818, 820, 822, 831, 834, 835, 837, 839, 840, 843, 846, 849, 851, 852, 853, 858, 859, 860, 864, 866, 867, 868, 869, 870, 874, 875, 877, 888, 891, 892, 896, 898&lt;/partitions&gt;
+  &lt;/server&gt;
+  &lt;server&gt;
+    &lt;id&gt;2&lt;/id&gt;
+    &lt;host&gt;172.30.204.218&lt;/host&gt;
+    &lt;http-port&gt;6665&lt;/http-port&gt;
+    &lt;socket-port&gt;6666&lt;/socket-port&gt;
+    &lt;admin-port&gt;6667&lt;/admin-port&gt;
+    &lt;partitions&gt;0, 2, 3, 4, 10, 12, 14, 15, 17, 18, 20, 27, 29, 31, 33, 36, 39, 41, 42, 43, 46, 48, 54, 56, 62, 63, 66, 67, 70, 76, 77, 80, 81, 85, 86, 92, 96, 97, 100, 103, 104, 108, 112, 113, 117, 124, 125, 127, 129, 133, 134, 139, 140, 143, 146, 147, 162, 163, 165, 167, 171, 174, 178, 179, 185, 190, 195, 200, 203, 205, 208, 210, 211, 214, 218, 220, 223, 225, 230, 235, 236, 237, 240, 241, 244, 248, 252, 253, 255, 257, 258, 259, 261, 262, 263, 264, 267, 273, 274, 275, 277, 278, 285, 289, 296, 297, 300, 302, 303, 308, 309, 314, 315, 316, 327, 335, 337, 345, 350, 351, 354, 355, 356, 357, 362, 363, 365, 373, 374, 375, 379, 384, 386, 392, 393, 396, 397, 399, 400, 403, 404, 410, 414, 417, 420, 421, 426, 430, 432, 433, 435, 437, 438, 439, 442, 443, 444, 446, 450, 451, 453, 456, 460, 463, 464, 467, 468, 470, 472, 473, 475, 476, 478, 484, 495, 496, 501, 503, 504, 506, 511, 512, 513, 518, 522, 527, 532, 533, 535, 536, 542, 550, 552, 553, 556, 565, 566, 568, 574, 577, 578, 580, 581, 582, 584, 587, 588, 590, 591, 595, 598, 600, 602, 605, 607, 615, 619, 620, 626, 634, 635, 636, 640, 651, 652, 653, 657, 660, 661, 662, 664, 670, 676, 678, 681, 682, 684, 688, 691, 695, 698, 704, 709, 710, 711, 712, 717, 718, 719, 721, 723, 725, 727, 734, 735, 738, 740, 749, 750, 752, 753, 760, 764, 765, 766, 775, 782, 784, 786, 788, 789, 791, 793, 794, 819, 824, 825, 826, 830, 832, 833, 838, 845, 847, 850, 854, 861, 862, 872, 873, 876, 878, 879, 882, 886, 889, 890, 893, 897, 899&lt;/partitions&gt;
+  &lt;/server&gt;
+</pre>
+<blockquote>
+注意：partitions不是静态划分服务器，而是一种key空间的划分机制“每个key都被静态映射到某个具体数据分区”。而且数据分区(data partition)的个数是不能修改的。
+</blockquote>
+
+<p>
+store.xml：
+</p>
+<pre class="brush:xml">
+&lt;stores&gt;
+  &lt;store&gt;
+    &lt;!-- store的名字，客户端调用时需要知道具体是调用哪个store时就是根据store的名字 --&gt;
+    &lt;name&gt;test&lt;/name&gt;
+    &lt;!-- 后端持久化所使用的存储引擎  --&gt;
+    &lt;persistence&gt;bdb&lt;/persistence&gt;
+    &lt;description&gt;Test store&lt;/description&gt;
+    &lt;owners&gt;harry@hogwarts.edu, hermoine@hogwarts.edu&lt;/owners&gt;
+    &lt;!-- 决定如何存储副本，支持consistent-routing（默认）、zone-routing、all-routing --&gt;
+    &lt;routing-strategy&gt;consistent-routing&lt;/routing-strategy&gt;
+    &lt;!-- 制定路由策略，voldemort支持client（客户端路由）和server（服务端路由），例子中选择的是客户端路由 --&gt;
+    &lt;routing&gt;client&lt;/routing&gt;
+    &lt;!-- 数据被保存的份数，每次put和delete都要最终在n（例子里n为3）个多节点执行。它保证系统在n-1个节点挂掉后数据不会丢失 --&gt;
+    &lt;replication-factor&gt;3&lt;/replication-factor&gt;
+    &lt;!-- 读成功（未产生异常）的最小节点数 --&gt;
+    &lt;required-reads&gt;2&lt;/required-reads&gt;
+    &lt;!-- 写成功的最小节点数 --&gt;
+    &lt;required-writes&gt;2&lt;/required-writes&gt;
+    &lt;!-- 读写key时的序列化类型 --&gt;
+    &lt;key-serializer&gt;
+      &lt;type&gt;identity&lt;/type&gt;
+      &lt;compression&gt;
+        &lt;type&gt;lzf&lt;/type&gt;
+      &lt;/compression&gt;
+    &lt;/key-serializer&gt;
+    &lt;!-- 读写value时的序列化类型 --&gt;
+    &lt;value-serializer&gt;
+      &lt;type&gt;identity&lt;/type&gt;
+      &lt;compression&gt;
+        &lt;type&gt;lzf&lt;/type&gt;
+      &lt;/compression&gt;
+    &lt;/value-serializer&gt;
+  &lt;/store&gt;
+  &lt;store&gt;
+    &lt;name&gt;test2&lt;/name&gt;
+    &lt;persistence&gt;bdb&lt;/persistence&gt;
+    &lt;description&gt;Test store&lt;/description&gt;
+    &lt;owners&gt;harry@hogwarts.edu, hermoine@hogwarts.edu&lt;/owners&gt;
+    &lt;routing-strategy&gt;consistent-routing&lt;/routing-strategy&gt;
+    &lt;routing&gt;client&lt;/routing&gt;
+    &lt;replication-factor&gt;2&lt;/replication-factor&gt;
+    &lt;required-reads&gt;1&lt;/required-reads&gt;
+    &lt;required-writes&gt;2&lt;/required-writes&gt;
+    &lt;key-serializer&gt;
+      &lt;type&gt;identity&lt;/type&gt;
+      &lt;compression&gt;
+        &lt;type&gt;lzf&lt;/type&gt;
+      &lt;/compression&gt;
+    &lt;/key-serializer&gt;
+    &lt;value-serializer&gt;
+      &lt;type&gt;identity&lt;/type&gt;
+      &lt;compression&gt;
+        &lt;type&gt;lzf&lt;/type&gt;
+      &lt;/compression&gt;
+    &lt;/value-serializer&gt;
+  &lt;/store&gt;
+</pre>
+
+<p>
+store.xml中各种参数解释：
+</p>
+<ol>
+<li>
+<code>retention-days(optional)</code>：这个可选参数，允许用户设置一个数据保留时间，然后每天特定时间在服务器上运行一个任务来删除过期数据。
+
+<li>
+<code>retention-scan-throttle-rate(optional)</code>：
+
+<li>
+<code>preferred-reads(optional)</code>：每次尝试执行读取操作的节点数，默认等于required-reads
+
+<li>
+<code>preferred-writes(optional)</code>：每次尝试写操作的节点数，默认等于required-writes
+
+<li>
+<code>hinted-handoff-strategy(optional)</code>：这是另一个一致性机制，有这些选项：any-handoff、consistent-handoff、proximity-handoff。具体机制介绍在<a href="voldemort_3.html">Hinted Handoff机制</a>。
+
+</ol>
+
+<p>
+server.properties：
+</p>
+<pre>
+# The ID of *this* particular cluster node
+node.id=2
+
+max.threads=100
+
+############### DB options ######################
+
+http.enable=true
+socket.enable=true
+
+# BDB
+bdb.write.transactions=false
+bdb.flush.transactions=false
+bdb.cache.size=128M
+
+# Mysql
+mysql.host=localhost
+mysql.port=1521
+mysql.user=root
+mysql.password=3306
+mysql.database=test
+
+#NIO connector settings.
+enable.nio.connector=true
+
+request.format=vp3
+storage.configs=voldemort.store.bdb.BdbStorageConfiguration, voldemort.store.readonly.ReadOnlyStorageConfiguration
+</pre>
+
+<p>
+server.properties的各种参数可以在<a href="http://www.project-voldemort.com/voldemort/javadoc/all/voldemort/server/VoldemortConfig.html">这里</a>看到。
+</p>
+<h2 id="toc_0.2">zone</h2>
+<p>
+<code>zone</code>：map nodes to certain logical clusters(datacenter,rack,etc) called zones(可以在cluster.xml中配置)，它是一组在网络里非常近的节点，例如处于同一个机房或者同一个数据中心。
+</p>
+
+<h2 id="toc_0.3">服务启动</h2>
+<ul>
+<li>
+第一步，下载代码
+
+<li>
+第二步，启动单个节点的集群
+<pre class="brush:shell">
+$ bin/voldemort-server.sh config/single_node_cluster &gt; /tmp/voldemort.log &amp;
+</pre>
+
+<li>
+第三步，启动命令行测试客户端
+<pre class="brush:shell">
+$ bin/voldemort-shell.sh test tcp://localhost:6666
+Established connection to test via tcp://localhost:6666
+&gt; put "hello" "world"
+&gt; get "hello"
+version(0:1): "world"
+&gt; delete "hello"
+&gt; get "hello"
+null
+&gt; help
+....
+&gt; exit
+k k thx bye.
+</pre>
+
+</ul>
+<hr />
+<p>
+<code>日期</code>：2014-04-15
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.project-voldemort.com/voldemort/configuration.html">Configuration</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>
