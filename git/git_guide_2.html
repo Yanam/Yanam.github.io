@@ -55,7 +55,7 @@
 <a href="https://github.com/tpope/vim-pathogen">pathogen</a>是一个管理vim插件的工具，方便了插件的安装与删除，很好用。
 </p>
 <h3 id="toc_0.1.1">安装</h3>
-<pre class="brush:sh">
+<pre class="brush:shell">
 $ mkdir ~/.vim/
 $ mkdir ~/.vim/{autoload,bundle}
 $ cd ~/.vim/
@@ -74,7 +74,7 @@ $  https://raw.github.com/tpope/vim-pathogen/master/autoload/pathogen.vim
 <p>
 如果你是vim新手，直接在命令行中打<code>vim ~/.vimrc</code>,然后复制下面的配置到文件中。
 </p>
-<pre class="brush:text">
+<pre>
 excute pathogen#infect()
 syntax on
 filetype plugin indent on
@@ -84,7 +84,7 @@ filetype plugin indent on
 <p>
 安装还是很简单的，只要插件在git有资源就可以。
 </p>
-<pre class="brush:sh">
+<pre class="brush:shell">
 # 添加子模块
 $ git submodule add https://github.com/vim-scripts/blackboard.vim.git bundle/color
 # 初始化子模块
