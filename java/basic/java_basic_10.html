@@ -1,0 +1,239 @@
+<html>
+<head>
+    <title>LinkedList、ArrayList的区别</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">LinkedList</a>
+<li><a href="#toc_0.3">ArrayList</a>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+从开始找工作起就知道了这个问题：“LinkedList、ArrayList的区别？”高级一点的会加个“Vector”。即使这样，回答这个问题也不是很有底，毕竟理解有深有浅，从淘宝中间件博客里看到一片关于LinkList的文章，正好借此复习一下。
+</p>
+
+<p>
+LinkedList、ArrayList、Vector都是List接口的实现，其中LinkedList是双向链表，ArrayList是可变数组，Vector是线程安全的可变数组。通常会说，LinkedList适合增删改多的场景，ArrayList适合随即访问多的场景，Vector比ArrayList因为它是线程安全的。
+</p>
+<h2 id="toc_0.2">LinkedList</h2>
+<p>
+LinkedList各操作的时间复杂度：
+</p>
+<ol>
+<li>
+get is O(n)
+
+<li>
+add is O(1)
+
+<li>
+remove is O(n) ,remove(Object o)和remove(int i)都是
+
+<li>
+Iterator.remove is O(1)
+
+</ol>
+
+
+<p>
+双向链表的删除节点的复杂度O(1)，你之需要将被删除节点的前后节点链接，然后将被删除节点的前驱和后置都置为null即可，但是为什么LinkedList的remove操作却是而是O(n)呢？
+</p>
+
+<p>
+我们看一下JDK中LinkedList的remove(Object o)源码：
+</p>
+<pre class="brush:java">
+    public boolean remove(Object o) {
+        if (o == null) {
+            for (Node&lt;E&gt; x = first; x != null; x = x.next) {
+                if (x.item == null) {
+                    unlink(x);
+                    return true;
+                }
+            }
+        } else {
+            for (Node&lt;E&gt; x = first; x != null; x = x.next) {
+                if (o.equals(x.item)) {
+                    unlink(x);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+</pre>
+<p>
+从程序中我们可以看到，LinkedList.remove(object)方法中，传入的参数为节点存储的value，我们需要先<code>查找</code>到该value,然后才能进行删除操作。所以时间复杂度是O(n)+O(1),也就是O(n)。
+</p>
+
+<p>
+我们在看一下LinkedList 的remove(int i)方法的源码：
+</p>
+<pre class="brush:java">
+    public E remove(int index) {
+        checkElementIndex(index);
+        return unlink(node(index));
+    }
+    Node&lt;E&gt; node(int index) {
+        // assert isElementIndex(index);
+
+        if (index &lt; (size &gt;&gt; 1)) {
+            Node&lt;E&gt; x = first;
+            for (int i = 0; i &lt; index; i++)
+                x = x.next;
+            return x;
+        } else {
+            Node&lt;E&gt; x = last;
+            for (int i = size - 1; i &gt; index; i--)
+                x = x.prev;
+            return x;
+        }
+    }
+</pre>
+<p>
+我们看到，通过索引删除时，会根据索引位置判断是在list的前半部分还是后半部分，然后在查找，在最坏的情况，查找次数为n/2次，但是因为没有比较的开销，所以比remove(Object o)还是要好不少的。
+</p>
+<h2 id="toc_0.3">ArrayList</h2>
+<p>
+ArrayList各操作的时间复杂度：
+</p>
+<ol>
+<li>
+get is O(1)
+
+<li>
+add is O(1) ,但是在最坏情况下为O(n)也就是数组需要重新分配和复制时。
+
+<li>
+remove is O(n)
+
+</ol>
+
+<p>
+我们看一下ArrayList是如何实现可变数组的：
+</p>
+<pre class="brush:java">
+    public boolean add(E e) {
+        ensureCapacityInternal(size + 1);  // Increments modCount!!
+        elementData[size++] = e;
+        return true;
+    }
+    private void ensureCapacityInternal(int minCapacity) {
+        modCount++;
+        // overflow-conscious code
+        if (minCapacity - elementData.length &gt; 0)
+            grow(minCapacity);
+
+    }
+    private void grow(int minCapacity) {
+        // overflow-conscious code
+        int oldCapacity = elementData.length;
+        int newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1);
+        if (newCapacity - minCapacity &lt; 0)
+            newCapacity = minCapacity;
+        if (newCapacity - MAX_ARRAY_SIZE &gt; 0)
+            newCapacity = hugeCapacity(minCapacity);
+        // minCapacity is usually close to size, so this is a win:
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+</pre>
+<p>
+我们可以看到，每次add操作时，程序都会对数组大小进行判断，如果需要则进行数组扩容。
+</p>
+
+<p>
+在看一下JDK中ArrayList的remove(Object o)的源码：
+</p>
+<pre class="brush:java">
+    public boolean remove(Object o) {
+        if (o == null) {
+            for (int index = 0; index &lt; size; index++)
+                if (elementData[index] == null) {
+                    fastRemove(index);
+                    return true;
+                }
+        } else {
+            for (int index = 0; index &lt; size; index++)
+                if (o.equals(elementData[index])) {
+                    fastRemove(index);
+                    return true;
+                }
+        }
+        return false;
+    }
+    private void fastRemove(int index) {
+        modCount++;
+        int numMoved = size - index - 1;
+        if (numMoved &gt; 0)
+            System.arraycopy(elementData, index+1, elementData, index,
+                             numMoved);
+        elementData[--size] = null; // Let gc do its work
+    }
+</pre>
+<p>
+从代码我们可以看到，无论是增删，ArrayList都涉及到了数组复制，因为它要改变数组的大小，这是很好时间的。
+</p>
+
+<p>
+如果你确定你的ArrayList的大小，在构造ArrayList给定一个足够的大小，能够减少不必要的数组大小重新分配和复制的操作。
+</p>
+<blockquote>
+<code>modCount</code>这个变量是用来确保多线程访问时的线程安全的。
+</blockquote>
+<hr />
+<p>
+<code>日期</code>：2013-07-22
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://jm.taobao.org/2010/09/16/linkedlist%E7%9A%84%E5%B1%80%E9%99%90/">LinkedList的局限</a>、<a href="http://stackoverflow.com/questions/322715/when-to-use-linkedlist-over-arraylist">When to use LinkedList&lt;&gt; over ArrayList&lt;&gt;?</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

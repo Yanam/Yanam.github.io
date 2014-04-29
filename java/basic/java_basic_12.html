@@ -1,0 +1,434 @@
+<html>
+<head>
+    <title>Java基础--HashMap源码分析</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">HashMap的数据结构</a>
+<li><a href="#toc_0.2">源码分析</a>
+<ul>
+<li><a href="#toc_0.2.1">关键成员变量</a>
+<li><a href="#toc_0.2.2">初始化</a>
+<li><a href="#toc_0.2.3">哈希与定位</a>
+<li><a href="#toc_0.2.4">扩容</a>
+<li><a href="#toc_0.2.5">fast-fail策略</a>
+<li><a href="#toc_0.2.6">key的hashcode与equals方法</a>
+</ul>
+<li><a href="#toc_0.3">使用HashMap的注意事项</a>
+<li><a href="#toc_0.4">HashMap、HashSet、HashTable、ConcurrentHashMap 的区别</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">HashMap的数据结构</h2>
+<p>
+想深入了解HashMap不清楚它的数据结构是不行的，
+</p>
+
+<p>
+<img src="images/hashmap.jpg" />
+</p>
+
+<p>
+可以看出Java中的HashMap是靠<code>数组</code>来存储数据，靠<code>链表</code>来解决哈希冲突的问题。
+</p>
+
+<p>
+解决哈希冲突有两种常用方法：开放地址法、链表法。具体看<a href="../../other/hash.html">../../other/hash</a>
+</p>
+
+<p>
+我们可以从HashMap的源码中看到这样一个成员变量<code>transient Entry[] table;</code>，HashMap就是通过它来存储数据的。
+</p>
+
+<p>
+我们在看一下Entry的具体实现：
+</p>
+<pre class="brush:java">
+    static class Entry&lt;K,V&gt; implements Map.Entry&lt;K,V&gt; {
+        final K key;
+        V value;
+        Entry&lt;K,V&gt; next;
+        final int hash;
+........
+</pre>
+
+<p>
+看到其中的<code>next</code>成员变量了吗？它就是为解决哈希冲突问题而存在的，是一个链表。
+</p>
+
+<h2 id="toc_0.2">源码分析</h2>
+<h3 id="toc_0.2.1">关键成员变量</h3>
+<pre class="brush:java">
+    /**
+     * The default initial capacity - MUST be a power of two.
+     */
+    //默认初始化数组大小
+    static final int DEFAULT_INITIAL_CAPACITY = 16;
+
+    /**
+     * The maximum capacity, used if a higher value is implicitly specified
+     * by either of the constructors with arguments.
+     * MUST be a power of two &lt;= 1&lt;&lt;30.
+     */
+    //最大数组大小
+    static final int MAXIMUM_CAPACITY = 1 &lt;&lt; 30;
+
+    /**
+     * The load factor used when none specified in constructor.
+     */
+    //默认加载因子
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
+
+    /**
+     * The table, resized as necessary. Length MUST Always be a power of two.
+     */
+    //真正存储数据的数组
+    transient Entry[] table;
+
+    /**
+     * The number of key-value mappings contained in this map.
+     */
+    //map中存放键值对的个数
+    transient int size;
+
+    /**
+     * The next size value at which to resize (capacity * load factor).
+     * @serial
+     */
+    //数组需要resize的边界
+    int threshold;
+
+    /**
+     * The load factor for the hash table.
+     *
+     * @serial
+     */
+    //加载因子
+    final float loadFactor;
+
+    /**
+     * The number of times this HashMap has been structurally modified
+     * Structural modifications are those that change the number of mappings in
+     * the HashMap or otherwise modify its internal structure (e.g.,
+     * rehash).  This field is used to make iterators on Collection-views of
+     * the HashMap fail-fast.  (See ConcurrentModificationException).
+     */
+    //用来标记HashMap重构(resize)的次数
+    transient int modCount;
+
+</pre>
+
+<p>
+什么是loadFactor？
+loadFactor = 散列表实际元素数量(size)/散列表容量(capacity)
+<code>loadFactor</code>（加载因子/负载因子 翻译随意把）：衡量的是散列表的空间利用率，loadFactor越大空间利用率越高，但是查询效率越低。
+</p>
+<blockquote>
+对于散列表来说，查询一个元素的平均时间复杂度为O(1+loadFactor)
+</blockquote>
+<h3 id="toc_0.2.2">初始化</h3>
+<p>
+接下来我们看一下HashMap的构造函数
+</p>
+
+<pre class="brush:java">
+
+    public HashMap(int initialCapacity, float loadFactor) {
+        if (initialCapacity &lt; 0)
+            throw new IllegalArgumentException("Illegal initial capacity: " +
+                                               initialCapacity);
+        if (initialCapacity &gt; MAXIMUM_CAPACITY)
+            initialCapacity = MAXIMUM_CAPACITY;
+        if (loadFactor &lt;= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException("Illegal load factor: " +
+                                               loadFactor);
+
+        // Find a power of 2 &gt;= initialCapacity
+        int capacity = 1;
+	//我们可以看到不论传入的initialCapactity是多少，最后都会变成2的n次幂
+        while (capacity &lt; initialCapacity)
+            capacity &lt;&lt;= 1;
+
+        this.loadFactor = loadFactor;
+        threshold = (int)(capacity * loadFactor);
+        table = new Entry[capacity];
+        init();
+    }
+
+    public HashMap(int initialCapacity) {
+        this(initialCapacity, DEFAULT_LOAD_FACTOR);
+    }
+
+    public HashMap() {
+        this.loadFactor = DEFAULT_LOAD_FACTOR;
+        threshold = (int)(DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR);
+        table = new Entry[DEFAULT_INITIAL_CAPACITY];
+        init();
+    }
+</pre>
+<blockquote>
+我们从上面的构造函数中可以看出，无论是默认还是自定义数组大小，最后得到的数组大小（capactity）都是2的n次幂，这里保证数组capactity为2的n次幂是为了配合后面的hash与定位方法的。我们后面会提到，这里先提个醒。
+</blockquote>
+
+<h3 id="toc_0.2.3">哈希与定位</h3>
+<p>
+HashMap是怎样根据key定位到value的？我们先看源码
+</p>
+
+<pre class="brush:java">
+    /**
+     * Applies a supplemental hash function to a given hashCode, which
+     * defends against poor quality hash functions.  This is critical
+     * because HashMap uses power-of-two length hash tables, that
+     * otherwise encounter collisions for hashCodes that do not differ
+     * in lower bits. Note: Null keys always map to hash 0, thus index 0.
+     */
+    static int hash(int h) {
+        // This function ensures that hashCodes that differ only by
+        // constant multiples at each bit position have a bounded
+        // number of collisions (approximately 8 at default load factor).
+        h ^= (h &gt;&gt;&gt; 20) ^ (h &gt;&gt;&gt; 12);
+        return h ^ (h &gt;&gt;&gt; 7) ^ (h &gt;&gt;&gt; 4);
+    }
+
+    /**
+     * Returns index for hash code h.
+     */
+    static int indexFor(int h, int length) {
+        return h &amp; (length-1);
+    }
+	
+    public V get(Object key) {
+        if (key == null)
+            return getForNullKey();
+        int hash = hash(key.hashCode());
+	//先定位到数组的位置
+        for (Entry&lt;K,V&gt; e = table[indexFor(hash, table.length)];
+             e != null;
+             e = e.next) {
+            Object k;
+	    //在对链表进行遍历找到对于的元素
+            if (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k)))
+                return e.value;
+        }
+        return null;
+    }
+	
+    private V getForNullKey() {
+        for (Entry&lt;K,V&gt; e = table[0]; e != null; e = e.next) {
+            if (e.key == null)
+                return e.value;
+        }
+        return null;
+    }
+
+</pre>
+
+<p>
+从<code>get(Object key)</code>方法中我们可以知道，要想在HashMap中定位到某个元素，需要靠key的hash值来找到数组的下标。但HashMap并不是直接使用key的hashcode，而是通过一步hash运算（看hash(int h)）得到hash值，然后在拿这个值与数组的长度-1来进行与运算。
+</p>
+
+<p>
+为了让元素能够均匀分布在数组中，我们首先想到的是拿元素的hash值与数组长度进行模运算（%），但是模运算消耗还有有些大，Java在这里使用了一种与运算（用hash值和数组长度-1进行与运算(&amp;)）。也就是说源码中的“h &amp; (length-1)”等价于“h % 2^p”。
+</p>
+<blockquote>
+而这里也就是为什么初始化和扩容时，数组长度要为2的n次幂，因为当length为2的n次幂时，这个与运算效率最高。
+</blockquote>
+
+<p>
+为什么数组长度为2的n次幂时与运算效率最高呢？
+</p>
+
+<p>
+<img src="images/hashmap_index.jpg" />
+</p>
+
+<p>
+从上图我们可以看出，当hashcode为8或9时，与1110（也就是数组长度16的二进制表示）进行与运算时，的到了相同的结果，碰撞产生了。同时我们也发现，当数组长度为15时，hashcode要与14（1110）尽心与运算，因为14的最后一位是0，会导致0001、0011、0101、1001、1011、0111、1101这几个位置永远不会存放元素，着使得数组的可用位置比数组长度小多了，碰撞发送的几率更大了，查询效率必然会减慢。
+</p>
+
+
+<p>
+为什么要对key的hashcode在进行一次hash运算呢？
+</p>
+
+<p>
+我们从上面的源码可以知道，index时会执行“h &amp; (length-1)”然后得到h的n(指的是2的n次幂的n)个最低位组成的数字，如果直接使用hascode，那么h的这n个最低位相同的几率很大，比如：当length为0x100(二进制100000000)时，对0xab11(1010101100010001)、0xac11(1010110000010001)、0xee11进行与运算得到的结果都是0x11(10001)，因为只有低位进行了运算，而高位没有。
+</p>
+
+<p>
+而<code>hash(int h)</code>就是为了对hashcode进行处理,加入了高位的计算，把所有位都考虑进去，至于源码是具体是什么意思，我看不懂啊。
+</p>
+<h3 id="toc_0.2.4">扩容</h3>
+<p>
+当我们在HashMap中放的数据越来越多时，碰撞的概率也就越来越大，为了提高查询效率也就需要对它进行扩容。
+</p>
+
+<p>
+我们先看一下扩容的源码：
+</p>
+<pre class="brush:java">
+    void addEntry(int hash, K key, V value, int bucketIndex) {
+        Entry&lt;K,V&gt; e = table[bucketIndex];
+        table[bucketIndex] = new Entry&lt;&gt;(hash, key, value, e);
+        if (size++ &gt;= threshold)
+            resize(2 * table.length);
+    }
+</pre>
+
+<p>
+从源码中我们可以看出HashMap会在什么适合进行扩容(resize)操作，在size大于等于threshold(capactity*loadFactor)时进行，扩容的幅度就是当前的两倍大。
+</p>
+<blockquote>
+扩容会带来元素的重新hash，所以频繁扩容会带来性能下降。
+</blockquote>
+
+<h3 id="toc_0.2.5">fast-fail策略</h3>
+<p>
+HashMap不是线程安全的，当在使用迭代器的过程中有其他线程修改了map，就会抛出ConcurrentModificationException，是<code>fast-fail策略</code>。
+</p>
+
+<p>
+它是通过成员变量<code>modCount</code>实现的，从变量名我们可以看出它是修改次数的意思，对HashMap内容的任何修改都会增加它的值。
+</p>
+
+<p>
+我们以源码中内部抽象类HashIterator为例
+</p>
+<pre class="brush:java">
+    private abstract class HashIterator&lt;E&gt; implements Iterator&lt;E&gt; {
+        Entry&lt;K,V&gt; next;        // next entry to return
+        int expectedModCount;   // For fast-fail
+        int index;              // current slot
+        Entry&lt;K,V&gt; current;     // current entry
+
+        HashIterator() {
+	//------------------fixme
+            expectedModCount = modCount;
+            if (size &gt; 0) { // advance to first entry
+                Entry[] t = table;
+                while (index &lt; t.length &amp;&amp; (next = t[index++]) == null)
+                    ;
+            }
+        }
+
+        public final boolean hasNext() {
+            return next != null;
+        }
+
+        final Entry&lt;K,V&gt; nextEntry() {
+	//------------------fixme
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            Entry&lt;K,V&gt; e = next;
+            if (e == null)
+                throw new NoSuchElementException();
+
+            if ((next = e.next) == null) {
+                Entry[] t = table;
+                while (index &lt; t.length &amp;&amp; (next = t[index++]) == null)
+                    ;
+            }
+            current = e;
+            return e;
+        }
+
+        public void remove() {
+            if (current == null)
+                throw new IllegalStateException();
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            Object k = current.key;
+            current = null;
+            HashMap.this.removeEntryForKey(k);
+            expectedModCount = modCount;
+        }
+
+    }
+</pre>
+
+<p>
+我们从上面的代码可以看到，在迭代器初始化的时候会将modCount的值赋给expectedModCount，在迭代过程中会对modCount与expectedModeCount进行对比，如果不一样就说明有其他线程修改了Map，抛出异常。
+</p>
+<h3 id="toc_0.2.6">key的hashcode与equals方法</h3>
+<p>
+get方法的过程：首先计算key的hashcode，找到数组中对应位置的某一元素，然后通过key的equals方法在对应位置的链表中找到需要的元素。所以，hashcode与equals方法对于找到对应元素是两个关键方法。 
+</p>
+
+
+<h2 id="toc_0.3">使用HashMap的注意事项</h2>
+<ol>
+<li>
+不要在并发环境中使用HashMap，可以考虑并发包里的ConcurrentHashMap。
+
+<li>
+如果数据大小是固定的，那么最好给HashMap设置一个合理容量。
+
+</ol>
+<h2 id="toc_0.4">HashMap、HashSet、HashTable、ConcurrentHashMap 的区别</h2>
+<p>
+HashSet 里的元素不能重复
+HashTable 是线程安全的，从源码看很多方法加了synchronized关键字，但在线程竞争激烈的情况下效率低下。因为当一个线程访问HashTable的同步方法时，其他线程访问HashTable的同步方法，可能会进入阻塞或轮询状态。如果线程1使用put进行添加操作，线程2不但不能进行put操作，并且不能使用get方法获取元素，所以竞争越激烈效率越低。
+HashMap 多线程环境下，使用put操作会引起死循环，导致CPU利用率接近100%，所以并发情况下不能使用，其他不用说了吧
+ConcurrentHashMap 为解决HashTable的效率低下的问题，采用了<code>锁分段技术</code>，首先将数据分成一段一段存储，然后给每段数据加锁，这样当一个线程占用锁访问其中一个段数据时，其他段的数据也能被其他线程访问。
+</p>
+<blockquote>
+HashTable虽然性能不如ConcurrentHashMap，但并不能完全被取代，二者的迭代器的<code>一致性</code>不同，HashTable的迭代器是强一致性，而ConcurrentHashMap是弱一致性，它的get、clear、iterator都是弱一致性的。
+</blockquote>
+<blockquote>
+ConcurrentHashMap适用于追求性能的场景，大多数线程都只做insert/delete操作，对读取数据的一致性要求较低。
+</blockquote>
+<hr />
+<p>
+<code>日期</code>：2013-8-14、2013-09-09
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.iteye.com/topic/539465">深入理解HashMap</a>、<a href="http://www.iteye.com/topic/754887">HashMap深度分析</a>、<a href="http://www.iteye.com/topic/368087">java.util.HashMap源码要点浅析</a>、<a href="http://niub.iteye.com/blog/1786571">哈希（Hash）相关---Java中的Hash机制（HashMap、HashSet及对其源码解析</a>、<a href="http://ifeve.com/concurrenthashmap-vs-hashtable/">ConcurrentHashMap能完全替代HashTable吗？</a>、<a href="http://ifeve.com/concurrenthashmap/">聊聊并发（四）深入分析ConcurrentHashMap</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

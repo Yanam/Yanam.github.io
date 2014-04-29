@@ -1,0 +1,236 @@
+<html>
+<head>
+    <title>Dump日志的分析与工具使用</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">linux命令</a>
+<ul>
+<li><a href="#toc_0.2.1">top</a>
+<li><a href="#toc_0.2.2">jmap</a>
+<li><a href="#toc_0.2.3">jstack</a>
+<li><a href="#toc_0.2.4">jstat</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+总是在HelloJava的微信上看到通过dump日志分析问题的东西，一直以为这是个高深的工具，又苦于没有实践机会，这次在解决iusersys的CPU占用过高的问题上拍上用场了。
+</p>
+
+<h2 id="toc_0.2">linux命令</h2>
+<h3 id="toc_0.2.1">top</h3>
+<p>
+我们知道通过 <code>top</code> 命令可以看到系统里所有进程的运行情况。但是对于使用多线程的Java服务怎么知道各个线程的允许情况呢？也可以使用该命令<code>top -H -p \(PID</code>，把\)PID替换为我们要察看的Java进程的pid，怎样知道Java的pid呢？使用命令<code>jps</code>，该命令在配置好Java的环境变量后就可以使用了。
+</p>
+
+<h3 id="toc_0.2.2">jmap</h3>
+<p>
+<code>jmap</code>(Memeory Map for Java) 命令主要用于生存堆快照，或察看堆内生成的对象实例。这个命令全部是用来察看堆内情况和使用情况的。
+</p>
+
+<p>
+命令格式如戏：
+</p>
+<pre class="brush:shell">
+$ jmap [option] pid
+# 64位
+$ jmap -J-d64 [option] pid
+</pre>
+
+<p>
+jmap 命令的 <code>option</code> 有如下：
+<table>
+<tr>
+<th>
+Option
+</th>
+<th>
+Descrption
+</th>
+</tr>
+<tr>
+<td>
+-dump
+</td>
+<td>
+生成堆快照，格式为：-dump:[live,]format=b,file=,其中live参数说明只dump出存活的对象,一般使用<a href="http://eclipse.org/mat/">MAT(Eclipse Memory Analyzer Tool)</a>来分析，或者IBM的<a href="http://www.alphaworks.ibm.com/tech/heapanalyzer/">IBM HeapAnalyzer</a>
+</td>
+</tr>
+<tr>
+<td>
+-heap
+</td>
+<td>
+生成堆详细信息，如使用哪种回收器、参数配置、分代状况等，只有Linux/Solaris有效。
+</td>
+</tr>
+<tr>
+<td>
+-histo
+</td>
+<td>
+显示堆中对象的情况，包括类、实例数量和合计容量。 分析内存不足的问题，分析哪些对象占用内存过多。
+</td>
+</tr>
+<tr>
+<td>
+-finalizerinfo
+</td>
+<td>
+显示在F-Queue中等待finalizer线程执行finalze方法的对象。只在Linux/Solaris有效。
+</td>
+</tr>
+<tr>
+<td>
+-permstat
+</td>
+<td>
+以ClassLoader为统计口径显示永久代内存情况。只在Linux/Solaris有效。
+</td>
+</tr>
+<tr>
+<td>
+-F
+</td>
+<td>
+强制生成堆快照。只在Linux/Solaris有效。
+</td>
+</tr>
+</table>
+</p>
+<blockquote>
+该命令运行时会有出现JVM假死的现象，线上系统使用适合要慎重啊，一般挂了之后在用。
+</blockquote>
+<h3 id="toc_0.2.3">jstack</h3>
+<p>
+<code>jstack</code>(Stack Trace For Java) 命令用来生成当前时刻的线程快照，常用来查找线程死锁、CPU负载高的问题。
+</p>
+
+<p>
+命令格式如下：
+</p>
+<pre class="brush:shell">
+$ jstack [option] pid
+
+$ jstack [option] pid &gt;filename
+</pre>
+
+<p>
+jstack 命令的<code>option</code> 如下：
+</p>
+
+<table>
+<tr>
+<th>
+Option
+</th>
+<th>
+Descrption
+</th>
+</tr>
+<tr>
+<td>
+-l
+</td>
+<td>
+显示锁的额外信息
+</td>
+</tr>
+<tr>
+<td>
+-m
+</td>
+<td>
+如果调用本地方法的话，可以显示C/C++的堆栈。
+</td>
+</tr>
+<tr>
+<td>
+-F
+</td>
+<td>
+强制打印线程栈的信息
+</td>
+</tr>
+</table>
+
+<p>
+打印出来的日志可以使用<a href="http://www.alphaworks.ibm.com/tech/jca/">IBM Thread and Monitor Dump Analyzer for Java</a>或者<a href="https://java.net/projects/tda">TDA - Thread Dump Analyzer</a>
+</p>
+
+<p>
+通常分析工具需要结合上面的top命令，先使用top -h -p pid找到CPU高的线程id，然后在分析工具中找到该线程id对应的代码，分析代码的问题。
+</p>
+
+<h3 id="toc_0.2.4">jstat</h3>
+<p>
+<code>jstat</code>是一个监控JVM内存使用情况的工具，通过它可以察看JVM的内存、垃圾回收等的情况。
+最近调试JVM的启动参数，察看gc状况时用到了该命令。
+</p>
+
+<p>
+详细介绍可以看<a href="http://docs.oracle.com/javase/1.5.0/docs/tooldocs/share/jstat.html">oracle官方文档</a>
+</p>
+
+<p>
+这次用的主要是 <strong>jstat -gcutil –h10 pid 4s</strong>  ,命令执行的结果是，每4秒输出一次某个pid下JVM的垃圾回收概况，并且每10行打印一次表头。
+</p>
+
+<p>
+<strong>jstat –gccapacity –h 10 4s</strong> 命令执行结果是，堆内各个区的允许情况。
+<hr />
+<code>日期</code>：2013-08-20、2013-08-21、2013-09-04
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.jiacheo.org/blog/279">tomcat thread dump 分析</a>、<a href=".html">.html</a>、<a href="https://github.com/yikebocai/blog/issues/32">JVM监控分析工具之jmap、jhat和jstack</a>、<a href="http://docs.oracle.com/javase/6/docs/technotes/tools/">JDK Tools and Utilities</a>、<a href="http://jiajun.iteye.com/blog/443196">JDK自带VM分析工具jps，jstat，jmap，jconsole</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

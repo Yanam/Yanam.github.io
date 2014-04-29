@@ -1,0 +1,129 @@
+<html>
+<head>
+    <title>java多线程--AQS</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">AQS</a>
+<ul>
+<li><a href="#toc_0.1.1">条件1：原子性操作同步器的状态位</a>
+<li><a href="#toc_0.1.2">条件2：阻塞和唤醒线程</a>
+<li><a href="#toc_0.1.3">条件3：有序的队列</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">AQS</h2>
+<p>
+基本的思想就是表现为一个<code>同步器</code>。支持下面两个操作：
+</p>
+<ol>
+<li>
+<code>获取锁</code>：
+
+<li>
+<code>释放锁</code>：
+
+</ol>
+
+<p>
+支持上门两个操作，需要实现的三个条件：
+</p>
+<ul>
+<li>
+原子性操作同步器的状态位
+
+<li>
+阻塞和唤醒线程
+
+<li>
+维护一个有序的队列
+
+</ul>
+
+<h3 id="toc_0.1.1">条件1：原子性操作同步器的状态位</h3>
+<p>
+使用一个32位的整数来描述状态位：<code>private volatile int state; </code>,操作时使用CAS确保值的正确性。
+</p>
+<h3 id="toc_0.1.2">条件2：阻塞和唤醒线程</h3>
+<p>
+使用LockSupport类的park和unpark方法实现线程阻塞与唤醒。
+</p>
+<h3 id="toc_0.1.3">条件3：有序的队列</h3>
+<p>
+选用CLH lock queue来解决有序队列的问题，但做了修改：
+</p>
+<ol>
+<li>
+一个节点必须提供一种有序的方式找到下一个节点。
+
+<li>
+使用每个节点的状态域来控制阻塞而不是自旋。
+
+</ol>
+
+<p>
+其中队列中节点（Node），可能有如下状态（waitStatus）：
+</p>
+<ul>
+<li>
+CANCELLED =1 ；节点操作因为超时或者对应的线程被interrupt。节点不应留在此状态，一旦到达此状态将从CLH队列中提出。
+
+<li>
+SINAL = -1 ；节点的己任节点是（或将要）BLOCKED状态（例如通过LockSupport.park()操作），因此一个节点一旦被释放或者取消就需要唤醒（LockSupport.unpark())它的继任节点。
+
+<li>
+CONDITION = -2 ；表面节点对应的线程因为不满足条件(Condition)而被阻塞。
+
+<li>
+0 ：正常状态，新生的非CONDITION节点都是此状态。
+
+<li>
+非负值标识节点不需要被通知（唤醒）。
+
+</ul>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

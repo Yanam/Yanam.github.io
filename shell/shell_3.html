@@ -1,0 +1,296 @@
+<html>
+<head>
+    <title>shell学习笔记3</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">查找技巧</a>
+<ul>
+<li><a href="#toc_0.1.1">find命令</a>
+<li><a href="#toc_0.1.2">xargs</a>
+</ul>
+<li><a href="#toc_0.2">前言</a>
+<ul>
+<li><a href="#toc_0.2.1">rsync</a>
+<ul>
+<li><a href="#toc_0.2.1.1">命令参数</a>
+<li><a href="#toc_0.2.1.2">示例</a>
+</ul>
+<li><a href="#toc_0.2.2">tar备份</a>
+<ul>
+<li><a href="#toc_0.2.2.1">示例</a>
+</ul>
+<li><a href="#toc_0.2.3">cpio</a>
+<li><a href="#toc_0.2.4">cp</a>
+<ul>
+<li><a href="#toc_0.2.4.1">命令参数</a>
+<li><a href="#toc_0.2.4.2">示例</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">查找技巧</h2>
+<h3 id="toc_0.1.1">find命令</h3>
+<p>
+命令格式：find pathname -options [-print -exec -ok]
+</p>
+<ul>
+<li>
+<code>pathname</code> find命令所查找的目录路径。
+
+<li>
+<code>-print</code> find命令将匹配的文件输出到标准输出。
+
+<li>
+<code>-exec</code> find命令对匹配的文件执行该参数所给出的shell命令。相应命令的形式为'command'{}\; 注意{}和\;之间的空格。
+
+<li>
+<code>-ok</code> 和-exec的作用相同，只不过以一种更为安全的模式来执行参数所给出的shell命令。每执行一个命令之前，都会给出提示，让用户来确定是否执行。
+
+</ul>
+
+<p>
+find 命令选项：
+</p>
+<ul>
+<li>
+<code>-name</code> 按照文件名来查找
+
+<li>
+<code>-perm</code> 按照文件权限来查找
+
+<li>
+<code>-prune</code> 使用这一选项可以使find命令不再当前指定的目录中查找，如果同时使用-depth选项，那么-prune将被忽略。
+
+<li>
+<code>-user</code> 按文件属主来查找
+
+<li>
+<code>-group</code> 按照文件属组来查找
+
+<li>
+<code>-mtime -n +n</code> 按照文件更改时间来查找，-n表示文件更改据现在n天以内，+n表示文件更改据现在n天以前
+
+<li>
+<code>-nogroup</code> 查找无有效属组的文件
+
+<li>
+<code>-nouser</code> 查找无有效属主的文件
+
+<li>
+<code>-type</code> 查找某一类型，d 目录，f 普通文件。。。
+
+<li>
+<code>-size n</code> 查找文件长度为n块的文件，带有c时白哦是文件长度以字节计。
+<pre class="brush:ps">
+# 在/logs目录中查找更改时间在5日以前的文件并删除它们
+$ find logs -type f -mtime +5 -exec rm {} \;
+# 在当前目录中查找以.conf结尾、更改时间在5日以上的文件，并删除它们，删除之前需要确认
+$ find . -name "*.conf" -mtime +5 -ok rm{} \;
+</pre>
+
+</ul>
+
+<pre calss="brush:ps">
+# 查找更改时间比文件sam新但比文件temp旧的文件
+$ find -newer httpd1.conf ! -newer tmpe -ls
+
+# 查找当前目录更改时间比tmep文件新的文件
+$ find . -newer temp -print
+
+# 如果在一个命令行没有指定动作，Linux和BSD系统下面-print缺省的被执行。
+</pre>
+<h3 id="toc_0.1.2">xargs</h3>
+<p>
+上面我们使用find命令的-exec选项处理匹配到的文件，但有些系统对能够传递给exec的命令长度有限制。而这就是xargs命令的用处。
+find命令把匹配的文件传递给xargs命令，而xargs命令每次只获取一部分而不是全部。
+</p>
+<pre class="brush:ps">
+# 用grep命令在所有的普通文件中搜索hostname这个词
+$ find . -type f -print|xargs grep "hostname"
+</pre>
+
+<h2 id="toc_0.2">前言</h2>
+<p>
+应用的上线后，经常会用到数据文件的备份、恢复、同步等操作，这里介绍常用的几种命令（工具）。
+</p>
+<h3 id="toc_0.2.1">rsync</h3>
+<p>
+<code>rsync</code>：(remote synchronize)是类Unix下的一个远程数据同步的工具和网络协议，它可以快速同步两台主机之间的文件，也可以同步本地磁盘不同目录的文件。
+</p>
+
+<ol>
+<li>
+可以保持整个目录树和文件系统
+
+<li>
+可以方便的做到保持文件的权限、时间、软硬连接
+
+<li>
+传输效率高（只对变更的部分进行传输）
+
+</ol>
+
+<h4 id="toc_0.2.1.1">命令参数</h4>
+<ol>
+<li>
+<code>-a</code>：(--arhcive)归档模式，以递归方式传递文件，并保持所有文件属性,等同于-rlptgoD
+
+<li>
+<code>-r</code>：(--recursive)对子目录以递归模式处理
+
+<li>
+<code>-t</code>：(--time)保持文件时间信息
+
+<li>
+<code>-g</code>：(--group)保持文件属组信息
+
+<li>
+<code>-o</code>：(--owner)保持文件属主信息
+
+<li>
+<code>-p</code>：(--perms)保持文件权限
+
+<li>
+<code>--list-only</code>：只列出文件不进行复制
+
+<li>
+<code>--delete</code>：删除那些在接收端还有，而在发送端已经不存在的文件
+
+<li>
+<code>-R</code>：使用相对路径信息
+
+<li>
+<code>-b</code>：创建备份，也就是对于目标路径，如果已经存在相同的文件名时，将老的文件重新命名为~filename。可以使用--suffix选项来制定不同的备份文件前缀。
+
+</ol>
+ 
+<h4 id="toc_0.2.1.2">示例</h4>
+<pre class="brush:shell">
+# 本地文件同步
+$ rsync -a --delete /home  /backups 
+$ rsync -a --delete /home/ /backups/home.0
+
+# 不适用其他参数，rsync会在/tmp目录下创建foo.c文件
+$ rsync /home/test/foo.c /tmp/
+# 使用-R参数，rsync会在/tmp/home/test/foo.c，也就是会保持完整的路径
+$ rsync -R /home/test/foo.c /tmp/ 
+
+</pre>
+<blockquote>
+在制定复制源时，路径最后释放有 / 是有不同含义的
+</blockquote>
+<ul>
+<li>
+<strong>/home</strong> ：表示将整个/home目录复制到目标目录
+
+<li>
+<strong>/home/</strong> ：表示将/home目录中的所有内容复制到目标目录
+
+</ul>
+
+<pre class="brush:shell">
+# 基于ssh 的远程同步数据
+ 
+# 执行“推”复制同步
+$ rsync /etc/hosts root@182.168.0.1:/etc/hosts
+# 执行“拉”复制同步
+$ rsync root@192.168.0.1:/etc/hosts  /etc/hosts 
+</pre>
+<h3 id="toc_0.2.2">tar备份</h3>
+<p>
+<code>tar</code>：是通用性较强的归档命令， <strong>在提取文件和较小目录方面表现不错</strong>
+具体介绍请看<a href="shell_9.html">tar命令介绍</a>
+</p>
+<h4 id="toc_0.2.2.1">示例</h4>
+<pre class="brush:shell">
+# 创建 /data的存档文件
+$ tar -czvf backup.tar.gz /data/
+
+# 恢复 /data目录
+$ tar -xzvf backup.tar.gz /data/
+</pre>
+<h3 id="toc_0.2.3">cpio</h3>
+
+<h3 id="toc_0.2.4">cp</h3>
+<p>
+<code>cp</code>：用来复制文件或目录
+</p>
+<h4 id="toc_0.2.4.1">命令参数</h4>
+<ol>
+<li>
+<code>-a</code>：递归拷贝目录，并保留链接和文件属性，相当于d、p、r三项组合
+
+<li>
+<code>-d</code>：拷贝时保留链接
+
+<li>
+<code>-f</code>：删除已经存在的目标文件而不提示。
+
+<li>
+<code>-i</code>：覆盖目标文件前给出确认提示，属交互式拷贝。
+
+<li>
+<code>-p</code>：复制源文件内容后，还将其修改时间和访问权限也复制到新文件
+
+<li>
+<code>-r</code>：如果源文件是一个目录，此时命令将递归复制其所有子目录和文件
+
+</ol>
+<h4 id="toc_0.2.4.2">示例</h4>
+<pre class="brush:shell">
+
+</pre>
+<hr />
+<p>
+<code>日期</code>：2014-04-02、2014-04-23
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.howtocn.org/rsync:use_rsync">使用 rsync 同步</a>、<a href="https://www.ibm.com/developerworks/cn/aix/library/0908_unixsync_chengyan/">Unix/Linux 系统自动化管理: 数据备份与同步篇</a>、<a href="http://os.51cto.com/art/201006/203217.htm">Rsync 参数详解</a>、<a href="http://www.cnblogs.com/peida/archive/2012/10/29/2744185.html">每天一个linux命令（8）：cp 命令</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

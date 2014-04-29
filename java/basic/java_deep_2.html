@@ -1,0 +1,180 @@
+<html>
+<head>
+    <title>.class文件</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<ul>
+<li><a href="#toc_0.1.1">怎样查看.class文件</a>
+<li><a href="#toc_0.1.2">class文件记录的信息</a>
+<li><a href="#toc_0.1.3">类文件增强</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+最近看了几个关于JVM有关的文章，不少涉及到了.class文件，还以为字节码就是等同于.class文件。看到rednaxelafx的PPT后才知道原来不是。
+</p>
+
+<h3 id="toc_0.1.1">怎样查看.class文件</h3>
+<p>
+示例：
+</p>
+<pre class="brush:java">
+import java.io.Serializable;
+public class Foo implements Serializable {
+	public void bar() {
+		int i= 31;
+		if(i&gt; 0) {
+			int j = 42;
+		}
+	}
+}
+
+</pre>
+
+<p>
+编译Java源码  javac -g Foo.java
+反编译Class文件  javap -c -s -l -verbose Foo
+</p>
+
+<p>
+执行完反编译的命令后就会在控制台上看到class文件的内容了。
+</p>
+
+<h3 id="toc_0.1.2">class文件记录的信息</h3>
+<ol>
+<li>
+结构信息
+
+<ul>
+<li>
+Class文件格式版本号
+
+<li>
+各部分的数量不大小
+
+</ul>
+<li>
+元数据
+
+<ul>
+<li>
+类/继承的超类/ 实现的接口的声明信息
+
+<li>
+域不方法声明信息
+
+<li>
+常量池
+
+<li>
+用户自定义的、RetentionPolicy为CLASS戒RUNTIME的注解
+
+<li>
+——对应Java源代码中“声明”不“常量”对应的信息
+
+</ul>
+<li>
+方法信息
+
+<ul>
+<li>
+字节码
+
+<li>
+异常处理器表
+
+<li>
+操作数栈与局部变量区大小
+
+<li>
+操作数栈的类型记录（StackMapTable，Java 6开始）
+
+<li>
+调试用符号信息（如LineNumberTable、LocalVariableTable）
+
+<li>
+——对应Java源代码中“语句”不“表达式”对应的信息
+
+</ul>
+</ol>
+<blockquote>
+可以看出<code>字节码</code>只代表程序逻辑，只是class文件中众多组成的一部分。
+</blockquote>
+<h3 id="toc_0.1.3">类文件增强</h3>
+<p>
+对类文件进行增强的时机是在Java源代码编译之后，在JVM执行之前。
+常见做法有：
+</p>
+<ul>
+<li>
+由IDE在完成编译操作之后执行。
+
+<li>
+在构建过程中完成，如通过Ant或者Maven来执行相关操作。
+
+<li>
+实现自己的Java类加载器。当获得Java类的字节代码后，先进行增强处理，在从修改后的字节代码中定义出Java类。
+
+<li>
+通过JDK 5 引用的java.lang.instrument包来完成。
+
+</ul>
+
+<hr />
+<p>
+<code>日期</code>：2013-5-6
+</p>
+
+<p>
+<code>参考</code>：<a href="http://www.infoq.com/cn/articles/cf-java-byte-code">Java深度历险（一）——Java字节代码的操纵</a>、
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

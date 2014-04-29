@@ -1,0 +1,182 @@
+<html>
+<head>
+    <title>python常用组件使用说明</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">linux下python的安装</a>
+<li><a href="#toc_0.2">windows下环境变量的配置</a>
+<li><a href="#toc_0.3">setuptools</a>
+<li><a href="#toc_0.4">pip</a>
+<li><a href="#toc_0.5">virtualEnv</a>
+<ul>
+<li><a href="#toc_0.5.1">简介</a>
+<li><a href="#toc_0.5.2">安装</a>
+<li><a href="#toc_0.5.3">使用</a>
+<ul>
+<li><a href="#toc_0.5.3.1">激活脚本（activate script）</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">linux下python的安装</h2>
+<pre class="brush:shell">
+# 下载解压
+wget http://python.org/ftp/python/2.7.2/Python-2.7.2.tgz
+tar zxvf Python-2.7.2.tgz
+cd Python-2.7.2
+# 编译安装
+./configure --prefix=/usr/local/python-2.7
+make
+make install
+# 检查和设置环境变量
+mv /usr/bin/python /usr/bin/python_bak
+ln -s /usr/local/python-2.6/bin/python /usr/bin/python
+
+</pre>
+<h2 id="toc_0.2">windows下环境变量的配置</h2>
+<p>
+添加环境变量
+</p>
+<ul>
+<li>
+path = C:\Python27
+
+<li>
+path = C:\Python27\Scripts 
+
+</ul>
+<h2 id="toc_0.3">setuptools</h2>
+<p>
+setuptools是安装pip的前置条件。
+安装步骤如下：
+</p>
+<ol>
+<li>
+直接下载<a href="https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py">ez_setup.py</a>文件。
+
+<li>
+运行该文件
+<pre class="brush:shell">
+$ python ez_setup.py
+</pre>
+
+</ol>
+<h2 id="toc_0.4">pip</h2>
+<p>
+pip是安装virtualEnv的前置条件。
+安装步骤如下：
+</p>
+<ol>
+<li>
+直接下载<a href="https://raw.github.com/pypa/pip/master/contrib/get-pip.py">get-pip.py</a>文件。
+
+<li>
+运行该文件
+<pre class="brush:shell">
+$ python get-pip.py
+</pre>
+
+</ol>
+
+<h2 id="toc_0.5">virtualEnv</h2>
+<h3 id="toc_0.5.1">简介</h3>
+<dl>
+<dt>virtualenv</dt>
+<dd>是一个用来创建隔离的python环境的工具，它创建的每个环境有自己的安装目录，不与其他环境共享包，方便解决不同工程间的版本和依赖问题。</dd>
+<h3 id="toc_0.5.2">安装</h3>
+<dt>可以使用pip工具安装</dt>
+<dd><code>pip  install  virtualenv</code></dd>
+<dt>如果想安装最新开放版</dt>
+<dd><code>pip  install  https://github.com/pypa/virtualenv/tarball/develop</code>。</dd>
+<dt>也可以使用easy_install工具</dt>
+<dd><code>sudo easy_install virtualenv</code></dd>
+</dl>
+<p>
+如果没有python包管理，可以直接下载<a href="https://raw.github.com/pypa/virtualenv/master/virtualenv.py">virtualenv.py</a>这个文件，然后直接运行<code>python  virtualenv.py</code>。
+</p>
+
+<h3 id="toc_0.5.3">使用</h3>
+<dl>
+<dt>创建环境</dt>
+</dl>
+<pre class="brush:ps">
+# 方式一
+python virtualenv.py 环境名
+# 方式二
+virtualenv 环境名 
+</pre>
+
+<dl>
+<dt>The --system-site-packages 选项</dt>
+<dd>如果在创建环境时使用了改选项，则新创建的虚拟环境会从<code>/usr/lib/python2.7/site-packages</code>继承包。</dd>
+</dl>
+<pre class="brush:ps">
+virtualenv --system-site-packages 环境名
+</pre>
+<h4 id="toc_0.5.3.1">激活脚本（activate script）</h4>
+<p>
+执行激活脚本会将环境变量中$PATH中python的路径改为指定环境的中python的路径。命令行的提示符会有相应的显示，来标示出当前的环境名。
+<dl>
+<dt>liunx</dt>
+<dd>指定环境<code>source 环境名/bin/activate</code>，解除环境<code>source 环境名/bin/deactivate</code></dd>
+</dl>
+</p>
+
+<dl>
+<dt>windows</dt>
+<dd>指定环境<code>\path\to\env\Scripts\activate</code>，解除环境<code>\path\to\env\Scripts\deactivate</code></dd>
+<hr />
+</dl>
+<p>
+<code>日期</code>：2012-9-19、2013-11-18
+</p>
+
+<p>
+<code>参考</code>：<a href="http://www.virtualenv.org/en/latest/index.html#id2">virtualenv</a>、<a href="http://www.pip-installer.org/en/latest/installing.html">pip-Install howto</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

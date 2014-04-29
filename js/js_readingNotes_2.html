@@ -1,0 +1,374 @@
+<html>
+<head>
+    <title>js高级程序设计读书笔记（二）</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">操作符</a>
+<ul>
+<li><a href="#toc_0.1.1">位操作符</a>
+<ul>
+<li><a href="#toc_0.1.1.1">负数的二进制表示</a>
+<li><a href="#toc_0.1.1.2">按位非（NOT）</a>
+<li><a href="#toc_0.1.1.3">按位与（AND）</a>
+<li><a href="#toc_0.1.1.4">按位或（OR）</a>
+<li><a href="#toc_0.1.1.5">按位异或（XOR）</a>
+<li><a href="#toc_0.1.1.6">左移</a>
+<li><a href="#toc_0.1.1.7">有符号的右移</a>
+<li><a href="#toc_0.1.1.8">无符号的右移</a>
+</ul>
+<li><a href="#toc_0.1.2">布尔操作符</a>
+<li><a href="#toc_0.1.3">相等操纵符</a>
+<ul>
+<li><a href="#toc_0.1.3.1">相等于不相等</a>
+<li><a href="#toc_0.1.3.2">全等和不全等</a>
+</ul>
+</ul>
+<li><a href="#toc_0.2">函数</a>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">操作符</h2>
+<h3 id="toc_0.1.1">位操作符</h3>
+<h4 id="toc_0.1.1.1">负数的二进制表示</h4>
+<p>
+负数以二进制进行存储，使用的格式是<code>二进制补码</code>。计算一个数据的二进制补码有三个步骤：
+</p>
+<ol>
+<li>
+求这个数值绝对值的二进制码。
+
+<li>
+就二进制反码，即将0替换为1，将1替换为0。
+
+<li>
+得到的二进制反码加1。
+<pre>
+求-18的二进制码
+18的二进制码：
+0000 0000 0000 0000 0000 0000 0000 0001 0010
+反码：
+1111 1111 1111 1111 1111 1111 1111 1110 1101
+反码加1：
+1111 1111 1111 1111 1111 1111 1111 1110 1101
+					   1
+--------------------------------------------
+-18的二进制码：
+1111 1111 1111 1111 1111 1111 1111 1110 1110
+</pre>
+
+</ol>
+<h4 id="toc_0.1.1.2">按位非（NOT）</h4>
+<p>
+按位非操作符由一个波浪线（~）表示，结果是返回数值的反码。
+</p>
+<h4 id="toc_0.1.1.3">按位与（AND）</h4>
+<p>
+按位与操作符由（&amp;）表示。只有同时为1时才返回1，否则都返回0。
+</p>
+
+<table>
+<tr>
+<th>
+第一个数值的位
+</th>
+<th>
+第二个数值的位
+</th>
+<th>
+结果
+</th>
+</tr>
+<tr>
+<td>
+1
+</td>
+<td>
+1
+</td>
+<td>
+1
+</td>
+</tr>
+<tr>
+<td>
+1
+</td>
+<td>
+0
+</td>
+<td>
+0
+</td>
+</tr>
+<tr>
+<td>
+0
+</td>
+<td>
+1
+</td>
+<td>
+0
+</td>
+</tr>
+<tr>
+<td>
+0
+</td>
+<td>
+0
+</td>
+<td>
+0
+</td>
+</tr>
+</table>
+<h4 id="toc_0.1.1.4">按位或（OR）</h4>
+<p>
+按位或操作符由（|）表示。有一个是1就返回1，都是0才返回0。
+</p>
+
+<table>
+<tr>
+<th>
+第一个数值的位
+</th>
+<th>
+第二个数值的位
+</th>
+<th>
+结果
+</th>
+</tr>
+<tr>
+<td>
+1
+</td>
+<td>
+1
+</td>
+<td>
+1
+</td>
+</tr>
+<tr>
+<td>
+1
+</td>
+<td>
+0
+</td>
+<td>
+1
+</td>
+</tr>
+<tr>
+<td>
+0
+</td>
+<td>
+1
+</td>
+<td>
+1
+</td>
+</tr>
+<tr>
+<td>
+0
+</td>
+<td>
+0
+</td>
+<td>
+0
+</td>
+</tr>
+</table>
+<h4 id="toc_0.1.1.5">按位异或（XOR）</h4>
+<p>
+按位异或操作符由（^）表示。只有一个1时才返回，否则都返回0。
+</p>
+
+<table>
+<tr>
+<th>
+第一个数值的位
+</th>
+<th>
+第二个数值的位
+</th>
+<th>
+结果
+</th>
+</tr>
+<tr>
+<td>
+1
+</td>
+<td>
+1
+</td>
+<td>
+0
+</td>
+</tr>
+<tr>
+<td>
+1
+</td>
+<td>
+0
+</td>
+<td>
+1
+</td>
+</tr>
+<tr>
+<td>
+0
+</td>
+<td>
+1
+</td>
+<td>
+1
+</td>
+</tr>
+<tr>
+<td>
+0
+</td>
+<td>
+0
+</td>
+<td>
+0
+</td>
+</tr>
+</table>
+<h4 id="toc_0.1.1.6">左移</h4>
+<p>
+左移操作符由（&lt;&lt;)表示。
+</p>
+<h4 id="toc_0.1.1.7">有符号的右移</h4>
+<p>
+有符号的右移操作符由（&gt;&gt;）表示。
+</p>
+<h4 id="toc_0.1.1.8">无符号的右移</h4>
+<p>
+无符号的右移操作符由（&gt;&gt;&gt;）表示。
+</p>
+
+<h3 id="toc_0.1.2">布尔操作符</h3>
+<p>
+逻辑非<code>!</code>、逻辑与<code>&amp;&amp;</code>、逻辑或<code>||</code>
+</p>
+<h3 id="toc_0.1.3">相等操纵符</h3>
+<h4 id="toc_0.1.3.1">相等于不相等</h4>
+<p>
+由两个等于号（<code>==</code>）表示。
+</p>
+<h4 id="toc_0.1.3.2">全等和不全等</h4>
+<p>
+由三个等于号（<code>===</code>）表示。
+</p>
+
+<p>
+区别在于<code>==</code>会先进行强制转型在进行比较，而<code>===</code>是直接比较。建议使用全等。
+</p>
+
+<h2 id="toc_0.2">函数</h2>
+<p>
+有两点需要注意：
+</p>
+<ol>
+<li>
+函数的参数在内部是以数组来表示的，因此它不在乎传递的参数个数与类型。
+<pre class="brush:js">
+//函数内部可以通过arguments对象来访问参数数组。
+function sayHi(){
+	alert("Hello"+arguments[1]+","+arguments[2]);
+}
+sayHi("li","how are you today?");
+</pre>
+
+</ol>
+<p>
+所有参数传递都是值，不可能通过引用传递参数。
+</p>
+<pre class="brush:js">
+//
+function setName(obj){
+	obj.name="测试";
+}
+var person = new Object();
+setName(person);
+alert(person.name);	//"测试"
+//
+function setName(obj){
+	obj.name="测试";
+	obj = new Object();
+	obj.name = "小王";
+}
+var person = new Object();
+setName(person);
+alert(person.name);	//"测试"
+</pre>
+
+<ol>
+<li>
+没有重载。
+
+</ol>
+
+<hr />
+<p>
+<code>日期</code>:2012-07-30
+<hr />
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

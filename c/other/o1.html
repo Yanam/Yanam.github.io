@@ -1,0 +1,368 @@
+<html>
+<head>
+    <title>c语言中的内存分配</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">内存空间</a>
+<li><a href="#toc_0.2">常见内存溢出错误及对策</a>
+<li><a href="#toc_0.3">指针与数组的区别</a>
+<ul>
+<li><a href="#toc_0.3.1">修改内容</a>
+<li><a href="#toc_0.3.2">内容复制与比较</a>
+<li><a href="#toc_0.3.3">计算内存容量</a>
+<li><a href="#toc_0.3.4">指针参数</a>
+</ul>
+<li><a href="#toc_0.4">c语言动态内存分配与释放函数</a>
+<ul>
+<li><a href="#toc_0.4.1">malloc函数</a>
+<li><a href="#toc_0.4.2">memset函数</a>
+<li><a href="#toc_0.4.3">calloc函数</a>
+<li><a href="#toc_0.4.4">realloc函数</a>
+<li><a href="#toc_0.4.5">free函数</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">内存空间</h2>
+<p>
+一个c/c++程序占用的内存分为以下几个部分：
+</p>
+<ol>
+<li>
+程序代码区：用来存放程序的二进制代码。
+
+<li>
+动态存储区：用于在 <strong>程序执行</strong> 时分配的内存，又分为：
+
+<ol>
+<li>
+栈区（stack） ，由编译器自动分配释放，存放函数中的参数值，局部变量的值等。效率高但容量有限，函数运行结束时，这些内存区域会自动释放。
+
+<li>
+堆区（heap） ，一般由程序员分配释放，在c语言中，只有使用指针才能动态的分配内存。
+
+</ol>
+<li>
+静态存储区：用于存储全局变量、静态变量，这些变量的空间在程序编译时就已经分配好了，程序结束后由系统释放。
+
+<li>
+字符串常量区：程序结束后由系统释放。
+
+</ol>
+ 
+<h2 id="toc_0.2">常见内存溢出错误及对策</h2>
+<ol>
+<li>
+用malloc或new申请内存后，应该立即检查指针是否为NULL。
+
+<li>
+不要忘记为数组和动态内存赋初值。
+
+<li>
+避免数组或指针的下标越界，特别要当心发生“多一’或’少一“操作。
+
+<li>
+动态内存的申请和释放（malloc和free、new和delete）必须配对。
+
+<li>
+用free或者delete释放内存后，立即将指针设置为NULL，防止产生野指针。
+<pre class="brush:c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+int main(void){
+	char *p;
+	p = (char *)malloc(40 * sizeof(char));
+	if(p==NULL){				//必选对指针进行判断
+		printf("内存分配失败！");
+		return 1;
+	}
+	strcpy(p,"示例程序");			//不要忘记赋初值
+	printf("%s",p);
+
+	free(p);				//free一定要和malloc成对出现
+	p = NULL;				//释放后将指针设置为NULL，防止野指针
+	return 0;
+}
+</pre>
+
+</ol>
+<h2 id="toc_0.3">指针与数组的区别</h2>
+<p>
+在c/c++程序中，数组和指针经常可以互相替换使用，但二者并不是等价的。
+</p>
+<ul>
+<li>
+数组：在静态存储区或栈上被创建。数组名对应着（不是指向）一块内存，其地址和容量在生命周期内保持不变，只有数组内容可以改变。
+
+<li>
+指针：可以随时指向任意类型的内存块，它的特征是”可变”，所以我们常用指针来操作动态内存。
+
+</ul>
+<h3 id="toc_0.3.1">修改内容</h3>
+<pre class="brush:c">
+#include &lt;stdio.h&gt;
+
+void main(int argc,char **argv){
+	char *p="world";		//p指向常量字符串，而常量字符串是不可被修改的
+	char a[]="hello";
+
+	printf("array addr:%p \t pointer addr:%p",a,p);
+	a[0]='X';
+	p[0]='X';			//编译器不能发现该错误
+
+	printf("array:%s ,pointer:%s",a,p);
+}
+</pre>
+<blockquote>
+window系统使用cygwin可以正确执行该程序，cygwin与原版gcc有区别，估计是bug
+</blockquote>
+<h3 id="toc_0.3.2">内容复制与比较</h3>
+<p>
+不能对数组名进行直接复制与比较。
+</p>
+<pre class="brush:c">
+char a[]="hello";
+char b[10];
+stcpy(b,a);			//不能 b=a
+if(strcmp(b,a)==0)		//不能 if(b==a)
+</pre>
+
+<p>
+对指针指向内容的进行复制或比较也不能直接的操作，p=a只是复制了地址，将a的地址赋给了p，同理if(p==a)也是比较的地址而不是内容
+</p>
+<pre class="brush:c">
+int len = strlen(a);
+char *p = (char *)malloc(sizeof(char *)*(len-1));
+strcpy(p,a);			//不能p=a
+if（strcmp(p,a)==0)		//不能 if(p==a)
+
+</pre>
+<h3 id="toc_0.3.3">计算内存容量</h3>
+<pre class="brush:c">
+char a[] = "hello,world";
+char *p=a;
+printf("a sizeof :%d",sizeof(a));		//12字节 得到的是数组的字节数
+printf("p sizeof :%d",sizeof(p));		//4字节 得到的是指针变量的字节数
+//当数组作为函数参数传递时，该数组自动退化为同类型指针。
+void func(char a[100]){
+	pirntf("a sizeof :%d",a);		//4字节
+}
+</pre>
+<h3 id="toc_0.3.4">指针参数</h3>
+<p>
+如果函数的参数是一个指针，不要用该指针去申请动态内存。
+</p>
+<pre class="brush:c">
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+//通过指针参数申请内存，	错误
+void getmemory1(char *p,int num){
+	//编译器总要为函数的每个参数制作临时副本，以本例来说假设p的临时副本
+	//为_p，编译器使_p=p。这样在函数体内对_p内容的修改就会导致p内容的修
+	//改，但是本例将_p所指向的内存地址改变了，导致_p和p指向了不同地方，
+	//所以该函数并不能为p申请到空间，还会造成内存溢出，因为_p申请的空间
+	//没有进行free。
+        p= (char *)malloc(sizeof(char)*num);
+}
+
+//通过传指针的指针来实现	正确
+void getmemory2(char **p,int num){
+        *p=(char *)malloc(sizeof(char)*num);
+}
+
+//用函数返回值传递动态内存	正确，且易于理解
+char *getmemory3(int num){
+        char *p = (char *)malloc(sizeof(char)*num);
+}
+
+//函数返回“栈内存”		错误
+char *getmemory4(void){
+        char p[] = "hello";
+        return p;		//编译器将提出警告
+} 
+//修改后的函数返回“栈内存”		可以执行通过，但概念错误，返回的始终是“只读”内存。
+char *getmemory5(void){
+        char *p = "hello";
+        return p;
+} 
+int main(int argc,char **argv){
+        char *p=NULL;
+//      getmemory1(p,100);
+//      strcpy(p,"hello");
+
+//      getmemory2(&amp;p,100);
+//      strcpy(p,"hello");
+//      printf("p:%s",p);
+
+        p = getmemory3(100);
+        strcpy(p,"hello");
+        printf("p:%s\n",p);
+        return 0;
+}
+</pre>
+<h2 id="toc_0.4">c语言动态内存分配与释放函数</h2>
+<p>
+c标准函数库提供了许多函数来实现对堆上内存管理，其中包括：malloc、calloc、reallco、free等。他们在stdlib.h头文件中。
+</p>
+<h3 id="toc_0.4.1">malloc函数</h3>
+<p>
+malloc函数可是从堆内存上获得指定字节的内存空间，其函数声明如下：
+<code>void *malloc(int n)</code>
+</p>
+
+<p>
+形参 <strong>n</strong> 为想要分配的字节数。如果执行成功，返回获得的内存空间的 <strong>首地址</strong> ；如果执行失败，返回NULL。
+</p>
+<blockquote>
+malloc函数分配的内存空间是未初始化的。
+</blockquote>
+<h3 id="toc_0.4.2">memset函数</h3>
+<p>
+memset函数可以将制定内存空间按字节单位设置为字符c，其声明如下：
+<code>void *memset(void *p,int c,int n)</code>
+</p>
+
+<p>
+<strong>p</strong> 为要初始化的内存空间首地址， <strong>c</strong> 为要设定的值， <strong>n</strong> 为要设置的内存空间字节长度。
+</p>
+
+<h3 id="toc_0.4.3">calloc函数</h3>
+<p>
+calloc函数与malloc功能类似，不同的是使用它得到的内存空间是经过初始化的，其内容 <strong>全为0</strong> 。其声明如下：
+<code>void *calloc(int n,int size)</code>
+</p>
+
+<p>
+<strong>n</strong> 要申请的个数， <strong>size</strong> 为每个的字节长度
+</p>
+
+<h3 id="toc_0.4.4">realloc函数</h3>
+<p>
+realloc函数可以实现内存分配和释放的功能，其函数声明如下：
+<code>void *realloc(void *p,int n)</code>
+</p>
+
+<p>
+<strong>p</strong> 为指向堆内存的指针，realloc函数将指针p指向的内存块的大小变为n字节。如果当前内存块足够realloc，则只是将原指针指向的空间扩大，地址不变。如果连续内存块长度不够，则需要重新分配一块内存，将内容拷贝到新地址里，并将原有内存空间删除，两个地址就不同。
+</p>
+<blockquote>
+realloc分配的空间也是未初始化的。
+</blockquote>
+<h3 id="toc_0.4.5">free函数</h3>
+<p>
+free函数可以实现释放内存的功能，其函数声明如下：
+<code>void free(void *p)</code>
+</p>
+
+<p>
+free函数接受任意类型的指针。
+</p>
+<blockquote>
+free函数值释放指针指向内存空间的内容，该指针仍然指向原来的地方，此时指针为野指针，安全的做法是将其置为NULL。
+</blockquote>
+
+<pre class="brush:c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+int main(int argc,char **argv){
+        //malloc示例
+        char *p =NULL;
+        p = (char *)malloc(sizeof(char)*2);
+        if(p==NULL){
+                printf("申请内存失败！");
+                return 1;
+        }
+        //此时申请的内存空间未进行初始化
+        memset(p,0,sizeof(char)*2);             //初始化，将初始值设为0
+        printf("p初始化后的值为:%s,地址为：%p\n",p,p);
+
+        char *t = NULL;
+        t = (char *)calloc(3,sizeof(char));
+        if(t==NULL){
+                printf("申请内存空间失败！");
+                return 1;
+        }
+        printf("t的值为：%s,地址为：%p\n",t,t);
+
+        strcpy(t,"12");
+        printf("t的值为：%s,地址为：%p\n",t,t);
+
+        //这样调用realloc的方式要避免，因为如果realloc失败返回NULL，t会丢失原来指向的地址
+//      t = (char *)realloc(t,sizeof(char)*4);
+
+        char *t2 = (char *)realloc(t,sizeof(char)*4);
+        memset(t,0,sizeof(char)*4);
+        //realloc后地址是否相同，取决于原内存块是否有足够长的连续区域。
+        printf("t的值为：%s,地址为：%p\n",t2,t2);
+
+
+        //释放内存
+        free(p);
+        p =NULL;
+        //成功realloc后系统就已经删除掉原内存空间，无需手动释放
+        //free(t);
+        t =NULL;
+        free(t2);
+        t2 =NULL;
+
+        return 0;
+}
+</pre>
+<hr />
+<p>
+<code>日期</code>：2013-12-03
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.cnblogs.com/jiajinghai/archive/2011/11/09/2243709.html">浅谈C语言中的内存分配</a>、<a href="http://blog.csdn.net/chenyiming_1990/article/details/9476181">C语言的变量的内存分配</a>、<a href="http://club.topsage.com/thread-443540-1-1.html">C语言 内存管理详解 </a>、<a href="http://en.wikipedia.org/wiki/C_dynamic_memory_allocation">C dynamic memory allocation</a>、<a href="http://www.cppblog.com/sandywin/archive/2011/09/14/155746.html">C中堆管理——浅谈malloc,calloc,realloc函数之间的区别</a>、<a href="http://www.cnblogs.com/ren54/archive/2008/11/20/1337545.html">真正认识 REALLOC 的工作方式</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

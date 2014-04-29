@@ -1,0 +1,213 @@
+<html>
+<head>
+    <title>java多线程10--DCL与happens-Before规则</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">happens-before</a>
+<ul>
+<li><a href="#toc_0.1.1">Happen-before规则</a>
+<li><a href="#toc_0.1.2">例子</a>
+</ul>
+<li><a href="#toc_0.2">DCL（double check lock）</a>
+<ul>
+<li><a href="#toc_0.2.1">推荐方法（IODH）</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">happens-before</h2>
+<p>
+java存储模型有一个happens-before原则，当我们说一个操作（A）happens-before另一个操作（B）时，我们其实说的是“在发送操作B以前，操作A对内存施加的影响能够被观察到”。所谓对内存施加的影响就是对变量的写入。
+例如：	线程1）执行如下操作A：x=3；
+	线程2）执行如下操作B：y=x;
+如果操作A happens-before 操作B，线程2）在执行操作B之前就能确定操作“x=3”被执行了，是因为两个操作之间没有其他对x的写入操作， 
+</p>
+
+<p>
+时间上的前后关系而没有happens-before关系可能但并不保证能观测到签一个操作对内存施加的影响。
+</p>
+<h3 id="toc_0.1.1">Happen-before规则</h3>
+<ol>
+<li>
+Each action in a thread happens-before every action in that thread that comes later in the program's order.(同一线程的每个操作都happen-before其后的任何操作。)
+
+<li>
+An unlock (synchronized block or method exit) of monitor happens-before every subsequent lock(synchronized block or method entry) of that same monitor.Add because the happens-before relation is transitive,all actions of a thread prior to unlocking happens-before all actions subsequent to any thread locking that monitor.(对一个监视器的解锁happen-before每个后续对同一个监视器的加锁。)
+
+<li>
+A write to a volatile field happens-before every subsequent read of that same filed.Writes and reads of volatile fields have similar memory consistency effects as entering and exiting monitors,but do not entail mutual exclusion locking.(对volatile属性的字段进行写操作happens-before所有之后的读操作。) 
+
+<li>
+A call to start on a thread happens-before any action in the started thread.(Thread.start()操作happens-before所有thread里的操作)
+
+<li>
+All actions in a thread happens-before any other thread successfully returns from a join on that thread.(一个线程里的所有操作都happens-before其他线程join此线程成功返回。)
+
+</ol>
+<h3 id="toc_0.1.2">例子</h3>
+<pre class="brush:java">
+public void setX(int x){
+	this.x = x;	//(1)
+}
+public int getX(){
+	return x;	//(2)
+}
+</pre>
+
+<p>
+根据上面的规则，判断一下当一个线程操作setx方法、另一个线程操作getx方法时，这两个操作是否有happens-before的关系。首先由于两个操作由不同线程操作，所以规则1不符合，又由于不涉及到锁，所以规则2也不符合，其他规则也不负，所以两个操作没有happens-before关系。也就是说当不同线程操作这个两个方法时有发送读写脏数据的情况。
+</p>
+
+<p>
+让两个操作有happens-before的关系
+</p>
+<pre class="brush:java">
+public synchronized void setx(int x){
+	this.x = x;	//(1)
+}
+public synchronized int getx(){
+	return x;	//(2)
+}
+</pre>
+
+<p>
+这段代码和前面代码的区别是在读写方法前加了synchronized关键字，然后我们在根据规则进行判断，滤去其他规则，看第二条，由于我们使用了synchronized关键字保证了同时只有一个线程可以访问synchronized修饰的方法。假设unlock操作发生在lock操作之前，那么根据规则一（单线程）(1)操作happens-before unlock 操作，lock 操作 happens-before 于(2) 操作。根据规则二（多线程对同一个锁的操作），lock 操作 happens-before unlock 操作。根据规则二（传递规则），操作(1) -&gt;  unlock, unlock -&gt; lock , lock -&gt; 操作(2),所以操作(1) -&gt; 操作(2)，也就是说操作(1) happens-before 操作(2)。
+</p>
+
+<p>
+如果将两个方法中任意一个synchronized关键字去掉会怎样呢？这是以前困扰我的问题，我总是任务读方法不用加锁啊？当其中一个方法去掉此关键字后，他们两个操作的happens-before 关系就不复存在了，很明显已经不符合规则二（多线程对同一个锁的操作），这样告诉我们一个原则：<code>必须对同一个变量的所有读写操作同步，才能保证不读到陈旧的数据，仅仅同步其中一个是不够的。</code>
+</p>
+
+<h2 id="toc_0.2">DCL（double check lock）</h2>
+<p>
+一个典型的DCL示例：
+</p>
+<pre class="brush:java">
+class LazySingleton{
+	private int somefiled; 
+	private static LazySingleton instance;
+	private LazySingleton(){
+		 this.somefield = new Random().nextInt(200)+1;	//(1) 
+	}
+	public LazySingleton getInstance(){
+		if(instance==null){				//(2)
+			sysnchronized(LazySingleton.class){	//(3)
+				if(instance == null){		//(4)
+					instance = new LazySingleton();	//(5)
+				}
+			}
+		}
+		return insatnce;				//(6)
+	}
+	public int getSomeFiled(){
+		return this.somefiled;				//(7)
+	}
+}
+</pre>
+<p>
+虽然当我们多线程调用getInstance()方法时只可能得到LazySingleton的唯一实例，这符合我们对单例模式的预期,但是问题是尽管我们可以得到LazySingleton对象的正确引用，但是可能访问到其成员变量的脏数据。
+也就是说理论上我们调用LazySingleton.getInsatnce().getSomefiled() 可能得到默认值0。
+因为语句(1)与语句(7)没有happens-before关系。
+</p>
+
+<p>
+由此我们得到一条经验：<code>对引用(包括对象引用和数组引用)的非同步访问，即使得到该引用的最新值，也不能保证得到其成员变量的最新值。</code>
+</p>
+
+<p>
+修正方法：
+</p>
+<pre  class="brush:java">
+// 1) 将 int 属性 用 volatile修饰
+// 2) 将getInstance操作跟getSomeFiled()放到一个锁里
+public int getSomeFiled(){
+	synchronized(LazySingleton.class){
+		return this.someField;
+	}
+}
+</pre>
+
+<p>
+在新的内存模型(JSR133)下，实例字段使用volatile可以解决DCL问题，但是使用volatile的性能开销也有所上升（在大多数平台下，volatile性能开销还是比较低的）。
+</p>
+
+
+<h3 id="toc_0.2.1">推荐方法（IODH）</h3>
+<p>
+很多博客在讨论DCL问题时都推荐IODH方法解决该问题，它既解决了延迟加载，又支持在多线程下允许，还不影响性能。
+</p>
+
+<p>
+<code>IODH</code>(Initialization On Demand Hodler)，这个写法的发明者是Google公司的Bob lee。
+</p>
+
+<pre class="brush:java">
+public class Singletion{
+	static class SingletonHolder{
+		static Singleton instance = new Singltion();
+	}
+
+	public static Singlton getInstance(){
+		return SingltonHolder.instance;
+	}
+}
+</pre>
+
+<p>
+上面代码之所以正确的原因是：初始化是有static字段来保证的。如果一个字段设置在static初始化中，对其他访问这个类的线程来说是能正确的保证它的可见性的。
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2013-02-27 、2013-03-15、2013-09-09
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.iteye.com/topic/260515">用happen-before规则重新审视DCL</a>、<a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/package-summary.html">Package java.util.concurrent</a>、<a href="http://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand holder idiom</a>、<a href="http://ifeve.com/jmm-faq-dcl/">Java内存模型FAQ（十一）新的内存模型是否修复了双重锁检查问题？</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

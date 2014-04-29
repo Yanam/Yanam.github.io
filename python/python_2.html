@@ -1,0 +1,101 @@
+<html>
+<head>
+    <title>python学习笔记2</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">字典dict</a>
+<ul>
+<li><a href="#toc_0.1.1">字典方法</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">字典dict</h2>
+<p>
+<code>dict</code>函数
+</p>
+<h3 id="toc_0.1.1">字典方法</h3>
+<dl>
+<dt><code>clear</code>方法</dt>
+<dd>清楚字典的所有项。</dd>
+<dt><code>copy</code>方法</dt>
+<dd>浅复制一个字典。</dd>
+<dt><code>fromkeys</code>方法</dt>
+<dd>使用给定的键建立新的字典，每个键默认值为None。</dd>
+<dt><code>get</code>方法</dt>
+<dd>取得字典某项的值，如果key不存在则返回None。</dd>
+<dt><code>has_key</code></dt>
+<dd>检查字典是否包含给定的键。与 k in dict类型。</dd>
+<dt><code>items</code></dt>
+<dd>将字典所有项以列表的形式返回。</dd>
+<dt><code>iteritems</code></dt>
+<dd>与items类型，不过返回的是迭代器。</dd>
+<dt><code>keys</code>和<code>iterkeys</code></dt>
+<dd>与上面类似，不过返回的是键。 </dd>
+<dt><code>values</code>和<code>itervalues</code></dt>
+<dd>与上面类似，不过返回的是值，与其他不同的是返回值会包含重复内容。</dd>
+<dt><code>pop</code>方法</dt>
+<dd>获得给点键的值，然后从字典中移除。</dd>
+<dt><code>popitem</code>方法</dt>
+<dd>与上面类似，不过是随机弹出某个项。</dd>
+<dt><code>setdefault</code>方法</dt>
+<dd>与get类似，不过还能在字典不给定键的情况下设定相应的键值。</dd>
+<dt><code>update</code>方法</dt>
+<dd>可以用一个字典项更新另一个字典。</dd>
+</dl>
+<pre class="brush:python">
+# dict
+items = [('name','tom'),('age',12)] 
+d = dict(items)
+print d				#{'age':12,'name':'tom'}
+# fromkeys
+dict.fromkeys(['name','age'])
+print dict			#{'age':None,'name':None}
+
+</pre>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

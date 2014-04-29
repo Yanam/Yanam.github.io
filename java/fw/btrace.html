@@ -1,0 +1,168 @@
+<html>
+<head>
+    <title>BTrace的使用</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">BTrace是啥</a>
+<li><a href="#toc_0.3">安装</a>
+<li><a href="#toc_0.4">使用</a>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+UIBI遇到性能问题，tps跟平均请求时间都不高，为了找出性能消耗点，需要有一个详细的时间日志，自己在代码里加太low了，就选择了使用BTrace。
+</p>
+
+<h2 id="toc_0.2">BTrace是啥</h2>
+<p>
+BTrace 是Java的一个动态跟踪工具。工作原理就是把跟踪代码动态替换到被监控的Java程序内。<a href="http://kenai.com/projects/btrace">BTrace官网</a>
+</p>
+<h2 id="toc_0.3">安装</h2>
+<p>
+安装非常简单：
+</p>
+<ol>
+<li>
+去官网下载BTrace。
+
+<li>
+解压到某个目录，可以选择将bin文件加入到PATH环境变量中。
+
+<li>
+可能需要设置一下 bin/btrace 文件中的JAVA_HOME 环境变量（在文件头加上“JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64”）。
+
+</ol>
+
+<p>
+环境变量的设置
+</p>
+<pre class="brush:shell">
+$ export BTRACE_HOME=/home/yudengfeng/btrace
+$ export PATH=$BTRACE_HOME/bin:$PATH
+</pre>
+
+
+<h2 id="toc_0.4">使用</h2>
+<p>
+使用也同样的简单，Shell下 输入 btrace &lt;pid&gt; Test.java 
+</p>
+
+<p>
+pid可以用jps命令查询。(必须装了jdk才有jps命令可用)
+</p>
+
+<p>
+<code>sudo bin/btrace 3615 ExecuteTime.java &gt;excute.log </code>
+其中pid为你要监控的Java程序的pid，一般运行jps 命令可以查看到。
+Test.java 为BTrace脚本。
+例如：
+</p>
+<pre class="brush:java">
+//注意这些静态方法
+import static com.sun.btrace.BTraceUtils.print;
+import static com.sun.btrace.BTraceUtils.println;
+import static com.sun.btrace.BTraceUtils.str;
+import static com.sun.btrace.BTraceUtils.strcat;
+import static com.sun.btrace.BTraceUtils.timeMillis;
+
+import com.sun.btrace.annotations.BTrace;
+import com.sun.btrace.annotations.Kind;
+import com.sun.btrace.annotations.Location;
+import com.sun.btrace.annotations.OnMethod;
+import com.sun.btrace.annotations.ProbeClassName;
+import com.sun.btrace.annotations.ProbeMethodName;
+import com.sun.btrace.annotations.TLS;
+
+@BTrace
+public class ExecuteTime {
+
+	@TLS
+	static long beginTime = 0;
+
+	@OnMethod(clazz = "/com\\.ifeng\\.iusersys\\.[^bean]\\..*/", method = "/.*/")
+	public static void startMethod() {
+		beginTime = timeMillis();
+	}
+
+	@OnMethod(clazz = "/com\\.ifeng\\.iusersys\\.[^bean]\\..*/", method = "/.*/", location = @Location(Kind.RETURN))
+	public static void endMethod(@ProbeClassName String pcn,@ProbeMethodName String pmn) {
+		
+		 long count = timeMillis() - beginTime;
+		 if(count&gt;1){
+			print(strcat(strcat(strcat("call ",pcn),"."),pmn));
+			print("   [");    
+			print(strcat("Time taken : ", str(count)));    
+			println("]");  
+		 }
+	}
+
+}
+
+</pre>
+
+<p>
+上面例子为一个输出程序运行时间的脚本。
+</p>
+
+<p>
+BTrace除了可以自己写脚本以外，还提供了很多写好的脚本，放在sample目录下，<a href="https://kenai.com/projects/btrace/pages/UserGuide">BTrace User's Guide</a>页面底部可以看到对它们的描述。
+</p>
+<blockquote>
+BTrace并不是对程序毫无影响，因为它毕竟修改了class文件，但是影响微乎其微。
+</blockquote>
+<hr />
+<p>
+<code>日期</code>：2013-5-16
+</p>
+
+<p>
+<code>参考</code>：<a href="https://kenai.com/projects/btrace/pages/UserGuide">BTrace User's Guide</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

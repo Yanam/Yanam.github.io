@@ -1,0 +1,176 @@
+<html>
+<head>
+    <title>python学习笔记3</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">其他语句</a>
+<ul>
+<li><a href="#toc_0.1.1">布尔值</a>
+<li><a href="#toc_0.1.2">range和xrange函数</a>
+<li><a href="#toc_0.1.3">列表推导式</a>
+<li><a href="#toc_0.1.4">参数</a>
+<li><a href="#toc_0.1.5">lambda函数</a>
+<li><a href="#toc_0.1.6">内建函数filter、map、reduce</a>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">其他语句</h2>
+<p>
+if、for、while等语句都是以冒号“:”结尾。
+else if 在python中简写为elif。
+循环语句可以跟else语句连接,当循环结束时执行else子句，但当循环被break中断时则不执行。
+try 语句也可以后接else，在未发送异常时执行。
+</p>
+<h3 id="toc_0.1.1">布尔值</h3>
+<p>
+标准值：False、True
+False、None、0、""、()、[]、{}以上这些值在作为布尔表达式时会被解释为假Flase。
+</p>
+<h3 id="toc_0.1.2">range和xrange函数</h3>
+<dl>
+<dt><code>range</code>函数</dt>
+<dd>range([start,] stop [,step] ) ,根据给出的start与stop指定的范围以及step设定的步长，生成一个序列。</dd>
+<dt><code>xrange</code>函数</dt>
+<dd>与上面相同，只不过生成的不是一个数值，而是一个生成器。</dd>
+</dl>
+<pre class="brush:python">
+&gt;&gt;&gt;  range(5)
+[0,1,2,3,4]
+&gt;&gt;&gt;  range(1,5)
+[1,2,3,4]
+&gt;&gt;&gt;  range(0,6,2)
+[0,2,4]
+
+
+# xrange
+&gt;&gt;&gt; xrange(5)
+xrange(5)
+&gt;&gt;&gt; list(xrange(5))
+[0,1,2,3,4]
+</pre>
+<h3 id="toc_0.1.3">列表推导式</h3>
+<p>
+列表推导式（list comprehension）是利用其他列表创建新列表的一种方法。工作方式类似于for循环。
+</p>
+<pre class="brush:python">
+&gt;&gt;&gt; [x*x for x in range(10)]
+[0,1,4,9,16,25,36,49,64,81]
+&gt;&gt;&gt; [x*x for x in range(10) if x%3 ==0]
+[0,9,36,81]
+</pre>
+<h3 id="toc_0.1.4">参数</h3>
+<dl>
+<dt><code>位置参数</code></dt>
+<dd>因为它们的位置很重要。但有些时候，参数的顺序很难记住，为了让事情简单我们可以使用<code>关键字参数</code>。</dd>
+<dt><code>关键字参数</code></dt>
+<dd>最厉害的地方在于可以在函数中给参数提供默认值，当它和位置参数联合使用时，注意要不位置参数放在前面。</dd>
+<dt><code>收集参数</code></dt>
+<dd>收集其余位置的参数。</dd>
+</dl>
+<pre class="brush:python">
+def print_param_4(x,y,z=3,*pospar,**keypar):
+	print x,y,z
+	print pospar
+	print keypar
+
+&gt;&gt;&gt; print_param_4(1,2,3,4,5,6,7,foo=1,bar=2)
+1 2 3
+(5,6,7)
+{'foo':1,'bar':2}
+</pre>
+<h3 id="toc_0.1.5">lambda函数</h3>
+<dl>
+<dt><code>lambda</code>函数</dt>
+<dd>python从lisp借鉴过来创建匿名函数的方法。lambda函数可以接收任意多个参数（包括可选参数）并返回单个表达式的值。</dd>
+</dl>
+<blockquote>
+lambda函数是一种编码风格问题。不一定非要使用它，任何使用它的地方都可以定义一个普通函数来替换。
+</blockquote>
+<pre class="brush:python">
+def f(x):
+    return x*2
+&gt;&gt;&gt; f(3)
+6
+&gt;&gt;&gt; g = lambda x:x*2
+&gt;&gt;&gt; g(3)
+6
+
+&gt;&gt;&gt;(lambda x:x*2)(3)
+6
+</pre>
+<h3 id="toc_0.1.6">内建函数filter、map、reduce</h3>
+<dl>
+<dt><code>filter</code>函数</dt>
+<dd>接收两个参数，分别为function和sequence。该函数返回一个执行function结果为true的序列。如果序列是字符串或者元组，那么返回的结果也是，否则返回列表。</dd>
+<dt><code>map</code>函数</dt>
+<dd>接收两个参数，分别为function和sequence。该函数返回sequence中元素执行function后的结果的列表。</dd>
+<dt><code>reduce</code>函数</dt>
+<dd>接收两个参数，分别为function和sequence。该函数一个调用二元函数的结果的和。</dd>
+</dl>
+<pre class="brush:python">
+def f(x):
+    return x%2!=0 and x%3!=0
+&gt;&gt;&gt; filter(f,range(2,25))
+[5,7,11,13,17,19,23]
+
+def cub(x):
+    return x*xx
+&gt;&gt;&gt; map(cub,range(1,11))
+[1,8,27,64,125,216,343,512,729,1000]
+# 当传递的参数是两个序列时，function也必须接收两个参数
+def add(x,y):
+    return x+y
+&gt;&gt;&gt; map(add,range(8),range(8))
+[0,2,4,6,8,10,12,14]
+
+def add(x,y):
+    return x+y
+&gt;&gt;&gt; reduce(add,range(1,11))
+55
+</pre>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

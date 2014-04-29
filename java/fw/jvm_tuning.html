@@ -1,0 +1,335 @@
+<html>
+<head>
+    <title>JVM启动参数设置与性能调优</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">JVM日志</a>
+<ul>
+<li><a href="#toc_0.1.1">GC相关参数</a>
+<li><a href="#toc_0.1.2">error相关参数</a>
+<li><a href="#toc_0.1.3">dump相关参数</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">JVM日志</h2>
+<p>
+JVM可以通过配置启动参数，打印出GC日志、错误日志、dump日志。
+</p>
+<h3 id="toc_0.1.1">GC相关参数</h3>
+<p>
+在JVM调优时除了通过jstat、jmap命令监控gc的情况，gc的日志也是一个很好的了解JVM运行情况的东西。
+</p>
+
+<p>
+涉及到gc的参数列表：
+</p>
+
+<table>
+<tr>
+<th>
+Option
+</th>
+<th>
+Descrption
+</th>
+<th>
+Result
+</th>
+</tr>
+<tr>
+<td>
+-XX:-PrintGC
+</td>
+<td>
+垃圾回收时打印日志
+</td>
+<td>
+输出如下：[GC 118250K-&gt;113543K(130112K), 0.0094143 secs]
+</td>
+</tr>
+<tr>
+<td>
+-XX:+PrintGCDetails
+</td>
+<td>
+垃圾回收时打印详细日志
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+-XX:+PrintGCTimeStamps
+</td>
+<td>
+打印GC发生的时间戳
+</td>
+<td>
+可与上面参数混用-XX:+PrintGC:PrintGCTimeStamps
+</td>
+</tr>
+<tr>
+<td>
+-XX:+PrintGCApplicationStoppedTime
+</td>
+<td>
+打印GC时应用停止的时间
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+-XX:+PrintGCApplicationConcurrentTime
+</td>
+<td>
+打印GC并行执行的时间
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+-XX:+PrintHeapAtGC
+</td>
+<td>
+打印每次GC前后的堆栈相信信息
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+-XX:-PrintClassHistogram
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+-XX:+PrintTLAB
+</td>
+<td>
+打印TLAB的使用情况
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+-XX:+PrintTenuringDistribution
+</td>
+<td>
+察看每次minor GC后
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+-Xloggc:&lt;filename&gt;
+</td>
+<td>
+指定gc日志路径与文件名
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+-XX:-UseGCLogFileRotation
+</td>
+<td>
+激活 gc日志覆盖
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+-XX:NumberOfGClogFiles=1
+</td>
+<td>
+gc日志的个数
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+-XX:GCLogFileSize=8K
+</td>
+<td>
+gc日志的大小,超过后会被覆盖
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+</table>
+
+<p>
+例子：
+</p>
+<pre class="brush:shell">
+$ java -XX:+PrintClassHistogram -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -XX:-UseGCLogFileRotation -XX:GCLogFileSize=120K -Xloggc:logs/gc.log
+</pre>
+<h3 id="toc_0.1.2">error相关参数</h3>
+<p>
+致命错误日志，一直没用实际使用过，先留着。
+<table>
+<tr>
+<th>
+Option
+</th>
+<th>
+Descrption
+</th>
+</tr>
+<tr>
+<td>
+-XX:ErrorFile=./hs_err_pid&lt;pid&gt;.log
+</td>
+<td>
+设置JVM致命错误日志的路径和名称
+</td>
+</tr>
+<tr>
+<td>
+-XX:OnError=
+</td>
+<td>
+设置JVM遇到致命错误时执行的命令
+</td>
+</tr>
+</table>
+</p>
+
+<p>
+例子：
+</p>
+<pre class="brush:shell">
+java -XX:ErrorFile=/var/log/java/java_error%p.log
+</pre>
+<h3 id="toc_0.1.3">dump相关参数</h3>
+<p>
+Java服务难免会遇到OutOfMemory的问题，分析dump日志是找到问题根源的关键，JVM可以通过参数设置，在遇到内存溢出时打印堆栈信息到日志中。
+</p>
+
+<p>
+涉及到dump的参数列表：
+</p>
+
+<table>
+<tr>
+<th>
+Options
+</th>
+<th>
+Descrption
+</th>
+</tr>
+<tr>
+<td>
+-XX:HeapDumpPath=
+</td>
+<td>
+指定堆栈日志路径，如果不指定文件名则为java_&lt;pid&gt;<em>&lt;date&gt;</em>&lt;time&gt;_heapDump.hprof
+</td>
+</tr>
+<tr>
+<td>
+-XX:-HeapDumpOnOutOfMemoryError
+</td>
+<td>
+激活 在JVM 发生OutOfMemoryError时dump日志的功能
+</td>
+</tr>
+<tr>
+<td>
+-XX:OnOutOfMemoryError=
+</td>
+<td>
+指定 在JVM 发生OutOfMemoryError时要执行的命令
+</td>
+</tr>
+</table>
+
+
+<p>
+例子：
+</p>
+<pre class="brush:shell">
+$ java -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$CATALINA_BASE/logs 
+</pre>
+
+
+<hr />
+<p>
+<code>日期</code>：2013-09-05
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.oracle.com/technetwork/java/javase/tech/vmoptions-jsp-140102.html#DebuggingOptions">Java HotSpot VM Options</a>、<a href="http://www.cnblogs.com/redcreen/archive/2011/05/04/2037057.html#CMSInitiatingOccupancyFraction_value">JVM系列三:JVM参数设置、分析</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

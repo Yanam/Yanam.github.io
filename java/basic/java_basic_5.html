@@ -1,0 +1,193 @@
+<html>
+<head>
+    <title>java基础5---通过jdbc得到数据库各种信息</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">起因</a>
+<li><a href="#toc_0.2">实现代码</a>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">起因</h2>
+<p>
+一直以为java中只有手动定义xml或者实体类才能操作数据库的数据，今天看mybatis源码是，发现<code>org.apache.ibatis.metadata</code>包下有个DatabaseFactory类竟然用jdbc本身的接口获得了数据库表名、字段名、字段类型等信息，真是挖到宝贝了，SSO要求数据库字段可扩展的需求也有实现办法了。
+</p>
+<h2 id="toc_0.2">实现代码</h2>
+<p>
+下面直接贴代码，数据库连接的代码就不贴了，只把取值的部门展示一下。
+</p>
+<pre class="brush:java">
+/**
+ * 通过jdbc查询出数据库的各种信息
+ * @author liuyn
+ *
+ */
+public class DataBaseDesc {
+
+	public static void main(String[] args) {
+		Connection con = ConnectUtil.getCon();
+		try {
+			DatabaseMetaData dmd = con.getMetaData();
+			ResultSet rs = dmd.getColumns("alarm", null, null, null);
+			while (rs.next()) {
+				String table_cat = rs.getString("TABLE_CAT");
+				String schemaName = rs.getString("TABLE_SCHEM");
+				String tableName = rs.getString("TABLE_NAME");
+				String columnName = rs.getString("COLUMN_NAME");
+				// java.sql.Types
+				String dataType = rs.getString("DATA_TYPE");
+				String columnSize = rs.getString("COLUMN_SIZE");
+				System.out.println("TABLE_CAT--[" + table_cat
+						+ "]--  TABLE_SCHEM--[" + schemaName
+						+ "]--  TABLE_NAME--[" + tableName
+						+ "]--  COLUMN_NAME--[" + columnName
+						+ "]--- DATA_TYPE[" + dataType + "]--  COLUMN_SIZE["
+						+ columnSize + "]");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			ConnectUtil.closeCon(con);
+		}
+	}
+}
+
+</pre>
+
+<p>
+可以看到表名，表的各种属性都被打印出来了。完整的数据库元数据如下：
+</p>
+<ul>
+<li>
+TABLE_CAT String =&gt; 表类别（可为 null）  
+
+<li>
+TABLE_SCHEM String =&gt; 表模式（可为 null）  
+
+<li>
+TABLE_NAME String =&gt; 表名称  
+
+<li>
+COLUMN_NAME String =&gt; 列名称  
+
+<li>
+DATA_TYPE int =&gt; 来自 java.sql.Types 的 SQL 类型  
+
+<li>
+TYPE_NAME String =&gt; 数据源依赖的类型名称，对于 UDT，该类型名称是完全限定的  
+
+<li>
+COLUMN_SIZE int =&gt; 列的大小。  
+
+<li>
+BUFFER_LENGTH 未被使用。  
+
+<li>
+DECIMAL_DIGITS int =&gt; 小数部分的位数。对于 DECIMAL_DIGITS 不适用的数据类型，则返回 Null。  
+
+<li>
+NUM_PREC_RADIX int =&gt; 基数（通常为 10 或 2）  
+
+<li>
+NULLABLE int =&gt; 是否允许使用 NULL。  
+    columnNoNulls - 可能不允许使用 NULL 值  
+    columnNullable - 明确允许使用 NULL 值  
+    columnNullableUnknown - 不知道是否可使用 null  
+
+<li>
+REMARKS String =&gt; 描述列的注释（可为 null）  
+
+<li>
+COLUMN_DEF String =&gt; 该列的默认值，当值在单引号内时应被解释为一个字符串（可为 null）  
+
+<li>
+SQL_DATA_TYPE int =&gt; 未使用  
+
+<li>
+SQL_DATETIME_SUB int =&gt; 未使用  
+
+<li>
+CHAR_OCTET_LENGTH int =&gt; 对于 char 类型，该长度是列中的最大字节数  
+
+<li>
+ORDINAL_POSITION int =&gt; 表中的列的索引（从 1 开始）  
+
+<li>
+IS_NULLABLE String =&gt; ISO 规则用于确定列是否包括 null。  
+    YES --- 如果参数可以包括 NULL  
+    NO --- 如果参数不可以包括 NULL  
+          空字符串 --- 如果不知道参数是否可以包括 null  
+
+<li>
+SCOPE_CATLOG String =&gt; 表的类别，它是引用属性的作用域（如果 DATA_TYPE 不是 REF，则为 null）  
+
+<li>
+SCOPE_SCHEMA String =&gt; 表的模式，它是引用属性的作用域（如果 DATA_TYPE 不是 REF，则为 null）  
+
+<li>
+SCOPE_TABLE String =&gt; 表名称，它是引用属性的作用域（如果 DATA_TYPE 不是 REF，则为 null）  
+
+<li>
+SOURCE_DATA_TYPE short =&gt; 不同类型或用户生成 Ref 类型、来自 java.sql.Types 的 SQL 类型的源类型（如果 DATA_TYPE 不是 DISTINCT 或用户生成的 REF，则为 null）  
+
+<li>
+IS_AUTOINCREMENT String =&gt; 指示此列是否自动增加  
+   YES --- 如果该列自动增加  
+   NO --- 如果该列不自动增加  
+         空字符串 --- 如果不能确定该列是否是自动增加参数  
+
+</ul>
+<hr />
+<p>
+<code>日期</code>：2012-12-25
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://lhxctc.iteye.com/blog/543404">JDBC读取一些元数据的常用方法</a>、<a href="http://blog.csdn.net/zhuhuazha/article/details/2836869">JDBC获取数据库表字段信息</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<html>
+<head>
+    <title>java多线程（一）原子</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">原子操作</a>
+<li><a href="#toc_0.2">volatile语义</a>
+<ul>
+<li><a href="#toc_0.2.1">volatile读写建立的happens-before关系</a>
+<li><a href="#toc_0.2.2">volatile写-读的内存语义</a>
+<li><a href="#toc_0.2.3">volatile内存语义的实现</a>
+</ul>
+<li><a href="#toc_0.3">CAS操作</a>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">原子操作</h2>
+<p>
+<code>原子操作</code>：多个线程执行一个操作时，其中任何一个线程要么完全执行完此操作，要么没有执行此操作的任何步骤，那么这个操作就是原子的。
+</p>
+
+<p>
+<code>java.util.concurrent.atomic</code>包中像AtomicInteger之类的都是用原子方式更新值。
+</p>
+
+<p>
+值得注意的是AtomicIntegerFiledUpdater&lt;T&gt;、AtomicLongFieldUpdate&lt;T&gt;、AtomicReferenceFieldUpdater&lt;T,V&gt;这三个类，他们是基于反射，对于给定类的指定volatile字段进行原子更新。
+</p>
+<pre class="brush:java">
+class Container{
+	public volatile int num;
+}
+
+class Task extends Thread{
+	private AtomicIntegerFiledUpdater&lt;Container&gt; updater = AtomicIntegerFieldUpdater.newUpdater(Container.class,"num");
+	private Container c;
+	
+	public Task(Container c){
+		this.c = c;
+	}
+	@Override
+	public void run(){
+		System.out.println(updater.getAndIncrement(c));
+		System.out.println(updater.getAndIncrement(c));
+	}
+
+}
+public class UpdaterUsage{
+	public static void main(String[] args){
+		Container c = new Container();
+		Task t1 = new Task(c);
+		Task t2 = new Task(c);
+		t1.start();
+		t2.start();
+	}
+}
+</pre>
+
+<p>
+还有AtomicMarkableReference&lt;V&gt;类，它描述了一个&lt;Object,Boolean&gt;的对，可以原子的修改Object或者Boolean的值，这种数据结构在一些缓存或者状态描述中比较有用。AtomicStampReference&lt;V&gt;维护的是一种类似于&lt;Object,int&gt;的数据结构，其实就是对对象（引用）的一个并发计数，可以对引用对象和计数同时进行原子操作。
+</p>
+
+<h2 id="toc_0.2">volatile语义</h2>
+<p>
+锁提供两种特性：<code>互斥</code>和<code>可见性</code>。
+<code>volatitle</code>：相当于synchronzied的弱实现，它只能保证对单个volatile变量的读/写具有原子性，而监视器锁的互斥执行的特性可以确保整个临界区的执行具有原子行。
+</p>
+
+<p>
+volatile变量具有如下特性：
+</p>
+<ol>
+<li>
+<code>可见性</code>：对一个volatile变量的读，总是能看到（任意线程）对这个volatile变量最后的写入。
+
+<li>
+<code>原子性</code>：对任意单个volatile变量的读/写具有原子性，但类似volatile++这种复合操作不具有原子性。
+
+</ol>
+<h3 id="toc_0.2.1">volatile读写建立的happens-before关系</h3>
+<pre class="brush:java">
+class VolatileExample{
+	int a =0;
+	volatile boolean flag = false;
+	public void writer(){
+		a =1;			//1
+		flag = true;		//2
+	}
+	public void reader(){
+		if(flag){		//3
+			int i = a;	//4
+			.....
+		}
+	}
+}
+</pre>
+
+<p>
+根据<a href="juc_12.html">happens-before</a>规则我们可以得出：
+</p>
+<ul>
+<li>
+根据程序次序规则，1 happens-before 2 ; 3 happens-before 4
+
+<li>
+根据volatile规则，2 happens-before 3.
+
+<li>
+根据happens-before的传递性规则，1 happens-before 4
+
+</ul>
+
+<p>
+根据happens-before 关系我们的出：
+<img src="images/volatile_1.png" />
+</p>
+<h3 id="toc_0.2.2">volatile写-读的内存语义</h3>
+<p>
+<code>volatile写的内存语义</code>
+</p>
+<blockquote>
+当写一个volatile变量时，JMM会把该线程对应的本地内存中的共享变量刷新到主内存。
+</blockquote>
+<p>
+以VolatileExample程序为例：
+<img src="images/volatile_2.png" />
+</p>
+
+<p>
+如上图所示：线程A在写flag变量后，本地内存A中被线程A更新过的两个共享变量的值被刷新到主内存中。此时，本地内存A和主内存的共享变量的值是一致的。
+</p>
+
+<p>
+<code>volatile读的内存语义</code>
+</p>
+<blockquote>
+当读一个volatile变量时，JMM会吧该线程对应的本地内存置为无效。线程接下来将从主内存中读取共享变量。
+</blockquote>
+<p>
+以VolatileExample程序为例：
+<img src="images/volatile_3.png" />
+</p>
+
+<p>
+如上图所示：在读flag变量后，本地内存B已经被置为无效。此时，线程B必须从主内存中读取共享变量。线程B的读取操作将导致本地内存B与主内存的共享变量的值变成一致的。
+</p>
+<h3 id="toc_0.2.3">volatile内存语义的实现</h3>
+<p>
+当然是以内存屏障做的各类禁止重排序喽，比较复杂就不抄了。
+</p>
+<h2 id="toc_0.3">CAS操作</h2>
+<ol>
+<li>
+<code>synchronized</code>是一种独占锁，也就是悲观锁，会导致其他所有需要锁的线程挂起，等待持有锁的线程释放锁。
+
+<li>
+乐观锁，就是每次不加锁而是假设没有冲突的去完成某项操作，如果因为冲突失败就重试，直到成功为止，这种乐观锁用到的机制就是<code>CAS</code>compare and swap。
+
+</ol>
+<p>
+CAS算法虽好，但会导致'ABA问题'；耗费CPU资源，即使没有任何竞争也会做一些无用功；会增加测试复杂度，稍不注意就会出现问题。
+解决ABA问题方法很多，可以考虑增加一个修改计数，只有在修改计数相同且a不变的情况才做swap，也可以考虑引用版本号，当版本号相同才swap。
+</p>
+<pre class="brush:java">
+private volatile int value;// 借助volatile原语，保证线程间的数据是可见的
+ 
+public final int get() {
+    return value;
+}
+ 
+public final int incrementAndGet() {
+    for (;;) {
+        int current = get();
+        int next = current + 1;
+        if (compareAndSet(current, next))
+            return next;
+    }//Spin自旋等待直到返为止置
+}
+</pre>
+
+<p>
+<code>整个JUC都是建立在CAS之上的</code>
+<hr />
+<code>日期</code>：2012-11-12、2012-11-22、2013-07-22
+</p>
+
+<p>
+参考资料：<a href="http://www.ibm.com/developerworks/cn/java/j-jtp04186/">Java 理论与实践: 非阻塞算法简介</a>、<a href="http://blog.csdn.net/aesop_wubo/article/details/7537960">JAVA并发编程学习笔记之CAS操作</a>、<a href="http://www.blogjava.net/xylz/archive/2010/07/04/325206.html">深入浅出 Java Concurrency (5): 原子操作 part 4</a>、<a href="http://www.goldendoc.org/2011/05/juc/">JUC 基础内容概述</a>、<a href="http://www.infoq.com/cn/articles/java-memory-model-4">深入理解Java内存模型（四）——volatile</a>、<a href="http://www.infoq.com/cn/articles/java-memory-model-4">深入理解Java内存模型（四）——volatile</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<html>
+<head>
+    <title>Maven的使用</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">什么是Maven</a>
+<li><a href="#toc_0.2">Maven的安装</a>
+<ul>
+<li><a href="#toc_0.2.1">设置Maven环境</a>
+<ul>
+<li><a href="#toc_0.2.1.1">Maven需要环境变量JAVA_HOME</a>
+<li><a href="#toc_0.2.1.2">设置Maven_HOME</a>
+<li><a href="#toc_0.2.1.3">设置path</a>
+<li><a href="#toc_0.2.1.4">设置Maven的仓库位置</a>
+</ul>
+<li><a href="#toc_0.2.2">安装eclipse插件</a>
+<ul>
+<li><a href="#toc_0.2.2.1">安装插件</a>
+<li><a href="#toc_0.2.2.2">设置Maven的目录</a>
+</ul>
+</ul>
+<li><a href="#toc_0.3">在eclipse中创建maven的web工程</a>
+<ul>
+<li><a href="#toc_0.3.1">创建项目</a>
+<ul>
+<li><a href="#toc_0.3.1.1">创建maven project</a>
+<li><a href="#toc_0.3.1.2">选择项目路径</a>
+<li><a href="#toc_0.3.1.3">选择项目类型</a>
+<li><a href="#toc_0.3.1.4">输入Group ID和Artifact ID</a>
+</ul>
+<li><a href="#toc_0.3.2">配置项目</a>
+<ul>
+<li><a href="#toc_0.3.2.1">添加source文件夹</a>
+<li><a href="#toc_0.3.2.2">更改class路径</a>
+<li><a href="#toc_0.3.2.3">把项目变成Dynamic web项目</a>
+<ul>
+<li><a href="#toc_0.3.2.3.1">配置Project Facts</a>
+</ul>
+</ul>
+<li><a href="#toc_0.3.3">设置部署程序集(Web Deployment Assembly)</a>
+<li><a href="#toc_0.3.4">添加依赖关系</a>
+<li><a href="#toc_0.3.5">发布</a>
+<li><a href="#toc_0.3.6">Maven结构目录说明</a>
+<li><a href="#toc_0.3.7">Maven运行命令</a>
+<li><a href="#toc_0.3.8">svn的使用</a>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">什么是Maven</h2>
+<p>
+<code>Maven</code>是apache出的项目构建工具，主要是来管理项目中的jar包及项目的集成。
+</p>
+
+<p>
+<a href="http://maven.apache.org/">官网</a>
+</p>
+<h2 id="toc_0.2">Maven的安装</h2>
+<p>
+ 在官网下载Maven，然后解压。
+</p>
+<h3 id="toc_0.2.1">设置Maven环境</h3>
+<h4 id="toc_0.2.1.1">Maven需要环境变量JAVA_HOME</h4>
+<p>
+如图所示：
+</p>
+
+<p>
+<img src="images/maven/mv_jdk.png" />
+</p>
+<h4 id="toc_0.2.1.2">设置Maven_HOME</h4>
+<p>
+变量名：M2_HOME
+变量值：E:\eclipse\lib\apache-maven-3.0.4
+</p>
+<h4 id="toc_0.2.1.3">设置path</h4>
+<ul>
+<li>
+在环境变量path的尾部加上：<code>;%M2_HOME%\bin;</code>---------注意分号。
+
+</ul>
+
+<p>
+也可以直接在path后加入：<code>E:\eclipse\lib\apache-maven-3.0.4\bin</code>。
+</p>
+
+<p>
+打开命令行，输入<code>mvn -version</code>检测Maven是否可用。
+</p>
+
+<p>
+如果配置正确，显示结果如下：
+</p>
+
+<p>
+<img src="images/maven/mv_cmd.png" />
+</p>
+<h4 id="toc_0.2.1.4">设置Maven的仓库位置</h4>
+<p>
+仓库用于存放我们项目所依赖的所有jar包。
+</p>
+
+<p>
+修改的文件为Maven根目录下的conf文件夹的setting.xml,我的位置为：E:\eclipse\lib\apache-maven-3.0.4\conf。
+</p>
+
+<p>
+修改的位置如下图所示：
+<img src="images/maven/mv_setting.png" />
+</p>
+
+<h3 id="toc_0.2.2">安装eclipse插件</h3>
+<h4 id="toc_0.2.2.1">安装插件</h4>
+<p>
+Maven的eclipse插件m2e安装地址为：<a href="http://m2eclipse.sonatype.org/sites/m2e">http://m2eclipse.sonatype.org/sites/m2e</a>
+</p>
+
+<p>
+安装插件后，会提示重启eclipse，这是一般会出现<code>Eclipse is running in a JRE, but a JDK is required....</code>的提示，这是因为m2e插件需要jdk的支持，解决这个问题的办法是在eclipse的配置文件(eclipse.ini)中添加如下配置：
+</p>
+
+<p>
+<code>-vm</code>
+</p>
+
+<p>
+<code>C:\Program Files\Java\jdk1.6.0_10\bin\javaw.exe</code>
+</p>
+<blockquote>
+注意：该配置一定要分两行写，而且一定要放在-vmargs之前，否则无法生效。
+</blockquote>
+<p>
+<img src="images/maven/mv_ini.png" />
+</p>
+<h4 id="toc_0.2.2.2">设置Maven的目录</h4>
+<p>
+插件安装完成之后Window-&gt;Preferences里找到Maven-&gt;Installations,然后单击add添加刚才解压的maven目录（也就是E:\eclipse\lib\apache-maven-3.0.4），OK后把它打上钩。
+如图所示：
+</p>
+
+<p>
+<img src="images/maven/mv_ins.png" />
+</p>
+
+<p>
+然后找到Maven-&gt;User Settings把User Settings设置为maven目录下conf\settings.xml,如图所示：
+<img src="images/maven/mv_eclipse.png" />
+</p>
+
+<h2 id="toc_0.3">在eclipse中创建maven的web工程</h2>
+<h3 id="toc_0.3.1">创建项目</h3>
+<h4 id="toc_0.3.1.1">创建maven project</h4>
+<p>
+在New窗口中选择Maven -&gt; Maven Project。
+</p>
+
+<p>
+<img src="images/maven/mv_pr_1.png" />
+</p>
+<h4 id="toc_0.3.1.2">选择项目路径</h4>
+<p>
+一般选择默认工作空间(User default Workspace location)即可。
+</p>
+
+<p>
+<img src="images/maven/mv_pr_2.png" />
+</p>
+<h4 id="toc_0.3.1.3">选择项目类型</h4>
+<p>
+因为要创建web工程，所以我们选择"maven-archetype-webapp"。
+</p>
+
+<p>
+<img src="images/maven/mv_pr_3.png" />
+</p>
+<h4 id="toc_0.3.1.4">输入Group ID和Artifact ID</h4>
+<p>
+Group ID一般写大项目名称。Artifact ID是子项目名称。例如；Spring的web包，Group ID：org.springfarmework Artifact ID：spring-web。Package是默认给你建一个包，不填也可以。
+</p>
+
+<p>
+<img src="images/maven/mv_pr_4.png" />
+</p>
+
+<p>
+建立好的项目结构如下所示：
+<img src="images/maven/mv_pr_5.png" />
+</p>
+
+<h3 id="toc_0.3.2">配置项目</h3>
+<h4 id="toc_0.3.2.1">添加source文件夹</h4>
+<p>
+我们需要添加<code>src/main/java</code>，<code>src/test/java</code>，<code>src/test/resources</code>三个文件夹，在项目上点击右键选择 New -&gt; Source Folder。
+</p>
+
+<p>
+<img src="images/maven/mv_pr_7.png" />
+</p>
+<h4 id="toc_0.3.2.2">更改class路径</h4>
+<p>
+在项目上点击右键选择 properties -&gt; Java Build Path -&gt; Source
+</p>
+
+<p>
+<img src="images/maven/mv_pr_8.png" />
+</p>
+
+<p>
+如上图所示，应该有四个文件夹。src/main/java , src/main/resources , src/test/java , src/test/resources 。
+</p>
+
+<p>
+双击每个文件夹的Output folder，选择路径。
+</p>
+
+<p>
+src/main/java , src/main/resources  选择 target/classes
+</p>
+
+<p>
+src/test/java , src/test/resources  选择 target/test-classes
+</p>
+
+<p>
+选上 Allow output folders for source folders 。
+</p>
+
+<p>
+还有一处需要修改：
+更改JDK版本，在 Libraries 双击JRE System Library, 选1.6版本。
+</p>
+
+<p>
+<img src="images/maven/mv_pr_9.png" />
+</p>
+<h4 id="toc_0.3.2.3">把项目变成Dynamic web项目</h4>
+<p>
+在项目上点击右键选择 properties -&gt; Project Facts ,点击 Convert to faceted from
+</p>
+
+<p>
+<img src="images/maven/mv_pr_10.png" />
+</p>
+
+<h5 id="toc_0.3.2.3.1">配置Project Facts</h5>
+<p>
+选中Dynamic Web Module ，根据需要选择相应的版本。
+</p>
+
+<p>
+<img src="images/maven/mv_pr_11.png" />
+</p>
+
+<p>
+点击上图中的<code>Further configuration available....</code>,弹出 Modfiy Facted Project窗口，此处是设置web.xml文件的路径，我们输入<code>src/main/webapp</code>.
+Generate web.xml deployment descriptor 字段生成 web.xml,可选可不选。
+</p>
+
+<p>
+<img src="images/maven/mv_pr_12.png" />
+</p>
+
+<p>
+<strong>注意由于此处将路径写成main/src/webapp,导致后面图片都相应出错，应该为src/main/webapp</strong>
+</p>
+<h3 id="toc_0.3.3">设置部署程序集(Web Deployment Assembly)</h3>
+<p>
+在项目上点击右键选择 properties -&gt; Deployment Assembly
+</p>
+
+<p>
+<img src="images/maven/mv_pr_13.png" />
+</p>
+
+<p>
+上图中的列表描述了部署项目时文件发布的路径(web工程也就是生成war包时的路径)。
+</p>
+<ol>
+<li>
+删除test的两项，因为它是测试时使用，部署时不需要。
+
+<li>
+设置将Maven的jar包发布到lib下：Add -&gt; Java Build Path Entries -&gt; Maven Dependencies -&gt; Finish。
+
+</ol>
+
+<p>
+完成后如下图所示：
+<img src="images/maven/mv_pr_14.png" />
+</p>
+
+<h3 id="toc_0.3.4">添加依赖关系</h3>
+<p>
+打开工程中的<code>pom.xml</code>，在&lt;dependencies&gt;节点中添加&lt;dependencies&gt;,Maven会根据所填依赖信息自动下载相关jar包。
+</p>
+
+<p>
+这里推荐两个搜索Maven相关jar的网站：<a href="http://mvnrepository.com/">http://mvnrepository.com/</a>、<a href="http://search.maven.org/">http://search.maven.org/</a>
+</p>
+
+<p>
+<img src="images/maven/mv_pr_15.png" />
+</p>
+
+<p>
+如果我们需要某个jar包，直接在上两个网上搜索，它会列出各个版本，选择相应版本太会显示相关的dependent的xml。
+</p>
+<h3 id="toc_0.3.5">发布</h3>
+<ol>
+<li>
+在项目点右键 Run As -&gt; Maven install 
+
+<li>
+Run As -&gt; Maven package
+
+<li>
+Run As -&gt; Run On Server
+
+</ol>
+
+<h3 id="toc_0.3.6">Maven结构目录说明</h3>
+<ul>
+<li>
+src/main/resources 项目的配置资源文件 
+
+<li>
+src/main/webapp  web项目的js,图片,页面等文件 
+
+<li>
+src/test/java 项目的测试java文件,单元测试类 
+
+<li>
+src/test/resources 测试的配置文件 
+
+<li>
+target 项目编译后的存放目录
+
+<li>
+pom.xml  maven的配置文件
+
+</ul>
+<h3 id="toc_0.3.7">Maven运行命令</h3>
+<p>
+Eclise菜单: run --&gt; Run Configurations... / Debug Configurations... ,选中Maven Build,点击左上角的新建图标,在Goals输入框中输入相应的命令,点击apply,再点击run/debug.
+</p>
+<ul>
+<li>
+项目运行 : org.mortbay.jetty:maven-jetty-plugin:run
+
+<li>
+项目打包 : org.apache.maven.plugins:maven-war-plugin:war
+
+<li>
+打jar包 : org.apache.maven.plugins:maven-source-plugin:jar
+
+<li>
+打源代码包 : org.apache.maven.plugins:maven-source-plugin:jar
+
+<li>
+Javadoc包 : org.apache.maven.plugins:maven-javadoc-plugin:jar
+
+</ul>
+ 
+<p>
+之后,会在target目录下生成相应的文件
+</p>
+ 
+<p>
+Maven的其它命令可以查询<a href="http://maven.apache.org/plugins/index.html(英文)">http://maven.apache.org/plugins/index.html(英文)</a>
+</p>
+<h3 id="toc_0.3.8">svn的使用</h3>
+<p>
+要在eclipse里检出Maven的工程，需要安装额外的插件<a href="http://m2eclipse.sonatype.org/sites/m2e-extras">http://m2eclipse.sonatype.org/sites/m2e-extras</a>  。
+这样在相应的工程上点击右键有Check out as Maven Project。
+</p>
+
+<p>
+在最近使用的过程中遇到了一些问题,从SVN上检出的Maven工程无法进行提交更新等操作，检出的工程与SVN没有关联。
+经过多方查询资料，解决了该问题，需要安装此插件<a href="https://github.com/markphip/m2eclipse-subclipse">https://github.com/markphip/m2eclipse-subclipse</a>
+参考的页面为：<a href="http://stackoverflow.com/questions/9661540/alternative-to-maven-scm-connector-subclipse-not-working-with-subclipse1-8">http://stackoverflow.com/questions/9661540/alternative-to-maven-scm-connector-subclipse-not-working-with-subclipse1-8</a>
+</p>
+
+<p>
+其中需要注意的是subclipse 插件一定要注意版本，最新的为好
+</p>
+
+<hr />
+
+<p>
+<code>日期</code>：2012-12-05、2012-12-06
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://my.oschina.net/wolf2leader/blog/10379">Maven使用</a>、<a href="http://wenku.baidu.com/view/0c1cdd886529647d2728521c.html">使用Eclipse构建Maven的Web项目</a>、<a href="http://my.oschina.net/moon/blog/77553">Maven基础</a>、<a href="http://gao234.iteye.com/blog/977508">Maven结合subclipse遇到的问题及解决方案</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

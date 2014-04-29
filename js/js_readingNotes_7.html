@@ -1,0 +1,323 @@
+<html>
+<head>
+    <title>js高级程序设计读书笔记（七）</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">BOM（浏览器对象模型）</a>
+<ul>
+<li><a href="#toc_0.1.1">window对象</a>
+<ul>
+<li><a href="#toc_0.1.1.1">窗口关系及框架</a>
+<li><a href="#toc_0.1.1.2">窗口位置</a>
+<li><a href="#toc_0.1.1.3">窗口大小</a>
+<li><a href="#toc_0.1.1.4">打开窗口</a>
+<li><a href="#toc_0.1.1.5">间歇调用和超时调用</a>
+<li><a href="#toc_0.1.1.6">系统对话框</a>
+</ul>
+<li><a href="#toc_0.1.2">location对象</a>
+<ul>
+<li><a href="#toc_0.1.2.1">查询字符串参数</a>
+<li><a href="#toc_0.1.2.2">位置操作</a>
+</ul>
+<li><a href="#toc_0.1.3">navigator对象</a>
+<ul>
+<li><a href="#toc_0.1.3.1">检测插件</a>
+<li><a href="#toc_0.1.3.2">注册处理程序</a>
+</ul>
+<li><a href="#toc_0.1.4">screen对象</a>
+<li><a href="#toc_0.1.5">history对象</a>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">BOM（浏览器对象模型）</h2>
+<h3 id="toc_0.1.1">window对象</h3>
+<p>
+由于window对象同时扮演着ECMAScript中Global对象的角色，因此所有全局作用域中声明的变量、函数都会变成window对象的属性和方法。
+</p>
+<h4 id="toc_0.1.1.1">窗口关系及框架</h4>
+<pre class="brush:html">
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;Frameset Example&lt;/title&gt;
+&lt;/head&gt;
+&lt;frameset rows="160.*"&gt;
+&lt;frame src="frame.htm" name="topFrame"/&gt;
+&lt;frameset cols="50%,50%"&gt;
+&lt;frame src="anotherframe.htm" name="leftFrame"/&gt;
+&lt;frame src="yetanotherframe.htm" name="righetFrame"/&gt;
+&lt;/frameset&gt;
+&lt;/frameset&gt;
+&lt;/html&gt;
+</pre>
+<p>
+上面的代码创建了一个框架集，我们可以通过多种方式引用上方的框架。不过最好还是使用top而不是window。<code>top</code>对象始终指向最高（最外）层的框架，也就是浏览器窗口。
+<img src="images/frames.jpg" />
+</p>
+
+<p>
+与<code>top</code>相对应的另一个window对象是<code>parent</code>。<code>parent</code>对象始终指向当前框架的直接上层框架。某些情况下parent有可能等于top；但是在没有框架的情况下，parent一定等于top（此时它们都等于window）。
+</p>
+
+<p>
+与框架有关的最后一个对象是<code>self</code>，它始终指向window。实际上self和window可以互换。
+</p>
+<h4 id="toc_0.1.1.2">窗口位置</h4>
+<p>
+无法在跨浏览器的条件下去的窗口左边与窗口上班的精确坐标值。但是<code>moveTo()</code>和<code>moveBy()</code>方法可以将窗口精确移动到一个新位置，不过这两个方法会被浏览器默认禁用，而且新版本浏览器中默认就是禁止的，另外这两个方法都不适用于框架，只能对最外层window对象使用。
+</p>
+<h4 id="toc_0.1.1.3">窗口大小</h4>
+<p>
+与上面类似，调整窗口大小的方法在浏览器中默认是禁止的。
+</p>
+<h4 id="toc_0.1.1.4">打开窗口</h4>
+<p>
+使用<code>window.open()</code>方法既可以导航到一个特定的URL，也可以打开一个新的浏览器窗口。这个方法接收4个参数：要加载的URL、窗口目标、一个特定字符串以及一个表示新页面是否取代浏览器历史记录中篮球加载页面的布尔值。通常只需传递第一个参数，最后一个参数只在不打开新窗口的情况下使用。
+</p>
+
+<p>
+如果未<code>window.open()</code>传递了第二个参数，而且该参数是已有窗口或框架的名称，那么就会在具体该名称的窗口或框架中加载第一个参数指定的URL。
+</p>
+<pre class="brush:js">
+//等同于 &lt;a href="http://www.g.cn" target="topFrame"&gt;&lt;/a&gt;
+window.open("http://www.g.cn","topFrame");
+</pre>
+
+<p>
+此外，第二个参数也可以是下列任何一个特殊的窗口名称：<code>_self</code>、<code>_parent</code>、<code>_top</code>、<code>_top</code>。
+</p>
+<h4 id="toc_0.1.1.5">间歇调用和超时调用</h4>
+<p>
+JavaScript是单线程语言。
+</p>
+
+<ol>
+<li>
+超时调用：可以使用window对象的<code>setTimeout()</code>方法，它接收两个参数：要执行的代码、以毫秒表示的时间（即在执行代码之前需要等待多少毫秒）。其中第一个参数可以是一个保护JavaScript代码的字符串，也可以是一个函数。
+<pre class="brush:js">
+//不建议传递字符串,因为传递字符串可能导致性能损失。
+setTimeout("alert('Hello,world!')",1000);
+
+//推荐的调用方式
+setTimeout(function(){
+	alert("Hello,world!");
+},1000);
+</pre>
+
+</ol>
+
+<p>
+调用<code>setTimeout()</code>方法后会返回一个数值ID，表示超时调用。这个超时调用ID是计划执行代码的唯一标识符，可以通过它来取消超时调用。取消尚未执行的超时调用计划，可以调用<code>clearTimeout()</code>方法并将相应ID传给它。
+</p>
+<pre class="brush:js">
+var timeoutId = setTimeout(function(){
+	alert("hello,world");
+},1000);
+//取消超时计划
+clearTimeout(timeoutId);
+</pre>
+<blockquote>
+超时调用的代码都是全局作用域中执行的，因此函数中的<code>this</code>的值通常会指向<code>window</code>对象。
+</blockquote>
+
+<ol>
+<li>
+间歇调用：可以调用<code>setInterval()</code>方法，它会按照指定时间间隔重复执行代码，直至被取消或者页面被卸载。调用setInterval()方法同样会返回一个ID，可以使用<code>clearInterval()</code>方法并传入ID来取消间歇调用。
+
+</ol>
+
+<h4 id="toc_0.1.1.6">系统对话框</h4>
+<p>
+系统对话框有：<code>alert()</code>、<code>confirm()</code>、<code>prompt()</code>。通过这几个方法打开的对话框都是同步或者模态的。也就是说，显示这些对话框的时候代码会停止执行，而关闭这些对话框后代码又会恢复执行。
+</p>
+<pre class="brush:js">
+//
+alert("弹出框");
+
+//
+if(confirm("are you sure?")){
+	alert("you choose yes");
+}else{
+	alert("you choose cancel");
+}
+
+//
+var result = prompt("what is your name?","");
+if(result!==null){
+	alert(result);
+}
+</pre>
+
+<p>
+还有两个可以通过JavaScript打开的对话框，即“查找”和“打印”。这两个对话框都是异步显示的，能够将控制权立即交还给脚本。
+</p>
+<pre class="brush:js">
+//显示打印对话框
+window.print();
+
+//显示查找对话框
+window.find();
+</pre>
+
+<h3 id="toc_0.1.2">location对象</h3>
+<p>
+location对象提供了与当前窗口中加载的文档有关的信息，还提供了一些导航功能。它既是window对象的属性，也是document对象的属性。也就是说window.location和document.location引用的是同一个对象。
+</p>
+
+<p>
+location对象的用处不止表现在它保持着当前文档的信息，还表现在它将URL解析为独立的片段。
+<img src="images/location.jpg" />
+</p>
+<h4 id="toc_0.1.2.1">查询字符串参数</h4>
+<p>
+尽管<code>location.search</code>返回从问号到URL末尾的所有内容，但没有办法逐个访问其中的每个参数。为此创建一个函数，以解析查询字符串，然后返回包含所有参数的一个对象。
+</p>
+<pre class="brush:js">
+function getQueryStringArgs(){
+	//得到查询字符串并去掉开头的问号
+	var qs = (location.search.length &gt;0?location.search.substring(1):"");
+	//保存数据的对象
+	var args = {};
+	//取得每一项
+	var items = qs.split("&amp;");
+	var item = null,name =null,value=null;
+	//逐个将每一项添加到args对象中
+	for (var i-0;i&lt;items.length;i++){
+		item = item[i].split("=");
+		name = decodeURIComponent(item[0]);
+		value = decodeURIComponent(item[1]);
+		args[name] = value;
+	}
+	return args;
+}
+//假设查询字符串是?q=javascript&amp;num=10
+var args = getQueryStringArgs();
+alert(args["q"]);		//"javascript"
+alert(args["num"]);		//"10"
+</pre>
+<h4 id="toc_0.1.2.2">位置操作</h4>
+<ol>
+<li>
+<code>assgin()</code>：最常用的改名浏览器位置的方法。
+<pre class="brush:js">
+location.assgin("http://www.g.cn");
+//下面两张操作也会调用assgin()放。和现实调用assign()效果一下。
+window.location = "http://www.g.cn";
+location.href = "http://www.g.cn";
+</pre>
+
+</ol>
+<p>
+另外，修改location对象的其他属性页可以改变当前加载的页面。例如
+</p>
+<pre class="brush:js">
+//原始URL http://www.g.cn/
+//http://www.g.cn/#section1
+location.hash = "#section1";
+</pre>
+<p>
+每次修改location的属性(hash除外)，页面都会以新的URL重新加载。
+</p>
+<ol>
+<li>
+<code>replace()</code>：上面介绍的方法修改URL后，会在浏览器的历史记录中生成一条记录，因此用户单击“后退”按钮都会导航到签一个页面。要禁用这种行为，就可以使用replace()方法。该方法值接收一个参数，就是要导航的URL。
+
+<li>
+<code>reload()</code>：作用是重新加载当前显示的页面。
+<pre class="brush:js">
+location.reload();		//重新加载（有可能从缓存加载）
+location.relaod(true);		//重新加载（从服务器重新加载）
+</pre>
+
+</ol>
+<h3 id="toc_0.1.3">navigator对象</h3>
+<h4 id="toc_0.1.3.1">检测插件</h4>
+<h4 id="toc_0.1.3.2">注册处理程序</h4>
+
+<h3 id="toc_0.1.4">screen对象</h3>
+<p>
+许多浏览器会禁用调整浏览器窗口大小的能力。
+</p>
+<h3 id="toc_0.1.5">history对象</h3>
+<p>
+history对象保存着用户上网的历史记录。
+</p>
+
+<p>
+<code>go()</code>：该方法可以在用户的历史记录中任意跳转。可以接收一个参数，表示向后或者向前跳转的页面数的一个整数值。负数表示向后跳（类似后退），整数表示向前跳（类似前进）：该方法可以在用户的历史记录中任意跳转。可以接收一个参数，表示向后或者向前跳转的页面数的一个整数值。负数表示向后跳（类似后退），整数表示向前跳（类似前进）。
+</p>
+<pre class="brush:js">
+//后退一页
+history.go(-1);
+//前进一页
+history.go(1);
+//前进两页
+hostroy.go(2);
+</pre>
+<p>
+也可以给go()放传递一个字符串参数，此时浏览器会跳到历史记录中包含该字符串的第一个位置---可能前进也可能后退，具体要看哪个位置最近，如果不包含该字符串，则什么也不做。
+</p>
+<pre class="brush:js">
+//跳到最近的g.cn
+history.go("g.cn");
+</pre>
+<p>
+另外还以使用两个简写方法<code>back()</code>、<code>foward()</code>方法。
+</p>
+<pre class="brush:js">
+//后退一页
+history.back();
+//前进一页
+history.forward();
+</pre>
+
+<hr />
+<p>
+<code>日期</code>：2012-08-17
+<hr />
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

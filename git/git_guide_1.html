@@ -1,0 +1,246 @@
+<html>
+<head>
+    <title>Git详解（一）</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<p>
+<a href="%toc.html">%toc</a>
+</p>
+<h2 id="toc_0.1">Git基本知识</h2>
+<ol>
+<li>
+任何文件在Git内部都只有三种状态：已提交（<code>committed</code>），已修改（<code>modefied</code>)和已暂存（<code>staged</code>）。
+
+</ol>
+
+<h2 id="toc_0.2">初次运行Git前的配置</h2>
+<pre class="brush:ps">
+#用户信息
+$ git config --global user.name "liuyn"
+$ git config --global user.email liuyn@ifeng.com
+
+#文本编辑器
+$ git config --global core.editor vim
+
+#差异分析工具
+$ git config --global merge.tool vimdiff
+
+#查看配置信息
+$ git config --list
+# 查看某个环节变量的设置
+$ git config user.name
+
+#获取帮助
+$ git help ***(某条命令)
+#例子,查看config命令的使用
+$ git help config
+
+</pre>
+<h2 id="toc_0.3">取得项目的Git仓库</h2>
+<p>
+有两种方式取得Git仓库的方法：
+</p>
+<ol>
+<li>
+在工作目录初始化新的仓库
+<pre class="brush:ps">
+#初始化
+$ git init
+
+#添加要进行版本控制的文件
+$ git add *.java
+$ git add README
+$ git commit -m 'initial project version'
+</pre>
+
+<li>
+从现有仓库克隆
+<pre class="brush:ps">
+# 从GitHub克隆一个项目
+$ git clone git://github.com/schacon/grit.git
+
+# 如果像给项目根目录重命名的
+$ git clone git://github.com/schacon/grit.git mygrit
+</pre>
+
+</ol>
+<h2 id="toc_0.4">记录每次更新到仓库</h2>
+<p>
+<img src="git_status_lifecycle.png" alt="文件的状态变化周期" />
+</p>
+
+<pre class="brush:ps">
+# 检查当前文件状态
+$ git status
+
+# 跟踪新文件
+$ git add 文件名
+
+# 比较工作目录中当前文件和暂存区域快照之前的差异，也就是修改之后还没暂存起来的变化内容。
+$ git diff
+# 比较已经暂存起来的文件和上次提交时的快照之间的差异
+$ git diff --cached
+
+# 提交更新
+$ git commit
+# 用-m参数后跟提交说明的方法 提交更新
+$ git commit -m 'the frist commit'
+
+# 跳过使用暂存区域,给git commit 加上-a选项，Git就会自动吧所有已跟踪过的文件暂存起来一并提交，从而跳过git add步骤
+$ git commit -a -m 'added new file'
+
+# 提交更新到远程仓库
+$ git push &lt;reomte&gt; &lt;branch&gt;
+
+# 删除文件
+$ git rm 文件名
+# 从Git仓库中删除，但仍希望文件保留在当前工作目录中，也就是只从跟踪清单中删除，也就是只从跟踪清单中删除
+$ git rm --cached 文件名
+
+# 移动文件
+$ git mv file_from file_to
+
+#查看提交历史
+
+$ git log
+# -p 选项展开显示每次提交的内容差异，-2 选项显示最近的两次更新
+$ git log -p -2
+# --stat 选项仅显示简要的增改行数统计
+$ git log --stat
+# --pretty 选项，可以指定使用完全不同于默认的方式展示提交历史，
+
+$ git log --pretty=format:"%h - %an, %ar : %s"
+
+# 使用图形化工具查看提交历史
+$ gitk
+
+# 修改最后一次提交
+$ git commit --amend
+
+# 取消已经暂存的文件
+$ git reset HEAD 文件名
+
+# 取消对文件的修改
+$ git checkout -- 文件名
+
+
+# 创建新的分支
+$ git branch 分支名称
+# 显示现在所在的分支，结果中带星号的既是
+$ git branch 
+# 选择某个分支
+$ git checkout 分支名称
+# 将某个分支的变更合并到当前分支
+$ git merge 想要合并的分支名称
+# 删除分支
+# -d 会确认要删除的分支与当前分支已经合并
+$ git branch -d 分支名称
+# -D 会直接删除
+$ git branch -D 分支名称
+
+
+</pre>
+
+<h2 id="toc_0.5">远程仓库的使用</h2>
+<pre class="brush:ps">
+# 查看当前的远程库
+$ git remote
+# 加上-v选项，显示对应的克隆地址
+$ git remote -v
+
+# 添加远程仓库
+# git remote add [shortname] [url]
+$ git remote add pb git://github.com/paulboone/ticgit.git
+
+# 从远程仓库抓取数据
+# git fetch [remote-name]
+$ git fetch pb
+
+# 查看远程仓库信息
+$ git remote show origin
+
+# 重命名远程仓库
+$ git remote rename 旧名称 新名称
+# 删除远程仓库
+$ git remote rm 名称
+
+
+# 新建标签
+$ git tag -a v0.1 -m 'the version 0.1'
+# 删除标签
+$ git tag -d thetagname
+# 显示已有的标签
+$ git tag
+# 把标签分享到远程仓库，默认情况，git push不会到远程仓库
+$ git push origin thetagname
+
+# 获取远程分支
+$ git checkout --track 远程名称/分支名称
+
+$ git checkout --track origin/dev
+
+
+</pre>
+
+<hr />
+<p>
+参考文档：
+</p>
+<ol>
+<li>
+<a href="http://www.kernel.org/pub/software/scm/git/docs/gittutorial.html">gittutorial</a>
+
+<li>
+<a href="http://blog.jobbole.com/25775/">Git详解</a>
+
+<li>
+<a href="http://stackoverflow.com/questions/315911/git-for-beginners-the-definitive-practical-guide#322967">Git for beginners</a>
+
+</ol>
+<hr />
+<p>
+<code>日期</code>：2012-09-10、2013-11-08
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

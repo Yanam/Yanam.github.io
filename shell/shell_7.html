@@ -1,0 +1,111 @@
+<html>
+<head>
+    <title>shell中与网络相关命令</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">netstat</a>
+<li><a href="#toc_0.2">tcpdump</a>
+<li><a href="#toc_0.3">ifconfig</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">netstat</h2>
+<p>
+<code>netstat</code>：该命令用来查看本机的网络信息，如网络连接、路由表等。
+</p>
+
+<p>
+常用参数：
+</p>
+<ol>
+<li>
+<code>-t</code>：显示TCP端口
+
+<li>
+<code>-u</code>：显示UDP端口
+
+<li>
+<code>-l</code>：列出在Listen（监听）的服务状态
+
+<li>
+<code>-n</code>：不显示计算机名，而显示ip地址
+
+<li>
+<code>-p</code>：显示建立连接的程序名（pid）
+
+<li>
+<code>-a</code>：显示所有信息
+
+</ol>
+
+<pre class="brush:shell">
+$ netstat -nlp|grep LISTEN		//查看所有监听端口
+
+$ netstat -nlp|grep 80			//查看所有80端口
+</pre>
+<h2 id="toc_0.2">tcpdump</h2>
+<p>
+<code>tcpdump</code>：这是一个将网络中传输的数据包“头”完全截获下来提供分析的命令。
+</p>
+
+
+<h2 id="toc_0.3">ifconfig</h2>
+<p>
+<code>ifconfig</code>：是linux中用于显示或者配置网络设备的命令。
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2014-1-23
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.xshell.net/linux/netstat.html">inux用netstat查看服务及监听端口</a>、<a href="http://www.cnblogs.com/ggjucheng/archive/2012/01/08/2316661.html">Linux netstat命令详解</a>、<a href="http://www.cnblogs.com/taobataoma/archive/2007/12/27/1016689.html">Linux系统下ifconfig命令使用及结果分析</a>、<a href="http://baike.baidu.com/link?url=nZSt7a9rLKnzsbFwfbg7K9DzhfBGRBG7MJedNAACLBbXJdIAII_gMhjYfcl5Vjoe1pz2hldLRgIXkl8RQfUuGa">百度百科--ifconfig</a>、<a href="http://blog.csdn.net/zjl_1026_2001/article/details/7303118">TCPDUMP命令详解</a>、<a href=".html">.html</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<html>
+<head>
+    <title>java基础（三）--异常的处理</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">Java 异常基本概念</a>
+<ul>
+<li><a href="#toc_0.1.1">异常处理的分类</a>
+<li><a href="#toc_0.1.2">多视角理解异常</a>
+</ul>
+<li><a href="#toc_0.2">如何正确处理异常</a>
+<ul>
+<li><a href="#toc_0.2.1">Java异常处理的原则</a>
+<li><a href="#toc_0.2.2">代码示例</a>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">Java 异常基本概念</h2>
+<p>
+下图为java 异常体系结构：
+</p>
+
+<p>
+<img src="images/exception_class2.jpg" />
+</p>
+
+<p>
+在Java中，所有异常都有一个共同的祖先<code>Throwable</code>。
+</p>
+
+<p>
+Throwable有两个重要的子类：
+</p>
+<ol>
+<li>
+<code>Exception(异常)</code>，表示应用程序中可预测、可恢复的问题。
+
+<li>
+<code>Error(错误)</code>,表示运行应用程序中出现较为严重的问题。大多数错误与代码作者无关，而表示JVM出现的问题，例如OutOfMemoryError。 
+
+</ol>
+ 
+<p>
+Exception类有个重要的子类<code>RuntimeException</code> ，表示“JVM 常用操作”引发的错误。例如NullPointerException、ArrayIndexOutOfBoundException。
+</p>
+<h3 id="toc_0.1.1">异常处理的分类</h3>
+<p>
+Java异常可分为：
+</p>
+<ol>
+<li>
+<code>可检测异常(Checked)</code>，对于方法调用者来说属于必须处理的异常。
+
+<li>
+<code>非检测异常(Unchecked)</code>，不一定非要才去任何适当操作，有两个类定义此种类型异常：RuntimeException和Error。
+
+<li>
+<code>自定义异常</code>
+
+</ol>
+<h3 id="toc_0.1.2">多视角理解异常</h3>
+<p>
+如下图所示，不同用户对异常的理解是不同的
+</p>
+
+<p>
+<img src="images/exception_view.gif" />
+</p>
+
+<h2 id="toc_0.2">如何正确处理异常</h2>
+
+<h3 id="toc_0.2.1">Java异常处理的原则</h3>
+<ol>
+<li>
+不丢弃异常，尽可能的处理异常。代码15-18行
+
+</ol>
+<p>
+针对异常应该采取一些行动，如修复问题、提醒某人或者其他处理，调用printStackTrace不算处理好了异常，如果在分析异常后认为自己无法处理，可以选择重新抛出异常。
+</p>
+<ol>
+<li>
+指定具体的异常，不要使用覆盖式异常处理块。代码15行
+<pre class="brush:java">
+
+   try{
+     // …
+   }
+   //危险的处理
+   catch(Exception e){
+     // …
+   }
+
+</pre>
+
+</ol>
+<p>
+在catch语句中尽可能指定具体的异常类型，不要试图处理所有可能的异常。
+</p>
+<ol>
+<li>
+说明异常的详细信息，记录可能影响应用运行的异常。代码3-18行
+
+</ol>
+<p>
+至少要采取一些永久的方式，记录下可能影响应用操作的异常。
+</p>
+<ol>
+<li>
+充分运行finally关键字，保证释放所有资源。代码3-14行
+
+</ol>
+<p>
+编写finally块要多加小心，特别是要注意finally块之内抛出的异常。
+</p>
+<ol>
+<li>
+try块不易过大。代码3-14行
+
+</ol>
+<p>
+把大段代码放入单个try块，不利于分析程序抛出异常的原因。 
+</p>
+<ol>
+<li>
+全面考虑异常对执行流程的影响，保证输出数据的完整。代码7-11行
+
+</ol>
+
+<h3 id="toc_0.2.2">代码示例</h3>
+<p>
+错误的例子：
+</p>
+<pre class="brush:java">
+OutputStreamWriter out = ... 
+java.sql.Connection conn = ... 
+try { // ⑸ 
+ 　Statement stat = conn.createStatement(); 
+ 　ResultSet rs = stat.executeQuery( 
+ 　　"select uid, name from user"); 
+ 　while (rs.next()) 
+ 　{ 
+ 　　out.println("ID：" + rs.getString("uid") // ⑹ 
+ 　　　"，姓名：" + rs.getString("name")); 
+ 　} 
+ 　conn.close(); // ⑶ 
+ 　out.close(); 
+ } 
+ catch(Exception ex) // ⑵ 
+ { 
+ 　ex.printStackTrace(); //⑴,⑷ 
+ }
+
+</pre>
+<p>
+修改后的代码：
+</p>
+<pre class="brush:java">
+OutputStreamWriter out = ... 
+java.sql.Connection conn = ... 
+try { 
+　Statement stat = conn.createStatement(); 
+　ResultSet rs = stat.executeQuery( 
+　　"select uid, name from user"); 
+　while (rs.next()) 
+　{ 
+　　out.println("ID：" + rs.getString("uid") + "，姓名: " + rs.getString("name")); 
+　} 
+} 
+catch(SQLException sqlex) 
+{ 
+　out.println("警告：数据不完整"); 
+　throw new ApplicationException("读取数据时出现SQL错误", sqlex); 
+} 
+catch(IOException ioex) 
+{ 
+　throw new ApplicationException("写入数据时出现IO错误", ioex); 
+} 
+finally
+{ 
+　if (conn != null) { 
+　　try { 
+　　　conn.close(); 
+　　} 
+　　catch(SQLException sqlex2) 
+　　{ 
+　　　System.err(this.getClass().getName() + ".mymethod - 不能关闭数据库连接: " + sqlex2.toString()); 
+　　} 
+　} 
+ 
+　if (out != null) { 
+　　try { 
+　　　out.close(); 
+　　} 
+　　catch(IOException ioex2) 
+　　{ 
+　　　System.err(this.getClass().getName() + ".mymethod - 不能关闭输出文件" + ioex2.toString()); 
+　　} 
+　} 
+}
+
+</pre>
+<hr />
+<p>
+<code>日期</code>：2012-11-16
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://blog.jobbole.com/30230/">Java异常处理的陋习展播</a>、<a href="https://www.ibm.com/developerworks/cn/java/j-lo-exception/">Java 异常处理及其应用</a>、<a href="http://www.ibm.com/developerworks/cn/java/j-lo-exceptionframework/?cmp=dwnpr&amp;cpb=dw&amp;ct=dwcon&amp;cr=cn_51CTO_dl&amp;ccy=cn">异常以及异常处理框架探析</a>、<a href="http://www.ibm.com/developerworks/cn/java/j-jtp05254/">Java 理论与实践: 关于异常的争论</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

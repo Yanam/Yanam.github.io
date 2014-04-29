@@ -1,0 +1,437 @@
+<html>
+<head>
+    <title>shell笔记2</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">文件安全与权限</a>
+<ul>
+<li><a href="#toc_0.1.1">认识liunx的文件权限</a>
+<li><a href="#toc_0.1.2">修改文件权限</a>
+<ul>
+<li><a href="#toc_0.1.2.1">符号模式</a>
+<li><a href="#toc_0.1.2.2">绝对模式</a>
+</ul>
+<li><a href="#toc_0.1.3">修改目录权限</a>
+<li><a href="#toc_0.1.4">suid/guid</a>
+<li><a href="#toc_0.1.5">改变文件所有权</a>
+<li><a href="#toc_0.1.6">设置文件默认权限</a>
+<li><a href="#toc_0.1.7">符号链接</a>
+</ul>
+<li><a href="#toc_0.2">用户和用户组管理</a>
+<ul>
+<li><a href="#toc_0.2.1">用户管理</a>
+<li><a href="#toc_0.2.2">用户组管理</a>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">文件安全与权限</h2>
+<h3 id="toc_0.1.1">认识liunx的文件权限</h3>
+<p>
+第一步我们先用<code>touch</code>命令创建一个文件
+</p>
+<pre class="brush:ps">
+$ touch temp
+</pre>
+<p>
+然后用<code>ls -l</code>命令查看一下目录下的文件属性，如下：
+</p>
+<pre class="brush:ps">
+$ ls -l
+totel 36
+-rw-r--r--	1 root	root		32313 Jul 25 14:23 conf.txt
+-rw-r--r--	1 root	root		0     Jul 25 14:50 temp
+</pre>
+<p>
+上面结果中,1 为文件的硬链接的数目，root 文件属主，root文件数组 ，32313 文件字节长度，Jul。。。文件更新时间，conf.txt文件名。
+</p>
+
+<p>
+-rw-r--r--：是文件的权限位。
+其中第一个横杠：文件类型，“-”表示该文件是一个普通文件。文件类型有七种：
+</p>
+<ol>
+<li>
+<code>d</code> 目录
+
+<li>
+<code>l</code> 符号链接（指向另一个文件）
+
+<li>
+<code>s</code> 套接字文件
+
+<li>
+<code>b</code> 块设备文件
+
+<li>
+<code>c</code> 字符设备文件
+
+<li>
+<code>p</code> 命名管道文件
+
+<li>
+<code>-</code> 普通文件
+
+</ol>
+
+<p>
+除去第一位的横杠，剩9个字符，分别代表9个权限为：
+</p>
+<ol>
+<li>
+<code>rw-</code>：前三位，文件属主权限
+
+<li>
+<code>r--</code>：中间三位，组用户权限
+
+<li>
+<code>r--</code>：后三位，其他用户权限
+
+</ol>
+<p>
+文件的权限位中每个字符含有：
+</p>
+<ol>
+<li>
+<code>r</code>：读权限
+
+<li>
+<code>w</code>；写/改权限
+
+<li>
+<code>x</code>：执行权限
+
+</ol>
+<h3 id="toc_0.1.2">修改文件权限</h3>
+<p>
+修改权限为使用<code>chmod</code>命令
+</p>
+<h4 id="toc_0.1.2.1">符号模式</h4>
+<p>
+格式为：chmod [who] operator [permission] filename
+</p>
+
+<p>
+who的含义：
+</p>
+<ul>
+<li>
+<code>u</code> 文件属主权限
+
+<li>
+<code>g</code> 属组用户权限
+
+<li>
+<code>o</code> 其他用户权限
+
+<li>
+<code>a</code> 所有用户权限
+
+</ul>
+<p>
+operator的含义：
+</p>
+<ul>
+<li>
+<code>+</code> 增加权限
+
+<li>
+<code>-</code> 取消权限
+
+<li>
+<code>=</code> 设置权限
+
+</ul>
+<p>
+permission的含义：
+</p>
+<ul>
+<li>
+<code>r</code> 读权限
+
+<li>
+<code>w</code> 写权限
+
+<li>
+<code>x</code> 执行权限
+
+</ul>
+<h4 id="toc_0.1.2.2">绝对模式</h4>
+<p>
+格式为：chmod [mode] file
+其中mode是一个八进制数。
+</p>
+<ul>
+<li>
+0 4 0 0 文件属主可读
+
+<li>
+0 2 0 0 文件属主可写
+
+<li>
+0 1 0 0 文件属主可执行
+
+<li>
+
+
+<li>
+0 0 4 0 属组用户可读
+
+<li>
+0 0 2 0 属组用户可写
+
+<li>
+0 0 1 0 属组用户可执行
+
+<li>
+
+
+<li>
+0 0 0 4 其他用户可读
+
+<li>
+0 0 0 2 其他用户可写
+
+<li>
+0 0 0 1 其他用户可执行
+
+</ul>
+
+<p>
+可以通过使用<code>-R</code>选项连同子目录下的文件一起设置
+</p>
+<pre class="brush:ps">
+chmod -R 664 /temp/*
+</pre>
+<h3 id="toc_0.1.3">修改目录权限</h3>
+<p>
+目录的权限位与文件不同
+</p>
+<ul>
+<li>
+<code>r</code> 可以列出该目录中的文件
+
+<li>
+<code>w</code> 可以在该目录创建或删除文件
+
+<li>
+<code>x</code> 可以搜索或者访问该目录
+
+</ul>
+<blockquote>
+目录的权限会覆盖该目录下文件的权限,如果把属组用户或其他用户针对某一目录的权限设置为--x，那么他们将无法列出该目录中的文件。如果该目录有一个执行位置位的脚步或程序，只要用户知道它的路径和文件名，仍然可以执行它。用户不能进入该目录并不妨碍它的执行。
+</blockquote>
+<h3 id="toc_0.1.4">suid/guid</h3>
+<p>
+<code>suid</code>意味着如果某个用户对属于自己的shell脚本设置了这种权限，那么其他用户在执行这一脚本时也会具有其属主的相应权限。
+<code>guid</code>执行相应脚本的用户将去油该文件所属用户组中用户的权限。
+</p>
+
+<h3 id="toc_0.1.5">改变文件所有权</h3>
+<p>
+当你创建一个文件，你就是文件的属主，一旦你拥有某个文件，就可以改变它的所有权，把它交给另外一个/etc/passwd文件中存在的合法用。可以通过用户名或者用户id完成。
+</p>
+
+
+<p>
+<code>chown</code>：用来更改文件拥有者，也可以改变文件所属组。格式，chmod -R -h owner file
+</p>
+<ul>
+<li>
+-R 意味着对所有子目录下的文件进行同样的操作
+
+<li>
+-h 意味着在改变符号链接文件的属主时不影响该链接所指向的目标文件
+<pre class="brush:ps">
+$ chown liuyn test.txt
+</pre>
+
+</ul>
+<p>
+<code>chgrp</code>：用来更改文件所属组，格式与上面类似
+</p>
+<pre class="brush:ps">
+chgrp group test.txt
+</pre>
+<p>
+<code>id</code>：查询用户属于那些用户组。
+</p>
+<pre class="brush:ps">
+# 查询当前用户所属组
+$ id
+uid=506(liuyn) gid=544(Administrators) groups=544(Administrators)
+# 查询某个用户所属组
+$ id liuyn
+</pre>
+<h3 id="toc_0.1.6">设置文件默认权限</h3>
+<p>
+<code>umask</code>：当前用户在创建文件或目录时的属性默认值。
+。。。
+</p>
+<h3 id="toc_0.1.7">符号链接</h3>
+<p>
+liunx有两种类型的链接：软连接、硬链接。
+</p>
+
+<ol>
+<li>
+软连接：又叫符号链接，这个文件包含另一个文件的路径名。和win下的快捷方式类似。命令格式：ln [-s] source_path target_path
+
+<li>
+硬链接：是已存在文件的另一个名字。命令格式：ln -d existfile newfile
+
+</ol>
+<p>
+硬链接的两个限制：1）不允许给目录创建硬链接；2）只有在同一个文件系统中的文件才能创建连接。
+</p>
+
+<p>
+对硬链接的读取和删除操作结果与软连接相同。但如果我们删除硬链接的源文件，硬链接文件依然存在，而且保留了原有文件的内容。这时系统就把它当成一个普通文件了。
+</p>
+<h2 id="toc_0.2">用户和用户组管理</h2>
+<h3 id="toc_0.2.1">用户管理</h3>
+<p>
+添加账户：useradd 选项 用户名
+选项：
+</p>
+<ul>
+<li>
+<code>-c</code> comment 指定一段注释性描述。
+
+<li>
+<code>-d</code> 目录 指定用户主目录，如果此目录不存在，则同时使用-m选项，可以创建主目录。
+
+<li>
+<code>-g</code> 用户组 指定用户所属用户组。
+
+<li>
+<code>-G</code> 用户组 指定用户所属的附加组
+
+<li>
+<code>-s</code> shell文件 指定用户的登录shell
+
+<li>
+<code>-u</code> 用户号 指定用户的用户号
+<pre calss="brush:ps">
+# 创建用户sam，并产生一个主目录/usr/sam
+$ useradd -d /usr/sam -m sam
+</pre>
+
+</ul>
+
+<p>
+删除账户：userdel 选项 用户名
+常用选项是-r，它的作用是吧用户的主目录一起删除。
+</p>
+<pre class="brush:ps">
+$ userdel sam
+</pre>
+
+<p>
+修改账户：usermod 选项 用户名
+</p>
+
+<p>
+用户口令管理：passwd 选项 用户名
+选项：
+</p>
+<ul>
+<li>
+<code>-l</code> 锁定口令，即禁用账户
+
+<li>
+<code>-u</code> 口令解锁
+
+<li>
+<code>-d</code> 使账户无口令
+
+<li>
+<code>-f</code> 强迫用户下次登录时修改口令
+<pre class="brush:ps">
+# 将sam口令删除，下次sam登录时，系统就不再询问口令
+$ passwd -d sam
+
+# 锁定用户sam
+$ passwd -l sam
+</pre>
+
+</ul>
+<h3 id="toc_0.2.2">用户组管理</h3>
+<p>
+其实就是对/etc/group文件的更新
+</p>
+
+<ol>
+<li>
+新增用户组：groupadd 选项 用户组
+
+<li>
+删除用户组：groupdel 用户组
+
+<li>
+修改用户组；groupmod 选项 用户组
+
+<li>
+切换用户组：newgrp 用户组 
+<pre class="brush:ps">
+# 新增用户组group1
+$ groupadd group1
+# 删除用户组group1
+$ groupdel group1
+# 将group1的标识号改为10000，组名改为group2
+$ groupmod -g 10000 -n group1 group2
+</pre>
+
+</ol>
+
+<hr />
+<p>
+<code>参考文档</code>：<a href="http://bbs.chinaunix.net/thread-434579-1-1.html">shell基础20篇</a>
+<hr />
+<code>日期</code>：2012-09-11、2012-09-12
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

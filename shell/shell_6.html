@@ -1,0 +1,302 @@
+<html>
+<head>
+    <title>shell笔记6</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">AWK</a>
+<ul>
+<li><a href="#toc_0.1.1">命令格式</a>
+<ul>
+<li><a href="#toc_0.1.1.1">三种调用方式</a>
+<li><a href="#toc_0.1.1.2">内建变量</a>
+</ul>
+<li><a href="#toc_0.1.2">过滤</a>
+<li><a href="#toc_0.1.3">制定分隔符</a>
+<li><a href="#toc_0.1.4">字符串匹配</a>
+<li><a href="#toc_0.1.5">拆分文件</a>
+<li><a href="#toc_0.1.6">if else</a>
+<li><a href="#toc_0.1.7">统计</a>
+<li><a href="#toc_0.1.8">与环境变量交互</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">AWK</h2>
+<p>
+<code>AWK</code>：是一种用于处理文本的语言。
+</p>
+
+<h3 id="toc_0.1.1">命令格式</h3>
+<pre class="brush:shell">
+$ awk '{pattern + action}' {filenames}
+
+# 简单示例
+$ netstat -ntlp &gt; netstat.txt 
+$ awk '{print $1,$4}' netstat.txt
+
+$ netstat -ntlp|awk '{print $1,$4}'
+
+# awk 的格式化输出和C语言的一样
+$ awk '{printf "%-8s %-8s\n",$1,$4}' netstat.txt
+</pre>
+
+<h4 id="toc_0.1.1.1">三种调用方式</h4>
+<ol>
+<li>
+命令行调用 ，我们大部分都是这种用法，就不介绍了
+
+<li>
+shell 脚本调用，把shell脚本的首行由“#!/bin/sh” 换成“#!/bin/awk”就行。
+
+<li>
+还有一种不常用就不提了。 
+
+</ol>
+<h4 id="toc_0.1.1.2">内建变量</h4>
+
+<table>
+<tr>
+<th>
+内建变量
+</th>
+<th>
+描述
+</th>
+</tr>
+<tr>
+<td>
+$0
+</td>
+<td>
+当前记录(该变量存放整行内容)
+</td>
+</tr>
+<tr>
+<td>
+$(1~n)
+</td>
+<td>
+当前记录的第n个字段，字段分隔由变量FS控制
+</td>
+</tr>
+<tr>
+<td>
+FS
+</td>
+<td>
+设置 字段分隔符，默认是空格或者Tab
+</td>
+</tr>
+<tr>
+<td>
+NF
+</td>
+<td>
+当前记录中字段个数，就是列数
+</td>
+</tr>
+<tr>
+<td>
+NR
+</td>
+<td>
+行号，从1开始，如果有多个文件会累计
+</td>
+</tr>
+<tr>
+<td>
+FNR
+</td>
+<td>
+行号，这个是各文件自己的行号
+</td>
+</tr>
+<tr>
+<td>
+RS
+</td>
+<td>
+设置 记录的分隔符，默认是换行符
+</td>
+</tr>
+<tr>
+<td>
+OFS
+</td>
+<td>
+得到 字段分隔符，默认也是空格
+</td>
+</tr>
+<tr>
+<td>
+ORS
+</td>
+<td>
+得到 记录分隔符，默认也是换行符
+</td>
+</tr>
+<tr>
+<td>
+FILENAME
+</td>
+<td>
+当前输入的文件名
+</td>
+</tr>
+</table>
+
+<h3 id="toc_0.1.2">过滤</h3>
+<p>
+直接来例子看吧
+</p>
+<pre class="brush:shell">
+# 得到第三列值为0且第六列值为LISTEN的记录
+$ awk '$3==0 &amp;&amp; $6=="LISTEN" ' netstat.txt
+
+# 在上面例子的基础上在把表头加上
+$ awk '$3==0 &amp;&amp; $6=="LISTEN" || NR==1 ' netstat.txt
+
+# 过滤后格式化输出
+$ awk '$3==0 &amp;&amp; $6=="LISTEN" || NR==1 {print "%-20s",$4}' netstat.txt
+</pre>
+
+<h3 id="toc_0.1.3">制定分隔符</h3>
+<pre class="brush:shell">
+# 指定分隔符为:
+$ awk 'BEGIN{FS=":"} {print $1,$3,$6}' /etc/passwd
+
+# 上面的命令等价于
+$ awk -F: '{print $1,$3,$6}' /etc/passwd
+
+# 指定多个分隔符
+$ awk -F '[;:]' 
+
+# 以\t 作为分隔符输出，输出的结果三列就以\t分隔了
+$ awk -F: '{print $1,$3,$6}' OFS="\t" /etc/passwd
+
+</pre>
+
+<h3 id="toc_0.1.4">字符串匹配</h3>
+<pre class="brush:shell">
+# 查找 username包含liu字符的用户，
+$ awk '$1 ~ /liu/'  /etc/passwd
+# ~ 表示模式开始，/ /中是模式，这就是个正则表达式的匹配
+ 
+
+# 还可以像grep那样进行匹配
+$ awk '/liu/'  /etc/passwd
+
+
+# 匹配两个
+$ awk '$1 ~ /liu|li/' /etc/passwd
+# 模式取反匹配 
+$ awk '$1 !~ /liu/' /etc/passwd
+$ awk '!/liu/' /etc/passwd
+</pre>
+<h3 id="toc_0.1.5">拆分文件</h3>
+<pre class="brush:shell">
+# 按第六列分隔文件,文件名就是该列的值
+$ awk 'NR!=1 {print &gt; $6}' netstat.txt
+$ ls
+ESTABLISHED FIN_WAIT1......
+
+# 把指定的列输出到文件
+$ awk 'NR!=1 {print $4,$5 &gt;$6}' netstat.txt
+
+
+</pre>
+<h3 id="toc_0.1.6">if else</h3>
+<p>
+一个使用if else拆分文件的例子
+</p>
+<pre class="brush:shell">
+
+$ awk 'NR!=1 {if($6 ~ /TIME|ESTABLISHED/) print &gt;1.txt};
+else if($6 ~ /LISTEN/) print &gt;2.txt;
+else print &gt;3.txt}' netstat
+
+</pre>
+<h3 id="toc_0.1.7">统计</h3>
+<pre class="brush:shell">
+# 统计log文件的大小总和
+$ ls -l *.log | awk '{sum+=$5} END {print sum}' 
+
+# 统计每个用户的进程占用了多少内存
+$ ps aux| awk 'NR!=1 {a[$1] += $6;} END {for(i in a) print i "," a[i]"KB";}' 
+</pre>
+
+<h3 id="toc_0.1.8">与环境变量交互</h3>
+<p>
+与环境变量交互，需要使用 -v参数和ENVIRON，使用ENVIRON的环境变量需要先exprot
+</p>
+
+<pre class="brush:shell">
+$ x=5
+
+$ echo $x
+5
+
+# 此时执行下面的命令是输出不了5的
+$ awk -F: '{print $1,$3,$6,ENVIRON["x"]}' OFS="\t" /etc/passwd
+
+$ export x
+# 在export 之后才会成功
+$ awk -F: '{print $1,$3,$6,ENVIRON["x"]}' OFS="\t" /etc/passwd
+
+# 使用-v
+$ awk -v val=123 -F : '{print $4+val}' OFS="\t" /etc/passwd
+</pre>
+<hr />
+<p>
+<code>日期</code>：2013-12-02、2014-3-21
+</p>
+
+<p>
+<code>参考资料</code>：<a href="blog.sina.com.cn/s/blog_6fc583e70100n6rm.html.html">linux下如何添加一个用户并且让用户获得root权限</a>、<a href="http://coolshell.cn/articles/9070.html">AWK 简明教程</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

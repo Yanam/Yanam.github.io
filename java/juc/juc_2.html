@@ -1,0 +1,228 @@
+<html>
+<head>
+    <title>java多线程（二）---interrput</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">线程中断</a>
+<li><a href="#toc_0.2">处理InterruptException</a>
+<li><a href="#toc_0.3">实现可取消的任务</a>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">线程中断</h2>
+<p>
+每个线程都有一个与之关联的Boolean属性，表示线程的<code>中断状态</code>。当另一个线程通过调用Thread.interrupt()中断一个线程时，会出现以下两种情况：
+</p>
+
+<ol>
+<li>
+如果那个线程在执行一个低级可中断阻塞方法，例如Thread.slepp()、Thread.join()、Object.wait()，那么它将取消阻塞并抛出InterruptException。
+<pre class="brush:java">
+package com.ifeng.concurrent.interrupt;
+/**
+ * interrupt操作对于阻塞状态的程序的影响
+ * @author liuyn
+ *
+ */
+public class BlockingIntterupt {
+	public static void main(String[] args) {
+		Thread t1 = new ThreadTest2();
+		t1.start();
+		t1.interrupt();
+	}
+}
+class ThreadTest2 extends Thread{
+	@Override
+	public void run(){
+		try {
+			System.out.println("异常前线程中断标志位："+Thread.currentThread().isInterrupted());
+			sleep(1000);
+		} catch (InterruptedException e) {
+			//When a blocking method detects interruption
+			//and throws InterruptedException, it clears the interrupted status 
+			//当一个阻塞方法检测到中断并抛出 InterruptedException 时，它清除中断状态
+			System.out.println("捕获异常后，线程中断标志位："+Thread.currentThread().isInterrupted());
+			System.out.println("产生中断异常！");
+			e.printStackTrace();
+		}
+	}
+}
+
+</pre>
+
+<li>
+对于一个正在运行的线程，interrupt()只是设置线程的中断状态。
+<pre class="brush:java">
+package com.ifeng.concurrent.interrupt;
+/**
+ * interrupt操作对于运行状态的程序的影响
+ * @author liuyn
+ *
+ */
+public class RunningInterrupt {
+	public static void main(String[] args) {
+		Thread t1 = new ThreadTest();
+		t1.start();
+		t1.interrupt();
+		System.out.println(t1.isInterrupted());
+	}
+}
+
+class ThreadTest extends Thread{
+	@Override
+	public void run(){
+		while(!Thread.currentThread().isInterrupted()){
+			System.out.println("线程正在运行。。。");
+			System.out.println("线程中断标志位："+Thread.currentThread().isInterrupted());
+			long time = System.currentTimeMillis();
+			while(System.currentTimeMillis()-time&lt;1000){//非阻塞的等待1000毫秒
+				
+			}
+		}
+	}
+}
+
+</pre>
+
+</ol>
+
+<h2 id="toc_0.2">处理InterruptException</h2>
+<p>
+如果抛出InterruptException意味着一个方法是阻塞方法，那么调用一个阻塞方法则意味着您的方法也是一个阻塞方法，而且您应该有某种策略来处理InterruptException。
+</p>
+
+<p>
+一般两种处理：
+</p>
+<ol>
+<li>
+继续throw InterruptException。
+<pre class="brush:java">
+//不捕捉 InterruptedException，将它传播给调用者
+public Task getTask() throws InterruptedException { 
+	return queue.take();
+}  
+// 在重新抛出 InterruptedException 之前执行特定于任务的清理工作
+    public void matchPlayers() throws InterruptedException { 
+        try {
+             Player playerOne, playerTwo;
+             while (true) {
+                 playerOne = playerTwo = null;
+                 // Wait for two players to arrive and start a new game
+                 playerOne = players.waitForPlayer(); // could throw IE
+                 playerTwo = players.waitForPlayer(); // could throw IE
+                 startNewGame(playerOne, playerTwo);
+             }
+         }
+         catch (InterruptedException e) {  
+             // If we got one player and were interrupted, put that player back
+             if (playerOne != null)
+                 players.addFirst(playerOne);
+             // Then propagate the exception
+             throw e;
+         }
+    }
+
+</pre>
+
+<li>
+继续设置Thread.interupt()异常标志位，让更上一次进行相应处理。
+<pre class="brush:java">
+//  捕捉 InterruptedException 后恢复中断状态
+// 如果捕捉到 InterruptedException 但是不能重新抛出它，那么应该保留中断发生的证据，以便调用栈中更高层的代码能知道中断，并对中断作出响应。
+public void run() { 
+        try {
+             while (true) {
+                 Task task = queue.take(10, TimeUnit.SECONDS);
+                 task.execute();
+             }
+         }
+         catch (InterruptedException e) { 
+             // Restore the interrupted status
+             Thread.currentThread().interrupt();
+         }
+    }
+
+</pre>
+
+</ol>
+<h2 id="toc_0.3">实现可取消的任务</h2>
+<p>
+可取消任务并不意味着需要立即对中断请求作出相应，通常只需循环迭代检查一次中断状态。
+</p>
+<pre class="brush:java">
+public class PrimeProducer extends Thread {
+    private final BlockingQueue&lt;BigInteger&gt; queue;
+
+    PrimeProducer(BlockingQueue&lt;BigInteger&gt; queue) {
+        this.queue = queue;
+    }
+
+    public void run() {
+        try {
+            BigInteger p = BigInteger.ONE;
+            while (!Thread.currentThread().isInterrupted())
+                queue.put(p = p.nextProbablePrime());
+        } catch (InterruptedException consumed) {
+            /* Allow thread to exit */
+        }
+    }
+
+    public void cancel() { interrupt(); }
+}
+
+</pre>
+<hr />
+<p>
+日期：<code>2012-11-08</code>
+</p>
+
+<p>
+参考：<a href="http://www.ibm.com/developerworks/cn/java/j-jtp05236.html">Java 理论与实践: 处理 InterruptedException</a>、<a href="http://hxraid.iteye.com/blog/429005">【解惑】 中断线程Interrupted的用处</a>、<a href="http://www.iteye.com/topic/970055">java线程阻塞中断和LockSupport的常见问题</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

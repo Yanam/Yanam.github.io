@@ -1,0 +1,270 @@
+<html>
+<head>
+    <title>shell脚本学习笔记（一）</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">怎样执行shell</a>
+<li><a href="#toc_0.2">基本语法</a>
+<ul>
+<li><a href="#toc_0.2.1">变量</a>
+<li><a href="#toc_0.2.2">登录环境</a>
+<li><a href="#toc_0.2.3">引号</a>
+<li><a href="#toc_0.2.4">条件测试</a>
+<li><a href="#toc_0.2.5">流程控制</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">怎样执行shell</h2>
+<p>
+在执行shell之前，要先取得文件的可执行权限
+</p>
+<pre class="brush:ps">
+$ chmod +x 文件名
+$ chmod 755 文件名
+</pre>
+<p>
+执行shell，有三种方式
+</p>
+<pre class="brush:ps">
+$ bash 文件名
+$ sh 文件名
+$ ./文件名
+</pre>
+<blockquote>
+注意：最后一种方式中/指的是当前目录，只有.(句号)指的是执行给出的文件。所以可以.foo来执行文件
+</blockquote>
+
+<p>
+shell中注释使用<code>#</code>
+</p>
+<h2 id="toc_0.2">基本语法</h2>
+<h3 id="toc_0.2.1">变量</h3>
+<p>
+变量名称只能是英文字符、数组和下划线，同时数字不能是开头。使用变量要在签名加$,有的时候变量命容易与其他文字混淆，可以使用花括号“{}”。
+</p>
+<pre class="brush:ps">
+a = "hello world"
+echo $a
+num =2
+echo "this is the ${num}nd"
+
+# 清除变量
+unset num
+
+# 只读变量，如果有人想要改变它，会返回错误信息
+readonly a
+# 查看所有只读变量
+readonly
+</pre>
+<p>
+系统变量
+</p>
+<pre class="brush:shell">
+$0	#这个程序的执行名字
+$n	#这个程序的第n个参数值，n=1...9
+$*	#这个程序的所有参数
+$#	#这个程序的参数个数
+$$	#这个程序的PID
+$？	#上一个指令的返回值
+</pre>
+<p>
+其中使用$?校验返回状态，返回0意味着成功，其他为失败。
+</p>
+
+<h3 id="toc_0.2.2">登录环境</h3>
+<p>
+环境变量的系统设置，下面列举相关文件：
+</p>
+<ol>
+<li>
+/etc/sysconfig/i18n	语言环境
+
+<li>
+/etc/profile	里面设置了一些重要的环境变量。PATH，HOSTNAME，UID之类的。
+
+</ol>
+
+<p>
+所有文件在改变之后用source命令或者.重新读取一遍。
+</p>
+<h3 id="toc_0.2.3">引号</h3>
+<ol>
+<li>
+<code>双引号（""）</code>：
+
+<li>
+<code>单引号(''）</code>：
+
+<li>
+<code>反引号</code>：用户设置系统命令的输出到变量。shell将反引号的内容作为一个系统命令，并执行其内容。
+
+<li>
+<code>反斜线（\）</code>：转义特殊字符。
+
+</ol>
+<h3 id="toc_0.2.4">条件测试</h3>
+<p>
+<code>test</code> 一般有两种格式：test condition 或 [ condition ]，第二种注意条件两边的空格。
+文件状态测试：-d 目录、-s 文件长度大于0、非空 、-f 正规文件、-w 可写、-L 符号连接、-u 文件有suid位设置、-r 可读、-x 可执行
+</p>
+<pre class="brush:ps">
+$ [ -w scores.txt ]
+$ echo $?			#0
+$ test -w scores.txt
+$ echo $?			#0
+</pre>
+
+<p>
+逻辑操作符：-a 逻辑与、-o 逻辑或、！逻辑非
+</p>
+<pre class="brush:ps">
+$ [ -w results.txt -a -w scores.txt ]
+$ echo $?			#0
+</pre>
+
+<p>
+字符串测试：== 两字符串相等、！=两字符串不等、-z空串、-n非空串
+</p>
+<pre class="brush:ps">
+$ [ -z $editor ]
+$ echo s?		#1
+$ [ $editor == "vim" ]
+$ echo $?		#0
+
+</pre>
+
+<p>
+数值测试：-eq数值相等、-ne数值不相等、-gt第一个数大于第二个数、-lt第一个数小雨第二个数、-le第一个数小于等于第二个数、-ge第一个数大于等于第二个数
+</p>
+<pre class="brush:ps">
+$ number = 130
+$ [ "$number" -eq "130" ]
+$ echo $?			#0
+</pre>
+
+<p>
+<code>expr</code> 一般用于整数值，但也可以用于字符串。格式为：expr argument operator argument
+</p>
+<pre class="brush:ps">
+$ expr 10 + 10
+$ 20
+</pre>
+
+<h3 id="toc_0.2.5">流程控制</h3>
+<p>
+<code>if</code>：	
+语法
+</p>
+<pre class="brush:ps">
+if 条件
+then
+命令1
+else
+命令2
+fi
+</pre>
+<p>
+<code>for</code>：
+语法
+</p>
+<pre class="brush:ps">
+for 变量名 in 列表
+do
+命令1
+命令2
+done
+#第二种
+for ((初值;循环条件;步长))
+do
+	执行的程序段
+done
+</pre>
+<p>
+<code>until</code>：
+语法
+</p>
+<pre class="brush:ps">
+until 条件
+命令1
+。。。
+done 
+</pre>
+<p>
+<code>while</code>：
+语法
+</p>
+<pre class="brush:ps">
+while 条件
+do
+命令1
+命令2
+done
+</pre>
+
+<p>
+shell中也可以和java一样使用<code>break</code>和<code>continue</code>来控制循环。
+</p>
+
+<hr />
+<p>
+参考文档:
+</p>
+<ol>
+<li>
+<a href="http://www.freeos.com/guides/lsst/ch02sec01.html">Linux Shell Scripting Tutorial</a>
+
+<li>
+<a href="http://bbs.chinaunix.net/thread-452942-1-1.html">shell基础二十篇</a>
+
+</ol>
+<hr />
+<p>
+<code>日期</code>：2012-09-10、2012-09-11
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

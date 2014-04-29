@@ -1,0 +1,539 @@
+<html>
+<head>
+    <title>js高级程序设计读书笔记（四）</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">引用类型</a>
+<ul>
+<li><a href="#toc_0.1.1">Object 类型</a>
+<li><a href="#toc_0.1.2">Array 类型</a>
+<ul>
+<li><a href="#toc_0.1.2.1">转换方法</a>
+</ul>
+<li><a href="#toc_0.1.3">栈方法、队列方法</a>
+<li><a href="#toc_0.1.4">重排序方法</a>
+<li><a href="#toc_0.1.5">操作方法</a>
+</ul>
+<li><a href="#toc_0.2">Date 类型</a>
+<li><a href="#toc_0.3">RegExp 类型</a>
+<ul>
+<li><a href="#toc_0.3.1">RegExp 实例属性</a>
+<li><a href="#toc_0.3.2">RegExp 实例方法</a>
+</ul>
+<li><a href="#toc_0.4">Function 类型</a>
+<ul>
+<li><a href="#toc_0.4.1">函数属性和方法</a>
+</ul>
+<li><a href="#toc_0.5">基本包装类型</a>
+<ul>
+<li><a href="#toc_0.5.1">Boolean 类型</a>
+<li><a href="#toc_0.5.2">Number 类型</a>
+<li><a href="#toc_0.5.3">String 类型</a>
+<li><a href="#toc_0.5.4">字符方法</a>
+<li><a href="#toc_0.5.5">字符串操作方法</a>
+<li><a href="#toc_0.5.6">字符串位置方法</a>
+<li><a href="#toc_0.5.7">字符串大小写转换方法</a>
+<li><a href="#toc_0.5.8">字符串的模式匹配方法</a>
+</ul>
+<li><a href="#toc_0.6">内置对象</a>
+<ul>
+<li><a href="#toc_0.6.1">Global对象</a>
+<ul>
+<li><a href="#toc_0.6.1.1">URI编码方法</a>
+<li><a href="#toc_0.6.1.2">eval()方法</a>
+<li><a href="#toc_0.6.1.3">window对象</a>
+</ul>
+<li><a href="#toc_0.6.2">Math对象</a>
+<ul>
+<li><a href="#toc_0.6.2.1">max()和min()方法</a>
+<li><a href="#toc_0.6.2.2">random()方法</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">引用类型</h2>
+
+<h3 id="toc_0.1.1">Object 类型</h3>
+<h3 id="toc_0.1.2">Array 类型</h3>
+<p>
+ECMAScript的数组的每一项可以保持任何类型的数据。
+</p>
+<pre class="brush:js">
+//创建数组的方式1，使用Array构造函数
+var colors = new Array();	
+var persons = new Array(20);	//创建一个包含20项的数组
+var names = new Array("Greg");	//创建一个包含1项，即字符串'Greg'的数组
+//创建数组的方式2，使用数组字面量表示法
+var colors = ["red","blue"];
+var names = []
+//数组的length属性，并不是只读的，这点要注意！
+var colors = ["red","blue","green"];
+alert(colors.length);	//3
+colors.length = 2;	//将长度减少为2
+alert(colors[2]);	//undefined
+colors.length = 3;	//将长度增长为3
+alert(colors[2]);	//undefined
+</pre>
+<p>
+利用length属性可以方便的在数组末尾添加新项。
+</p>
+<pre class="brush:js">
+var colors = ["red","blue","green"];	//创建一个包含3个字符串的数组
+colors[colors.length] = "black";	//（在位置3）添加一种颜色
+colors[colors.length] = "brown";	//（在位置4）添加一种颜色
+</pre>
+<h4 id="toc_0.1.2.1">转换方法</h4>
+<p>
+所有对象都具有toLocalString()、toString()、valueOf()方法。其中数组的toString()和valueOf()方法会返回相同的值，即由数组的每个值的字符串形式拼接城的一个以逗号分隔的字符串。
+</p>
+<pre class="brush:js">
+var colors = ["red","blue","green"];	//创建一个包含3个字符串的数组
+alert(colors.toString());		//red,blue,green
+alert(colors.valueof());		//red,blue,green
+alert(colors);				//red,blue,green
+</pre>
+<p>
+默认情况下都是以逗号分隔的,但是可以使用<code>join()</code>方法来实现不同分隔符。
+</p>
+<pre class="brush:js">
+var colors = ["red","blue","green"];
+alert(colors.join(","));	//red,blue,green
+alert(colors.join("||"));	//red||blue||green
+</pre>
+<p>
+如果数组的某一项是null或undefined，那么该值在<code>join()</code>、<code>toLocaeString()</code>、<code>toString()</code>、<code>valueOf()</code>方法返回的结果中以<code>空字符串</code>表示。
+</p>
+<h3 id="toc_0.1.3">栈方法、队列方法</h3>
+<p>
+利用EMCScript为数组提供的<code>push()</code>、<code>pop()</code>、<code>shift()</code>、<code>unshift()</code>方法模拟栈和队列的实现。
+</p>
+<h3 id="toc_0.1.4">重排序方法</h3>
+<p>
+Array有两个重排序的方法：
+</p>
+<ol>
+<li>
+<code>reverse()</code>方法会反转数组项的顺序。
+<pre class="brush:js">
+var values = [1,2,3,4,5];
+values.reverse();
+alert(values);		//5,4,3,2,1
+</pre>
+
+<li>
+<code>sort()</code>方法，默认按升序排列，会调用每个数组项的<code>toString()</code>方法，得到字符串在排序。所以即使是数值也会按字符串进行比较。
+<pre class="brush:js">
+var values = [0,1,5,10,15];
+values.sort();
+alert(values);		//0,1,10,15,5
+</pre>
+
+</ol>
+<p>
+<code>sort()</code>方法可以接收一个比较函数作为参数，来指导排列顺序。
+</p>
+<pre class="brush:js">
+function compare(value1,value2){
+	if(value1 &lt; value2){
+		return -1;
+	} else if(value1 &gt; value2){
+		return 1;
+	} else{
+		return 0;
+	}
+}
+var values = [0,1,5,10,15];
+values.sort(compare);
+alert(values);		//0,1,5,10,15
+</pre>
+<h3 id="toc_0.1.5">操作方法</h3>
+<p>
+<code>concat()</code>、<code>slice()</code>、<code>splice()</code>
+</p>
+<h2 id="toc_0.2">Date 类型</h2>
+<pre class="brush:js">
+var now = new Date();
+</pre>
+<h2 id="toc_0.3">RegExp 类型</h2>
+<p>
+正则表达式:<code>var experssion = / pattern /flags ;</code>
+正则表达式的匹配模式支持下列3个标志：
+</p>
+<ol>
+<li>
+<code>g</code>	：表示全局（global）模式，
+
+<li>
+<code>i</code>	:表示不区分大小写（case-insensitive)模式
+
+<li>
+<code>m</code>	：表示多行（multiline）模式，即到达一行文本末尾时还会继续查找下一行中是否存在匹配的项。
+
+</ol>
+<p>
+正则表达式中的元字符
+<code>( [ { \ ^ $ | ？ * +  . } ] )</code>
+定义正则表达式的方法：
+</p>
+<pre class="brush:js">
+/**
+*	字面量表示法
+*/
+var pattern1 = /[bc]at/i;
+/**
+*	构造函数
+*/
+var pattern2 = new RegExp("[bc]at","i");
+</pre>
+<p>
+注意：传递给RegExp构造函数的两个参数都是字符串。所以要对字符进行<code>双重转义</code>。字符<code>\</code>在字符串中通常被转义为<code>\\</code>,而在正则表达式字符串中就会变成<code>\\\\</code>。
+</p>
+<h3 id="toc_0.3.1">RegExp 实例属性</h3>
+<p>
+RegExp的每个实例都有下列属性：
+</p>
+<ol>
+<li>
+<code>global</code>：布尔值，表示是否设置了g标志。
+
+<li>
+<code>ignoreCase</code>：布尔值，表示是否设置了i标志。
+
+<li>
+<code>lastIndex</code>：整数，表示开始搜索下一个匹配的字符位置，从0算起。
+
+<li>
+<code>multiline</code>：布尔值，表示是否设置了m标志。
+
+<li>
+<code>source</code>：正则表达式的字符串表示。按字面量形式。
+<pre class="brush:js">
+var pattern1 = /\[bc\]at/i;
+alert(pattern1.global);		//false
+alert(pattern1.ignoreCase);	//true
+alert(pattern1.multiline);	//false
+alert(pattern1.lastIndex);	//o
+alert(pattern1.source);		//"\[bc\]at"
+</pre>
+
+</ol>
+<h3 id="toc_0.3.2">RegExp 实例方法</h3>
+<ol>
+<li>
+<code>exec()</code> :接受一个参数，即要匹配的字符串，返回包含第一个匹配项信息的数组，或者null。返回的数组是Array的实例，但包含<code>index</code>和<code>input</code>两个属性。index表示匹配项在字符串中的位置。input表示应用正则表达式的字符串。
+<pre class="brush:js">
+var text = "mom and dad and baby";
+var apttern = /mome( and dad( and baby)?)?/gi;
+var matches = pattern.exec(text);
+alert(matches.index);		//0
+alert(matches.input);		//"mom and dad and baby"
+alert(matches[0]);		//"mom and dad and baby"
+alert(matches[1]);		//" and dad and baby"
+alert(matches[2]);		//" and baby"
+</pre>
+
+<li>
+<code>test()</code>：接受一个字符串参数，匹配返回true，否则返回false。
+<pre class="brush:js">
+var text = "000-00-0000";
+var pattern = /\d{3}-\d{2}-\d{4}/;
+if(pattern.test(text)){
+	alert("The pattern was matched");
+}
+</pre>
+
+</ol>
+<h2 id="toc_0.4">Function 类型</h2>
+<p>
+函数实际上是对象，每个函数都是Function类型的实例。函数名实际上是一个指向函数对象的指针，所以js的函数没有重载。
+</p>
+<pre class="brush:js">
+/*
+* 一个函数可以有多个名字
+*/
+function sum(num1,num2){
+	return num1+num2;
+}
+alert(sum(10,10));		//20
+var anotherSum = sum;
+alert(anotherSum(10,10));	//20
+/*
+* 重复声明的同名函数，不会有重载，后面的会覆盖前面的
+*/
+function addSomeNumber(num){
+	return num+100;
+}
+function addSomeNumber(num){
+	return num+200;
+}
+alert(addSomeNumber(100));	//300
+</pre>
+<p>
+函数声明与函数表达式的区别：
+</p>
+<ol>
+<li>
+解析器会率先读取函数声明，并使其在执行任何代码前可用。
+<pre class="brush:js">
+/*
+* 该代码可以正常运行
+*/
+alert(sum(10,10));
+function sum(num1,num2){
+	return num1+num2;
+}
+</pre>
+
+<li>
+函数表达式则必须等到解析器执行到它所在代码行才会真正呗解释执行。
+<pre class="brush:js">
+/*
+* 该代码执行会产生错误
+*/
+alert(sum(10,10));
+var sum = function(num1,num2){
+	return num1+num2;
+}
+</pre>
+
+</ol>
+<p>
+除此之外，它们是等价的。
+</p>
+
+<p>
+函数内部有两个特殊对象：<code>arguments</code>和<code>this</code>。
+</p>
+<ol>
+<li>
+<code>arguments</code>：一个类数组对象，包含传入函数的所有参数。但它还有一个叫callee的属性，它是一个指针，指向拥有这个<code>arguments</code>对象的函数。
+<pre class="brush:js">
+function factorial(sum){
+	if(num&lt;=1){
+		return 1;	
+	} else {
+		//代替在递归调用中常用的直接调用方法名
+		//return num* factorial(num-1);
+		return num * arguments.callee(num-1);
+	}
+}
+</pre>
+
+</ol>
+<p>
+如上所示的代码，好处是在函数名在调用过程中发生改变程序依然可用。
+</p>
+<ol>
+<li>
+<code>this</code>：它是函数在执行时所处的作用域（在全局作用域调用时，this对象引用的就是window）。
+<pre class="brush:js">
+var color = "red";
+var o = {color:"blue"};
+function sayColor(){
+	alert(this.color);
+}
+sayColor();		//"red"
+o.sayColor = sayColor;
+o.sayColor();		//"blue"
+</pre>
+
+</ol>
+<h3 id="toc_0.4.1">函数属性和方法</h3>
+<p>
+每个函数包含两个属性:<code>length</code>、<code>prototype</code>。
+每个函数同时包含两个非继承而来的方法：<code>apply()</code>、<code>call()</code>。
+</p>
+
+<h2 id="toc_0.5">基本包装类型</h2>
+<p>
+为方便操作基本类型值，ECMAScript提供了3个特殊的引用类型：<code>Boolean</code>、<code>Number</code>、<code>String</code>。
+</p>
+
+<h3 id="toc_0.5.1">Boolean 类型</h3>
+<p>
+用处不大
+</p>
+<h3 id="toc_0.5.2">Number 类型</h3>
+<p>
+<code>toFixed()</code>方法，接收一个参数，按指定参数返回有相应小数位的字符串。
+</p>
+<pre class="brush:js">
+var num = 10;
+alert(num.toFixed(2));	//"10.00"
+</pre>
+<h3 id="toc_0.5.3">String 类型</h3>
+<h3 id="toc_0.5.4">字符方法</h3>
+<p>
+两个访问字符串特点字符的方法：<code>charAt()</code>、<code>charCodeAt()</code>。
+</p>
+<ol>
+<li>
+<code>charAt()</code>：以单字符字符串的形式返回给定位置的那个字符。
+<pre class="brush:js">
+var stringValue = "hello world";
+alert(stringValue.charAt(1));		//"e"
+</pre>
+
+<li>
+<code>charCodeAt()</code>：类似于charAt方法，但是返回的是字符编码。
+<pre class="brush:js">
+var stringValue = "hello world";
+alert(stringValue.charCodeAt(1));	//"101"
+</pre>
+
+</ol>
+<h3 id="toc_0.5.5">字符串操作方法</h3>
+<p>
+ECMAScript提供了三个基于子字符串创建新字符串的方法：<code>slice()</code>、<code>substr()</code>、<code>substring()</code>。
+</p>
+<h3 id="toc_0.5.6">字符串位置方法</h3>
+<p>
+从字符串中查找子字符串的方法:<code>indexOf()</code>、<code>lastIndexOf()</code>。两个的区别在于：<code>indexOf()</code>方法从字符串的头部向后搜索，<code>lastIndexOf()</code>方法从字符串的尾部向前搜索。
+</p>
+<pre class="brush:js">
+var stringValue = "hello world";
+alert(stringValue.indexOf("o"));	//4
+alert(stringValue.lastIndexOf("o"));	//7
+</pre>
+<p>
+两个方法都可以接受第二个参数，表示从字符串的哪个位置开始搜索。
+</p>
+<pre class="brush:js">
+var stringValue = "hello world";
+alert(stringValue.indexOf("o"，6));	//7
+alert(stringValue.lastIndexOf("o",6));	//4
+</pre>
+<h3 id="toc_0.5.7">字符串大小写转换方法</h3>
+<p>
+<code>toLowerCase()</code>、<code>toUpperCase()</code>
+</p>
+<h3 id="toc_0.5.8">字符串的模式匹配方法</h3>
+<ol>
+<li>
+<code>match()</code>：本质与调用RegExp的exec()方法相同。接受一个参数，要么是正则表达式，要么是RegExp对象。
+<pre class="brush:js">
+var text = "cat, bat, sat, fat";
+var pattern = /.at/;
+//与pattern.exec(text)相同
+var matches = text.match(pattern);
+alert(matches.index);	//0
+alert(matches[0]);	//"cat"
+</pre>
+
+<li>
+<code>search()</code>：接受一个参数与match()相同，返回第一个匹配项的索引，如果没有找到，返回-1。
+<pre class="brush:js">
+var text ="cat, bat, sat, fat";
+var pos = text.search(/at/);
+alert(pos);			//1
+</pre>
+
+<li>
+<code>replace()</code>：接受两个参数：第一个参数可以是一个RegExp对象或者一个字符串（这个字符串不会被转换成正则表达式）；第二个参数可以是一个字符串或者函数。
+<pre class="brush:js">
+var text = "cat, bat, sat, fat";
+//如果第一个参数是字符串，那么只会第一个子字符串。
+var result = text.replace("at","ond");
+alert(result);			//"cond, bat, sat, fat"
+//要想替换所有子字符串，唯一办法就是提供一个正则表达式，而且要知道全局标志(g)。
+result = text.replace("/at/g",text);
+alert(result);			//"cond, bond, sond, fond"
+</pre>
+
+<li>
+<code>split()</code>：基于指定的分隔符将一个字符串分割成多个子字符串，并返回子字符串的数组。分隔符可以是字符串，也可以是RegExp对象。可以接受可选的第二个参数，用于指定数组的大小。
+<pre class="brush:js">
+var colorText = "red,blue,green,yellow";
+var colors1 = colorText.split(",");	//["red","blue","green","yellow"]
+var colors2 = colorText.splie(",",2);	//["red","blue"]
+var colors3 = colorText.split(/[^\,]+/);	//["",",",",",",",""]
+</pre>
+
+</ol>
+<h2 id="toc_0.6">内置对象</h2>
+<p>
+ECMA-262只定义了两个内置对象：<code>Global</code>、<code>Math</code>。
+</p>
+<h3 id="toc_0.6.1">Global对象</h3>
+<p>
+不属于任何其他对象的属性和方法，最终都是Global的属性和方法。
+</p>
+<h4 id="toc_0.6.1.1">URI编码方法</h4>
+<ol>
+<li>
+<code>encodeURI()</code>：不会对本身属于URI的特殊字符进行编码，例如：冒号、正斜杠、问号、井字号。
+
+<li>
+<code>encodeURIComponent()</code>：会对它发现的任何非标准字符进行编码。
+<pre class="brush:js">
+var uri ="http://www.wrox.com/illegal vlaue.htm#start";
+alert(endcodeURI(uri));
+
+alert(encodeURIComponent(uri));
+</pre>
+
+</ol>
+<p>
+它们对应的解码方法为：<code>decodeURI()</code>、<code>decodeURIComponent()</code>。
+注意：原有的<code>escape()</code>、<code>unescape()</code>已经被废弃了，不要在使用了。
+</p>
+<h4 id="toc_0.6.1.2">eval()方法</h4>
+<h4 id="toc_0.6.1.3">window对象</h4>
+<p>
+javaScript中的window对象扮演了ECMAScript规定的Global对象的角色。
+</p>
+<h3 id="toc_0.6.2">Math对象</h3>
+<h4 id="toc_0.6.2.1">max()和min()方法</h4>
+<h4 id="toc_0.6.2.2">random()方法</h4>
+
+<hr />
+<p>
+<code>日期</code>：2012-08-01
+<hr />
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

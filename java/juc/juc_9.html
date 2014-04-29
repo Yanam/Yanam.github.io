@@ -1,0 +1,337 @@
+<html>
+<head>
+    <title>synchronized关键字</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">关于同步的意义</a>
+<li><a href="#toc_0.2">synchronized关键字</a>
+<ul>
+<li><a href="#toc_0.2.1">同步的基础</a>
+<li><a href="#toc_0.2.2">同步的原理</a>
+<li><a href="#toc_0.2.3">synchronized关键字使用方法</a>
+<ul>
+<li><a href="#toc_0.2.3.1">synchronized 方法</a>
+<li><a href="#toc_0.2.3.2">synchronized 块</a>
+</ul>
+<li><a href="#toc_0.2.4">规则</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">关于同步的意义</h2>
+<p>
+操作系统的设计者的目的是从概念上简化编程的模型，使其更加自然更加符合思维习惯。
+所以操作系统设计者为使用进程和线程来编程提供了一个<code>假设条件</code>：即进程和线程各自的执行流是连贯的，没有任何断续执行的现象。但是实际上从系统底层看，这些进程和线程的执行流是支离破碎的，并且这些破碎的执行流片段被CPU以某种方式（即操作系统的调度程序）组合成一个串行的、混合在一起的执行流。
+</p>
+
+<p>
+问题就在这里，同步问题的根源就是<code>看起来连贯的执行流实际上是破碎的</code>。比如有两个执行流A和B，A对一个数据进行操作，但是这个操作呗分割成相连的两块执行流碎片，而另一个执行流B需要在A完成这个数据操作之后才能取到这个数据然后进行自己的计算，可是由于A对数据操作这个本来完整的操作流被分隔成了相邻的两个碎片，然后CPU可能会在A的两个碎片直接插入B的取值操作这样一个执行流碎片。这样一来程序的行为就不符合我们的设想了。
+</p>
+
+<p>
+同步的本质就是让CPU不要把A的数据操作分隔开，不让B有机会插入来扰乱A，以保证正确的执行顺序。
+</p>
+
+<p>
+无论看起来执行多快的操作都可能被操作系统打断，从而形成碎片，导致执行结果的不可预料。
+</p>
+
+<p>
+所以应该在需要<code>精确时序</code>的地方使用同步。所谓精确时序场合就是数据使用或操作的执行存在依赖性的地方，对于代码来说，就是完成某项操作时对参与的进程或线程有执行顺序要求的代码。
+</p>
+
+<h2 id="toc_0.2">synchronized关键字</h2>
+<h3 id="toc_0.2.1">同步的基础</h3>
+<p>
+Java中的每一个对象都可以作为锁。
+</p>
+<ul>
+<li>
+对于同步方法，锁是当前实例对象。
+
+<li>
+对于静态同步方法，锁是当前对象的Class对象。
+
+<li>
+对于同步方法块，锁是Synchonized括号里配置的对象。
+
+</ul>
+<h3 id="toc_0.2.2">同步的原理</h3>
+<p>
+JVM规范规定JVM基于进入和退出Monitor对象来实现方法同步和代码块同步。
+</p>
+<h3 id="toc_0.2.3">synchronized关键字使用方法</h3>
+<p>
+有两种使用方法:<code>synchronized 方法</code>、<code>synchronized 块</code>。
+</p>
+
+<p>
+synchronized关键字 <strong>不是</strong> 方法签名的一部分。所以在子类重写父类方法，或者实现接口时，synchronized关键字是不会被继承的。
+</p>
+<h4 id="toc_0.2.3.1">synchronized 方法</h4>
+<p>
+synchronized 方法，控制对类成员变量的访问：*每个类实例对应一把锁*，方法一旦执行就独占锁。
+</p>
+
+<p>
+在java中不光类实例，*每个类也对应一把锁*，这样我们也可以把类的静态成员函数声明未synchronized，以控制其对类的静态成员变量的访问。
+</p>
+<h4 id="toc_0.2.3.2">synchronized 块</h4>
+<p>
+语法如下；
+</p>
+<pre class="brush:java">
+synchronized(syncObject){
+	//允许访问控制的代码
+}
+</pre>
+<p>
+synchronized块是这样一个代码块，其中代码必须获得对象syncObject（可以是类实例或者类）的锁才能执行。
+</p>
+<h3 id="toc_0.2.4">规则</h3>
+<p>
+<strong>一</strong>. 当两个并发线程访问同一个对象object中synchronized(this)同步代码时，同一时间只能有一个线程执行。
+</p>
+
+<pre class="brush:java">
+public class SyncTest1 implements Runnable {
+
+	@Override
+	public void run() {
+		synchronized (this) {
+			for (int i = 0; i &lt; 5; i++) {
+				System.out.println(Thread.currentThread().getName()
+						+ " synchronized loop " + i);
+			}
+		}
+	}
+
+	public static void main(String[] args) {
+		
+		SyncTest1 syncT = new SyncTest1();
+		
+		Thread t1 = new Thread(syncT,"线程1");
+		Thread t2 = new Thread(syncT,"线程2");
+		//结果应该是线程1先执行完，然后线程2才开始执行，不会出现交叉。
+		t1.start();
+		t2.start();
+
+	}
+}
+</pre>
+
+<p>
+<strong>二</strong>. 当一个线程访问object的一个synchronized(this)同步代码块时，另一个线程依然可以访问该object中的非synchronized(this)同步代码块。
+</p>
+<pre class="brush:java">
+public class SyncTest2 {
+
+	public synchronized void m4t1() {	 
+			int i = 5;
+			while (i-- &gt; 0) {
+				System.out
+						.println(Thread.currentThread().getName() + " : " + i);
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException ie) {
+				}
+			}
+	}
+
+	public void m4t2() {
+		int i = 5;
+		while (i-- &gt; 0) {
+			System.out.println(Thread.currentThread().getName() + " : " + i);
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException ie) {
+			}
+		}
+	}
+
+	public static void main(String[] args) {
+		final SyncTest2 syncT = new SyncTest2();
+		Thread t1 = new Thread(new Runnable(){
+			public void run() {syncT.m4t1();}},"线程1");
+		Thread t2 = new Thread(new Runnable(){
+			public void run() {syncT.m4t2();}},"线程2");
+
+		t1.start();
+		t2.start();
+	}
+}
+
+</pre>
+
+<p>
+<strong>三</strong>. 当一个线程访问object的一个synchronized(this)同步代码时，其他线程对object中所有其他synchronized(this)同步代码块的访问将被阻塞。
+</p>
+<pre class="brush:java">
+public class SyncTest3 {
+
+	public synchronized void m4t1() {	 
+			int i = 5;
+			while (i-- &gt; 0) {
+				System.out
+						.println(Thread.currentThread().getName() + " : " + i);
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException ie) {
+				}
+			}
+	}
+	//该方法加了synchronized关键字
+	public synchronized void m4t2() {
+		int i = 5;
+		while (i-- &gt; 0) {
+			System.out.println(Thread.currentThread().getName() + " : " + i);
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException ie) {
+			}
+		}
+	}
+
+	public static void main(String[] args) {
+		final SyncTest3 syncT = new SyncTest3();
+		Thread t1 = new Thread(new Runnable(){
+			public void run() {syncT.m4t1();}},"线程1");
+		Thread t2 = new Thread(new Runnable(){
+			public void run() {syncT.m4t2();}},"线程2");
+		//线程2需要等待线程1执行完后才可以执行。
+		t1.start();
+		t2.start();
+	}
+}
+
+</pre>
+
+<p>
+<strong>四</strong>. 当一个线程访问object的一个synchronized(this)同步代码块时，它就获得了这个object的对象锁。结果就是其他线程对该object对象的所有同步代码部分的访问都被阻塞。
+</p>
+
+<p>
+五. 在使用synchronized块同步类方法时，非静态方法可以使用this来同步，而静态方法必须使用Class对象来同步。它们互不影响。当然，也可以在非静态方法中使用Class对象来同步，但静态方法不能使用this来同步。
+</p>
+<pre class="brush:java">
+public class SyncTest4 {
+
+	private static int x=100;
+
+	/**
+	 * 对象锁
+	 */
+	public synchronized void setX() {
+		System.out.println("写线程加锁");
+		while (x-- &gt; 0) {
+			System.out
+			.println("写线程"+Thread.currentThread().getName() + " : " + x);
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException ie) {
+			}
+		}
+		System.out.println("写线程解锁");
+	}
+
+	/**
+	 * 类锁
+	 * @return
+	 */
+	public static int getX() {
+		synchronized (SyncTest4.class) {//静态方法只能用class同步，不能用this同步
+			System.out.println("读线程加锁");
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException ie) {
+			}
+			System.out.println("读线程解锁");
+			return x;
+		}
+		
+	}
+	
+	public static void main(String[] args) {
+		final SyncTest4 sync = new SyncTest4();
+		Thread t1 = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (true) {System.out.println("读线程"+Thread.currentThread().getName() + " : " + SyncTest4.getX());}
+			}
+		});
+		
+		Thread t2 = new Thread(new Runnable() {
+			@Override
+			public void run() {sync.setX();}
+		});
+		
+		t1.start();
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException ie) {
+		}
+		t2.start();
+	}
+}
+
+</pre>
+
+<p>
+从运行结果可以看出，类锁跟对象锁是互不影响的。
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2013-2-17、2013-2-18、2013-3-14、2013-5-7、2013-8-12
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.iteye.com/topic/4284?page=2">关于synchronized的疑问(youngS的回答)</a>、<a href="http://jimi68.iteye.com/blog/69061">同步synchronized方法和代码块</a>、<a href="http://www.oschina.net/question/565065_86006">同步方式 (1) —— synchronized</a>、<a href="http://www.blogjava.net/nokiaguy/archive/2009/nokiaguy/archive/2009/nokiaguy/archive/2009/03/22/261354.html">Java多线程初学者指南（11）：使用Synchronized块同步方法</a>、<a href="http://www.infoq.com/cn/articles/java-se-16-synchronized">聊聊并发（二）——Java SE1.6中的Synchronized</a>、<a href="http://ifeve.com/java-concurrency-constructs/">Java并发结构</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

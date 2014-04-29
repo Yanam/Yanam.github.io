@@ -1,0 +1,86 @@
+<html>
+<head>
+    <title>两种多路复用方案：Reactor/Proactor</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">I/O复用机制</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">I/O复用机制</h2>
+<p>
+一般情况下，I/O复用机制需要<code>事件分离器</code>(event demultiplexor)
+</p>
+
+<p>
+事件分离器的作用：即将那些读写事件源分发给各读写事件的处理者，开发人员在开始的适合需要在分离器那里注册感兴趣的事件，并提供相应的处理者(event handers),或者是回调函数；事件分离器会在适当的适合将请求的事件分发给这写handlers或者回调函数。
+</p>
+
+<p>
+涉及到事件分离器的两种模式称为：Reactor、Proactor。其中Reactor是基于<code>同步I/O</code>,而Proactor是基于<code>异步I/O</code>的。
+</p>
+
+<p>
+简单来说,<code>Reactor</code>是指IO事件准备就绪时通知用户线程进行IO操作。<code>Proactor</code>是指用户线程提交IO操作，只要等待IO完成事件就可以了。
+</p>
+
+<p>
+Linux 的epoll是 Reactor模式。
+window 的iocp是 proacotr模式。
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2013-07-28
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.cppblog.com/pansunyou/archive/2011/01/26/io_design_patterns.html">两种高性能I/O设计模式(Reactor/Proactor)的比较</a>、<a href="http://stackoverflow.com/questions/9138294/what-is-the-difference-between-event-driven-model-and-reactor-pattern">What is the difference between event driven model and reactor pattern?</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

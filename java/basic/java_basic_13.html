@@ -1,0 +1,234 @@
+<html>
+<head>
+    <title>Java基础--LinkedHashMap、IdentityHashMap的分析</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">LinkedHashMap</a>
+<ul>
+<li><a href="#toc_0.2.1">源码分析</a>
+<ul>
+<li><a href="#toc_0.2.1.1">成员变量</a>
+<li><a href="#toc_0.2.1.2">初始化</a>
+<li><a href="#toc_0.2.1.3">get、containsValue、transfer方法</a>
+</ul>
+<li><a href="#toc_0.2.2">排序策略</a>
+</ul>
+<li><a href="#toc_0.3">IdentityHashMap</a>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+写过HashMap的源码分析的日志后，就产生了把Collection相关的类都记录一下的想法。
+</p>
+<h2 id="toc_0.2">LinkedHashMap</h2>
+<p>
+LinkedHashMap是HashMap的子类，它解决了HashMap的遍历无序问题。而实现这一目的是通过双向链表。
+</p>
+
+<h3 id="toc_0.2.1">源码分析</h3>
+<p>
+LinkedHashMap通过继承HashMap，基本操作与HashMap一致，通过重写父类的某些方法实现自己链表的特性。
+</p>
+<h4 id="toc_0.2.1.1">成员变量</h4>
+<p>
+LinkedHashMap只定义了两个成员变量，为了实现双向链表重新定义了Entry：
+</p>
+<pre class="brush:java">
+    /**
+     * The head of the doubly linked list.
+     */
+	//双向链表的头节点
+    private transient Entry&lt;K,V&gt; header;
+
+    /**
+     * The iteration ordering method for this linked hash map: &lt;tt&gt;true&lt;/tt&gt;
+     * for access-order, &lt;tt&gt;false&lt;/tt&gt; for insertion-order.
+     *
+     * @serial
+     */
+	//为true时按访问顺序迭代，为false时按插入顺序迭代。
+    private final boolean accessOrder;
+
+
+    /**
+     * LinkedHashMap entry.
+     */
+    private static class Entry&lt;K,V&gt; extends HashMap.Entry&lt;K,V&gt; {
+        // These fields comprise the doubly linked list used for iteration.
+        Entry&lt;K,V&gt; before, after;
+	........
+    }
+</pre>
+
+<h4 id="toc_0.2.1.2">初始化</h4>
+
+<pre class="brush:java">
+    public LinkedHashMap() {
+        super();
+        accessOrder = false;
+    }
+
+    /**
+     * Called by superclass constructors and pseudoconstructors (clone,
+     * readObject) before any entries are inserted into the map.  Initializes
+     * the chain.
+     */
+    void init() {
+        header = new Entry&lt;&gt;(-1, null, null, null);
+        header.before = header.after = header;
+    }
+</pre>
+
+<p>
+从源码中我们可以看出，LinkedHashMap的构造函数都是调用父类HashMap的构造函数。值得关注的是HashMap的构造函数最后一步会调用<code>init()</code>方法，该方法在HashMap是空实现的，LinkedHashMap重写的该方法，完成了双向链表的header的初始化。
+</p>
+<h4 id="toc_0.2.1.3">get、containsValue、transfer方法</h4>
+<p>
+LinkedHashMap重写了transfer方法供父类的resize方法调用，在父类完成对哈希表的resize后，对自己的双向链表进行扩容。
+</p>
+<pre class="brush:java">
+    /**
+     * Transfers all entries to new table array.  This method is called
+     * by superclass resize.  It is overridden for performance, as it is
+     * faster to iterate using our linked list.
+     */
+    void transfer(HashMap.Entry[] newTable) {
+        int newCapacity = newTable.length;
+        for (Entry&lt;K,V&gt; e = header.after; e != header; e = e.after) {
+            int index = indexFor(e.hash, newCapacity);
+            e.next = newTable[index];
+            newTable[index] = e;
+        }
+    }
+</pre>
+
+<p>
+containsValue方法覆盖了父类的方法，用查询链表的方式替换了父类的table遍历方式。
+</p>
+<pre class="brush:java">
+    public boolean containsValue(Object value) {
+        // Overridden to take advantage of faster iterator
+        if (value==null) {
+            for (Entry e = header.after; e != header; e = e.after)
+                if (e.value==null)
+                    return true;
+        } else {
+            for (Entry e = header.after; e != header; e = e.after)
+                if (value.equals(e.value))
+                    return true;
+        }
+        return false;
+    }
+</pre>
+
+<p>
+还有几个方法不想写了，自己看吧
+</p>
+
+<h3 id="toc_0.2.2">排序策略</h3>
+<p>
+从前面我们知道LinkedHashMap定义了属性accessOrder，来控制排序模式。默认为按插入顺序。
+</p>
+
+<p>
+这种特性为我们实现LRU的HashMap提供了便利。
+</p>
+
+<p>
+要想实现LRU策略，我们先看一下LinkedHashMap提供的<code> protected boolean removeEldestEntry(Map.Entry&lt;K,V&gt; eldest)</code>方法，
+</p>
+<pre class="brush:java">
+    protected boolean removeEldestEntry(Map.Entry&lt;K,V&gt; eldest) {
+        return false;
+    }
+
+
+    void addEntry(int hash, K key, V value, int bucketIndex) {
+        createEntry(hash, key, value, bucketIndex);
+
+        // Remove eldest entry if instructed, else grow capacity if appropriate
+        Entry&lt;K,V&gt; eldest = header.after;
+        if (removeEldestEntry(eldest)) {
+            removeEntryForKey(eldest.key);
+        } else {
+            if (size &gt;= threshold)
+                resize(2 * table.length);
+        }
+    }
+</pre>
+<p>
+该方法会在有新数据放进来时被调用，默认返回false，是为了让它展现的像个正常的Map，而不是每次都将最老的数据删掉。要实现LRU可以重写该方法。
+</p>
+
+<p>
+例如这样:
+</p>
+<pre class="brush:java">
+private static final int MAX_ENTRIES = 100;
+//当数据条数大于100时返回true，
+protected boolean removeEldestEntry(Map.Entry eldest) {
+    return size() &gt; MAX_ENTRIES;
+}
+</pre>
+<h2 id="toc_0.3">IdentityHashMap</h2>
+<p>
+IdentityHashMap是一种可以有重复key的HashMap，原因是它使用<code>==</code>来进行key的比较而不是HashMap的<code>equals()</code>。
+</p>
+
+<p>
+使用较少，详细描述以后再说啦
+<hr />
+<code>日期</code>：2013-8-16
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://niub.iteye.com/blog/1786595">集合框架 Map篇（1）----HashMap、LinkedHashMap、IdentityHashMap</a>、<a href="http://zhangshixi.iteye.com/blog/673789">深入Java集合学习系列：LinkedHashMap的实现原理</a>、<a href="http://blog.02ta.com/blog/java/java-linkedhashmap-lru">使用LinkedHashMap实现LRU算法</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

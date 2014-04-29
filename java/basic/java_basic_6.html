@@ -1,0 +1,390 @@
+<html>
+<head>
+    <title>java基础6</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">内部类</a>
+<ul>
+<li><a href="#toc_0.1.1">概述</a>
+<li><a href="#toc_0.1.2">几个疑问</a>
+<li><a href="#toc_0.1.3">何时使用</a>
+</ul>
+<li><a href="#toc_0.2">javap</a>
+<ul>
+<li><a href="#toc_0.2.1">命令格式</a>
+<li><a href="#toc_0.2.2">可选参数</a>
+<li><a href="#toc_0.2.3">作用</a>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">内部类</h2>
+<h3 id="toc_0.1.1">概述</h3>
+<p>
+Java中有四种类型的内部类：
+</p>
+<ol>
+<li>
+<code>static inner class(静态内部类)</code>
+
+<ul>
+<li>
+最简单的内部类， <strong>只能</strong> 访问外部类的静态成员变量和静态方法， <strong>只有它</strong> 可以声明 <strong>静态成员变量</strong> ，其他内部类不可以。  
+<pre class="brush:java">
+public class StaticInnerClass {
+	private static int a =1;
+	private int x =1;
+	
+	public static class Inner{
+		private static int b =1;		//可以声明静态成员变量
+		public void execute(){
+			System.out.println(a+b);		//只能访问外部类的静态成员变量和静态方法
+			//System.out.println(x+b); 		//error
+		}
+	}
+	
+	public static void main(String[] args) {
+		StaticInnerClass.Inner inner = new StaticInnerClass.Inner();
+		inner.execute();
+	}
+}
+</pre>
+
+</ul>
+<li>
+<code>instance inner classes(非静态内部类/成员内部类)</code>
+
+<ul>
+<li>
+成员内部类 可以访问外部类的静态和非静态成员变量或方法
+<pre class="brush:java">
+public class InstanceInnerClass {
+	private int a=1;
+	private int x=1;
+	
+	public class Inner{
+		private int b=1;
+		private int a=2;		//内部类的变量可以和外部类重名
+		public void execute(){
+			System.out.println(a+b);
+			System.out.println(InstanceInnerClass.this.a+b);		//访问外部重名的变量
+		}
+	}
+	
+	public static void main(String[] args) {
+		InstanceInnerClass.Inner inner = new InstanceInnerClass().new Inner();
+		inner.execute();
+	}
+}
+</pre>
+
+</ul>
+<li>
+<code>local inner class(局部内部类)</code>：定义在其他类的实例方法中的内部类
+
+<ul>
+<li>
+类似于局部变量，它定义在方法体中，不能定义为public protected private 或者static类型  
+<pre class="brush:java">
+public class LocalInnerClass {
+
+	public void execute(){
+		final int a=1;
+		int x =1;
+		class Inner{
+			int b =1;
+			public void execute(){
+				System.out.println(a+b);		//局部内部类只能访问final类型的变量
+				//System.out.println(x+b);		//error
+			}
+		}
+		//内部类的对象只能在所在方法区进行创建
+		new Inner().execute();
+	}
+	
+	public static void main(String[] args) {
+		LocalInnerClass outer = new LocalInnerClass();
+		outer.execute();
+	}
+}
+</pre>
+
+</ul>
+<li>
+<code>anonymous inner class(匿名内部类)</code>
+
+<ul>
+<li>
+匿名内部类有两种使用方式
+
+<ol>
+<li>
+new <strong>ParentClassName</strong> (constructorArgs) {members}
+
+<li>
+new <strong>InterfaceName</strong> () {members}
+<pre class="brush:java">
+public class AnonymousInnerClass {
+	private String str = "1";
+	public void print(Date date){
+		System.out.println(date);
+	}
+	
+	public void strFormat(Iformat o){
+		o.format();
+	}
+	public static void main(String[] args) {
+		AnonymousInnerClass inner = new AnonymousInnerClass();
+		inner.print(new Date(){
+			@Override
+			public String toString() {
+				return super.toString();
+			}
+		});
+		final int a =1;	
+		inner.strFormat(new Iformat() {
+			@Override
+			public void format() {
+				System.out.println(a);	
+			}
+		});
+	}
+}
+
+interface Iformat{
+	void format();
+}
+</pre>
+
+</ol>
+</ul>
+</ol>
+<h3 id="toc_0.1.2">几个疑问</h3>
+<ol>
+<li>
+内部类如何获得外部类成员的访问权限？
+
+<li>
+为什么final限定的局部变量可以被内部类使用？
+
+</ol>
+
+<p>
+解释这些问题之前，我们先看一下上面示例程序经过javap反编译后的结果
+</p>
+<ul>
+<li>
+静态内部类
+<pre class="brush:shell">
+$ javap StaticInnerClass$Inner.class StaticInnerClass.class 
+</pre>
+<pre class="brush:java">
+//Compiled from "StaticInnerClass.java"
+public class com.ifeng.innerclass.StaticInnerClass$Inner {
+  static {};
+  public com.ifeng.innerclass.StaticInnerClass$Inner();
+  public void execute();
+}
+
+//Compiled from "StaticInnerClass.java"
+public class com.ifeng.innerclass.StaticInnerClass {
+  static {};
+  public com.ifeng.innerclass.StaticInnerClass();
+  public static void main(java.lang.String[]);
+  static int access$0();
+}
+</pre>
+
+</ul>
+<p>
+与下面的成员内部类不同的时，静态内部类Inner没有以外部类实例为参数的构造函数，也就拿不到外部实例的引用，操作外部实例变量或方法也就无从谈起了。
+</p>
+<ul>
+<li>
+成员内部类
+<pre class="brush:shell">
+$ javap InstanceInnerClass$Inner.class InstanceInnerClass.class
+</pre>
+<pre class="brush:java">
+//Compiled from "InstanceInnerClass.java"
+public class com.ifeng.innerclass.InstanceInnerClass$Inner {
+//内部类多了一个以外部类实例为参数的构造函数，并且赋给了final类型的局部变量 this$0
+  final com.ifeng.innerclass.InstanceInnerClass this$0;
+  public com.ifeng.innerclass.InstanceInnerClass$Inner(com.ifeng.innerclass.Inst
+anceInnerClass);
+  public void execute();
+}
+
+//Compiled from "InstanceInnerClass.java"
+public class com.ifeng.innerclass.InstanceInnerClass {
+  public com.ifeng.innerclass.InstanceInnerClass();
+  public static void main(java.lang.String[]);
+//内部类可以通过该方法访问外部成员b
+  static int access$0(com.ifeng.innerclass.InstanceInnerClass);
+}
+</pre>
+
+</ul>
+<p>
+从成员内部类的反编译结果，可以发现成员内部类可以访问外部类实例成员的原因。
+</p>
+<ul>
+<li>
+局部内部类
+<pre class="brush:shell">
+$ javap LocalInnerClass$1Inner.class LocalInnerClass.class
+</pre>
+<pre class="brush:java">
+//Compiled from "LocalInnerClass.java"
+class com.ifeng.innerclass.LocalInnerClass$1Inner {
+  int b;
+  final com.ifeng.innerclass.LocalInnerClass this$0;
+  com.ifeng.innerclass.LocalInnerClass$1Inner(com.ifeng.innerclass.LocalInnerCla
+ss);
+  public void execute();
+}
+
+//Compiled from "LocalInnerClass.java"
+public class com.ifeng.innerclass.LocalInnerClass {
+  public com.ifeng.innerclass.LocalInnerClass();
+  public void execute();
+  public static void main(java.lang.String[]);
+}
+</pre>
+
+<li>
+匿名内部类
+<pre class="brush:shell">
+
+$ javap AnonymousInnerClass$1.class AnonymousInnerClass$2.class 
+AnonymousInnerClass.class
+</pre>
+<pre class="brush:java">
+//Compiled from "AnonymousInnerClass.java"
+class com.ifeng.innerclass.AnonymousInnerClass$1 extends java.util.Date {
+  com.ifeng.innerclass.AnonymousInnerClass$1();
+  public java.lang.String toString();
+}
+
+//Compiled from "AnonymousInnerClass.java"
+class com.ifeng.innerclass.AnonymousInnerClass$2 implements com.ifeng.innerclass
+.Iformat {
+  com.ifeng.innerclass.AnonymousInnerClass$2();
+  public void format();
+}
+//Compiled from "AnonymousInnerClass.java"
+public class com.ifeng.innerclass.AnonymousInnerClass {
+  public com.ifeng.innerclass.AnonymousInnerClass();
+  public void print(java.util.Date);
+  public void strFormat(com.ifeng.innerclass.Iformat);
+  public static void main(java.lang.String[]);
+}
+</pre>
+
+</ul>
+<h3 id="toc_0.1.3">何时使用</h3>
+<h2 id="toc_0.2">javap</h2>
+<p>
+<code>javap</code>：这是一个JDK自带的反汇编命令，可以在JDK的bin目录下找到。
+</p>
+
+<h3 id="toc_0.2.1">命令格式</h3>
+<pre class="brush:shell">
+$ javap [可选参数] class ....
+</pre>
+<h3 id="toc_0.2.2">可选参数</h3>
+<p>
+这里介绍几个可能会用到的参数，完整的列表请查看下面参考资料里的官方文档。
+</p>
+
+<ul>
+<li>
+<code>-l</code>：打印行号表格和本地变量表格
+
+<li>
+<code>-public</code>：只展示public 类和成员
+
+<li>
+<code>-protected</code>：只展示public、protected的类和成员
+
+<li>
+<code>-package</code>：只展示package、public、protected的类和成员，这是命令的默认选项 * <code>-private</code>：展示所有类和成员 * <code>-s</code>：打印内部类型签名
+
+<li>
+<code>-c</code>：打印反汇编的代码
+
+<li>
+<code>-verbose</code>：打印堆栈(stack)信息，方法中局部变量和参数个数
+
+</ul>
+<h3 id="toc_0.2.3">作用</h3>
+<p>
+内部类作用：
+</p>
+<ol>
+<li>
+实现多继承
+
+<li>
+定义回调函数
+
+<li>
+对同一包内的其他类隐藏实现
+
+<li>
+可以用来实现事件驱动系统
+
+</ol>
+<hr />
+<p>
+<code>日期</code>：2014-03-21、2014-03-25
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://blog.csdn.net/temp1989/article/details/12618597#">为什么Java需要内部类？</a>、<a href="http://stackoverflow.com/questions/70324/java-inner-class-and-static-nested-class">Java inner class and static nested class</a>、<a href="http://jiangzhengjun.iteye.com/blog/658354">13、内部类（闭包与回调）</a>、<a href="http://blog.csdn.net/ilibaba/article/details/3866537">java内部类的作用分析</a>、<a href="http://stackoverflow.com/questions/70324/java-inner-class-and-static-nested-class">Java inner class and static nested class</a>、<a href="http://www.itzhai.com/java-based-notebook-a-static-inner-class-within-a-class-member-within-the-class-of-local-inner-classes-anonymous-inner-classes.html">Java基础笔记 – 内部类</a>、<a href="http://docs.oracle.com/javase/7/docs/technotes/tools/windows/javap.html">官方文档：javap - The Java Class File Disassembler</a>、<a href="http://my.oschina.net/jackieyeah/blog/157608">javap命令详解</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<html>
+<head>
+    <title>Java反射与动态代理</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">反射</a>
+<ul>
+<li><a href="#toc_0.1.1">泛型的处理</a>
+</ul>
+<li><a href="#toc_0.2">动态代理</a>
+<li><a href="#toc_0.3">AOP</a>
+<ul>
+<li><a href="#toc_0.3.1">Spring AOP</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">反射</h2>
+<p>
+反射API的第一个主要作用是获取程序运行时的内部结构。
+</p>
+
+<p>
+只要有java.lang.Class类的对象，就可以通过其中的方法获得该类的全部信息（构造方法、属性、方法等）。
+</p>
+<blockquote>
+其中的<code>getDeclaredXXX</code>方法表示之获取该类自身所声明的元素。
+</blockquote>
+
+<p>
+反射API的另一个重要作用是在运行时刻对一个Java对象进行操作。
+</p>
+
+<p>
+具体用法就不举例了，都很常见。值得注意的是使用Java反射API的时候可以绕过Java
+默认的访问控制检查，比如可以直接获取对象的私有域、调用私有方法等，只要在u会哦的相应的Field、Method对象，然后调用<code>setAccessible</code>方法并设为true即可。
+</p>
+<blockquote>
+实际上<code>setAccessible</code>是启用和禁用访问安全检查的开关，由于JDK的安全检查耗时较多，通过设为true的方法，可以达到<code>提升反射速度</code>的目的。而能访问private等修饰的方法和属性只是关闭安全检查的副作用。
+</blockquote>
+<h3 id="toc_0.1.1">泛型的处理</h3>
+<p>
+由于类型擦除机制的存在，泛型类中的类型参数等信息，在运行时刻是不存在的。为此，Java 5 对Java的类文件格式做了修订，添加了<code>Signature</code>属性，用来包含不再JVM类型系统中的类型信息。在运行时刻，JVM会读取Signature属性的内容并提供给反射API来使用。
+</p>
+
+<h2 id="toc_0.2">动态代理</h2>
+<p>
+代理模式作为一个经典模式,我们已经很熟悉了，代理对象与被代理对象实现相同的接口，调用这通过代理对象间接与被代理对象交互。
+</p>
+
+<p>
+Java 5 引入动态代理机制，是的开发人员能够在运行时刻动态创建出代理类一级对象。
+</p>
+
+<p>
+例子：
+</p>
+<pre class="brush:java">
+//一个禁用List接口中add方法的例子。
+public List getList(final List list){
+	return (List)Proxy.newProxyInstance(DummyProxy.class.getClassLoader(),new Calss[]{List.class},
+new InvocationHandler(){
+	public Object invoke(Object proxy,Method method,Object[] args)throws Throwable{
+		if("add".equals(method.getMethodName())){
+			throw new UnsupportOperationException();
+		}else{
+			return method.invoke(list,args);
+		}
+	}
+});
+}
+</pre>
+<blockquote>
+Java中的动态代理只支持对借口的代理。
+</blockquote>
+
+<h2 id="toc_0.3">AOP</h2>
+<p>
+说道了动态代理，就不能不提AOP，AOP实现的关键就是AOP框架自动创建AOP代理，AOP代理可分为静态代理（也就是在编译阶段的代码增强AspectJ就属于这种）和动态代理(JDK动态代理、CGLIB等在内存中“临时”生存AOP动态代理类，也被称为运行时增强)。
+</p>
+
+<h3 id="toc_0.3.1">Spring AOP</h3>
+<p>
+Spring允许使用AspectJ的注解用于定义方法，像Aspect、Pointcut、Advice等，但是Spring只是使用了和AspectJ 5 一样的注解，并没用使用AspectJ的编译器或者织入器(Weaver)，底层依然是Spring AOP，依然是运行时AOP。
+</p>
+
+<p>
+Spring AOP会动态选择使用JDK动态代理、CGLIB生成AOP代理，如果目标对象的实现类实现了借口，Spring AOP就会选择JDK 动态代理的方式来生存AOP代理类；如果目标对象没有实现接口，Spring AOP会采用CGLIB来生存AOP代理类，这个选择过程是透明的，开发者无需关心。
+</p>
+<blockquote>
+<code>CGLib</code> 是一个强大的高性能Code生存类库，它可以在运行时刻扩展Java类与实现Java接口。它的底层是Java字节码操作框架 <code>ASM</code>。
+</blockquote>
+<hr />
+<p>
+<code>日期</code>：2013-7-11
+</p>
+
+<p>
+<code>参考</code>:<a href="http://www.iteye.com/topic/762927?page=5">java高效反射类</a>、<a href="http://www.infoq.com/cn/articles/cf-java-reflection-dynamic-proxy">Java深度历险（七）——Java反射与动态代理</a>、<a href="http://www.ibm.com/developerworks/cn/java/j-lo-springaopcglib/">Spring AOP 实现原理与 CGLIB 应用</a>、<a href=".html">.html</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<html>
+<head>
+    <title>js高级程序设计读书笔记（五）</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">创建对象</a>
+<ul>
+<li><a href="#toc_0.1.1">构造函数模式</a>
+<li><a href="#toc_0.1.2">原型模式</a>
+<li><a href="#toc_0.1.3">组合使用构造函数模式和原型模式</a>
+<li><a href="#toc_0.1.4">动态原型模式</a>
+<li><a href="#toc_0.1.5">寄生构造函数模式</a>
+<li><a href="#toc_0.1.6">稳妥构造函数模式</a>
+</ul>
+<li><a href="#toc_0.2">继承</a>
+<ul>
+<li><a href="#toc_0.2.1">原型链</a>
+<li><a href="#toc_0.2.2">借用构造函数</a>
+<li><a href="#toc_0.2.3">组合继承</a>
+<li><a href="#toc_0.2.4">原型继承</a>
+<li><a href="#toc_0.2.5">寄生式继承</a>
+<li><a href="#toc_0.2.6">寄生组合式继承</a>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">创建对象</h2>
+<p>
+构造函数与普通函数的唯一区别，就在于调用它们的方式不同。任何函数，只要通过new操作符调用，那它就可以作为构造函数；任何函数，如果不通过new操作符调用，那它跟普通函数没有区别。
+</p>
+<h3 id="toc_0.1.1">构造函数模式</h3>
+
+<h3 id="toc_0.1.2">原型模式</h3>
+
+<h3 id="toc_0.1.3">组合使用构造函数模式和原型模式</h3>
+<p>
+该模式是目前ECMAScript中使用最广泛的一种自定义类型的方法，可以说是自定义引用类型的一种默认形式。
+</p>
+<pre class="brush:js">
+function Person(name,age,job){
+	this.name=name;
+	this.age=age;
+	this.job=job;
+	this.friends=["liu","ya","nan"];
+}
+Person.prototype= {
+	constructor = Person;
+	sayName:function() {
+		alert(this.name);
+	}
+}
+var person1 = new Person("tom",29,"teacher");
+var preson2 = new Person("cat",19,"student");
+</pre>
+<h3 id="toc_0.1.4">动态原型模式</h3>
+<pre class="brush:js">
+function Person(name,age,job){
+	this.name = name;
+	this.age = age;
+	this.job = job;
+	if(typeof this.sayName != "function"){
+		Person.prototype.sayName = function(){
+			alert(this.name);
+		};
+	}
+}
+var person = new Person("tom",19,"student");
+person.sayName();
+</pre>
+<h3 id="toc_0.1.5">寄生构造函数模式</h3>
+
+<h3 id="toc_0.1.6">稳妥构造函数模式</h3>
+
+<h2 id="toc_0.2">继承</h2>
+<h3 id="toc_0.2.1">原型链</h3>
+<pre class="brush:js">
+fucntion SuperType(){
+	this.property = true;
+}
+SuperType.prototype.getSuperValue = function(){
+	return this.property;
+};
+
+function SubType(){
+	this.subProperty = false;
+}
+SubType.prototype = new SuperType();
+
+SubType.prototype.getSubValue = function(){
+	return this.subProperty;
+};
+
+var instance = new SubType();
+alert(instance.getSuperValue());		//true
+
+alert(instance instanceof SubType);		//true
+alert(instance instanceof SuperType);		//true
+alert(instance instanceof Object);		//true
+
+alert(SubType.prototype.isPrototypeOf(instance));		//true
+alert(SuperType.prototype.isPrototypeOf(instance));		//true
+alert(Obejct.prototype.isPrototypeOf(instance));		//true
+</pre>
+<p>
+<img src="images/prototype.jpg" />
+</p>
+<h3 id="toc_0.2.2">借用构造函数</h3>
+<p>
+为解决原型中包含引用类型值所带来的问题。
+</p>
+<pre class="brush:js">
+function SuperType(){
+	this.colors = ["red","green","yellow"];
+}
+function SubType(){
+	//继承了SuperType
+	SuperType.call(this);
+}
+var instance1 = new SubType();
+instance1.colors.push("blue");
+alert(instance1.colors);		//"red,green,yellow,blue"
+
+var instance2 = new SubType();
+alert(instance2.colors);		//"red,green,yellow"
+
+</pre>
+<p>
+问题：方法都在构造函数中定义，无法复用。而且超类的原型中定义的方法，对子类而言也是不可见的，结果所有类型都只能使用构造函数模式。所以该模式很少单独使用。
+</p>
+<h3 id="toc_0.2.3">组合继承</h3>
+<p>
+该模式有时也叫经典继承，指的是讲原型链和借用构造函数的技术组合到一起。使用原型链实现对原型属性和方法的继承，通过借用构造函数实现对实例属性的继承。
+</p>
+<pre class="brush:js">
+function SuperType(name){
+	this.name = name;
+	this.colors=["red","blue","green"];
+}
+SuperType.prototype.sayName = function(){
+	return this.name;
+}
+function SubType(name,age){
+	SuperType.call(this,name);
+	this.age =age;
+}
+SubType.prototype = new SuperType();
+SubType.prototype.sayAge = function(){
+	return this.age;
+}
+var instance1 = new SubType("tom",19);
+instance1.colors.push("yellow");
+alert(instance1.colors);		//"red,blue,green,yellow"
+alert(instance1.sayName());		//"tom"
+alert(instance1.sayAge());		//19
+
+var instance2 = new SubType("cat",20);
+alert(instance2.colors);		//"red,blue,green"
+</pre>
+<h3 id="toc_0.2.4">原型继承</h3>
+<pre class="brush:js">
+function object(o){
+	function F(){}
+	F.prototype = o;
+	return new F();
+}
+</pre>
+<p>
+本质上讲，object()对传入其中的对象执行了一次浅复制。这也意味着父类引用类型的属性，会被子类的实例贡献。
+</p>
+<h3 id="toc_0.2.5">寄生式继承</h3>
+<p>
+它是与<code>原型式继承</code>紧密相关的。
+</p>
+<pre class="brush:js">
+function createAnother(original){
+	var clone = object(original);
+	clone.sayHi = function(){
+		alert("hi");
+	};
+	return clone;
+}
+</pre>
+<p>
+这里示范继承模式时使用的object()函数不是必须的，任何能返回新对象的函数都适用。
+</p>
+<h3 id="toc_0.2.6">寄生组合式继承</h3>
+<p>
+所谓寄生组合式继承，即通过借用构造函数来继承属性，通过原型链的混成形式来继承方法。其背后的基本思路是：不必为了指定子类型的原型而调用父类的构造函数，我们所需要的无非就是超类型的原型的一个副本而已。
+</p>
+<pre class="brush:js">
+function inheritPrototype(subType,superType){
+	var prototype = object(superType.prototype);
+	prototype.constructor = subType;
+	subType.prototype = prototype;
+}
+function SuperType(name){
+	this.name = name;
+	this.colors = ["red","blue","green"];
+}
+SuperType.prototype.sayName = function(){
+	alert(this.name);
+};
+function SubType(name,age){
+	SuperType.call(this,name);
+	this.age = age;
+}
+inheritPrototype(SubType,SuperType);
+SubType.prototype.sayAge = function(){
+	alert(this.age);
+};
+</pre>
+
+<hr />
+<p>
+<code>日期</code>：2012-08-07
+<hr />
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

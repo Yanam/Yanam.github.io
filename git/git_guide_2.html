@@ -1,0 +1,132 @@
+<html>
+<head>
+    <title>用pathogen管理vim插件</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">pathogen</a>
+<ul>
+<li><a href="#toc_0.1.1">安装</a>
+<li><a href="#toc_0.1.2">使用</a>
+</ul>
+<li><a href="#toc_0.2">git与vim插件</a>
+<ul>
+<li><a href="#toc_0.2.1">安装vim插件</a>
+<li><a href="#toc_0.2.2">删除vim插件</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">pathogen</h2>
+<p>
+<a href="https://github.com/tpope/vim-pathogen">pathogen</a>是一个管理vim插件的工具，方便了插件的安装与删除，很好用。
+</p>
+<h3 id="toc_0.1.1">安装</h3>
+<pre class="brush:sh">
+$ mkdir ~/.vim/
+$ mkdir ~/.vim/{autoload,bundle}
+$ cd ~/.vim/
+$ git init 
+$ curl -Sso ~/.vim/autoload/pathogen.vim \
+$  https://raw.github.com/tpope/vim-pathogen/master/autoload/pathogen.vim
+</pre>
+<blockquote>
+如果用的是window，需要把<code>~/.vim</code>换为<code>~/vimfiles</code>。
+</blockquote>
+<h3 id="toc_0.1.2">使用</h3>
+<p>
+在你的vimrc文件头部加上这句话<code>execute pathogen#infect()</code>
+</p>
+
+<p>
+如果你是vim新手，直接在命令行中打<code>vim ~/.vimrc</code>,然后复制下面的配置到文件中。
+</p>
+<pre class="brush:text">
+excute pathogen#infect()
+syntax on
+filetype plugin indent on
+</pre>
+<h2 id="toc_0.2">git与vim插件</h2>
+<h3 id="toc_0.2.1">安装vim插件</h3>
+<p>
+安装还是很简单的，只要插件在git有资源就可以。
+</p>
+<pre class="brush:sh">
+# 添加子模块
+$ git submodule add https://github.com/vim-scripts/blackboard.vim.git bundle/color
+# 初始化子模块
+$ git submodule init
+# 更新子模块
+$ git submodule update
+# 初始化submodule下的所有模块
+$ git submodule foreach git submodule init
+$ git submodule foreach git submodule update
+</pre>
+<h3 id="toc_0.2.2">删除vim插件</h3>
+<p>
+删除稍微麻烦一点，大概分三歩：
+</p>
+<ol>
+<li>
+在命令行中执行 <code>$ git rm --cached bundle/color</code>
+
+<li>
+编辑<code>.gitmodules</code>文件和<code>.git/config</code>文件，将子模块的相关配置删除
+
+<li>
+删除子模块残留的目录，本例就是删除bundel/color
+
+</ol>
+<hr />
+<p>
+<code>日期</code>：2013-6-18
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.cnblogs.com/cosiray/archive/2012/04/10/2440994.html">git 常用命令</a>、<a href="http://article.yeeyan.org/bilingual/331981">用 git submodule 同步 vim-plugins</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

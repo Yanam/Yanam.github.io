@@ -1,0 +1,214 @@
+<html>
+<head>
+    <title>Java多线程--CyclicBarrier</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">CyclicBarrier</a>
+<ul>
+<li><a href="#toc_0.1.1">概念</a>
+<li><a href="#toc_0.1.2">代码示例</a>
+</ul>
+<li><a href="#toc_0.2">Semaphore</a>
+<ul>
+<li><a href="#toc_0.2.1">概念</a>
+<li><a href="#toc_0.2.2">代码示例</a>
+</ul>
+</ul>
+</ul>
+</div>
+<h2 id="toc_0.1">CyclicBarrier</h2>
+<h3 id="toc_0.1.1">概念</h3>
+<p>
+与CountDownLatch类似，它允许一组线程等待整个线程组到达公共屏障点。和CountDownLatch的区别是可以循环使用。一旦线程都已经在屏蔽处集合并释放，则可以将其初始化到它初始状态。
+</p>
+<h3 id="toc_0.1.2">代码示例</h3>
+<pre class="brush:java">
+/**
+* CyclicBarrier 使用示例
+*/
+public class CyclicBarrierTest {
+
+	public static void main(String[] args) {
+		final CyclicBarrier barrier = new CyclicBarrier(3,new Runnable(){
+
+			@Override
+			public void run() {
+				System.out.println("最后一个线程进入"+Thread.currentThread().getName());
+				
+			}
+
+		});
+		
+		
+		Thread t1 = new Thread(new Runnable(){
+
+			@Override
+			public void run() {
+				System.out.println(Thread.currentThread().getName()+"---开始等待");
+				try {
+					barrier.await();
+					System.out.println(Thread.currentThread().getName()+"开始等待第二次");
+					barrier.await();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (BrokenBarrierException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				System.out.println(Thread.currentThread().getName()+"---等待结束");
+			}
+			
+		},"线程1");
+		
+		
+		Thread t2 = new Thread(new Runnable(){
+
+			@Override
+			public void run() {
+				System.out.println(Thread.currentThread().getName()+"---开始等待");
+				try {
+					barrier.await();
+					System.out.println(Thread.currentThread().getName()+"开始等待第二次");
+					Thread.sleep(2000);
+					barrier.await();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (BrokenBarrierException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				System.out.println(Thread.currentThread().getName()+"---等待结束");
+			}
+			
+		},"线程2");
+		
+		
+		Thread t3 = new Thread(new Runnable(){
+
+			@Override
+			public void run() {
+				System.out.println(Thread.currentThread().getName()+"---开始等待");
+				try {
+					Thread.sleep(2000);
+					barrier.await();
+					
+					System.out.println(Thread.currentThread().getName()+"开始等待第二次");
+					
+					barrier.await();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (BrokenBarrierException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				System.out.println(Thread.currentThread().getName()+"---等待结束");
+			}
+			
+		},"线程3");
+		
+			t1.start();
+			t2.start();
+			t3.start();
+
+
+	}
+}
+
+</pre>
+<h2 id="toc_0.2">Semaphore</h2>
+<h3 id="toc_0.2.1">概念</h3>
+<p>
+一个计数信号量，从概念上讲，信号量维护了一个许可集。
+</p>
+<h3 id="toc_0.2.2">代码示例</h3>
+<pre class="brush:java">
+public class SemaphoreTest {
+
+	public static void main(String[] args) {
+		final Semaphore sema = new Semaphore(5, true);
+
+		for (int i = 0; i &lt; 10; i++) {
+			Thread t1 = new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						System.out.println("Queue-----------------"+sema.getQueueLength());
+						// 获取许可
+						sema.acquire();
+						Thread.sleep((long) (Math.random() * 10000));
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} finally {
+						// 访问完后，释放
+						sema.release();
+						System.out.println("-----------------"+sema.availablePermits());
+					}
+
+				}
+
+			});
+			t1.start();
+		}
+
+	}
+}
+
+</pre>
+<hr />
+<p>
+<code>日期</code>：2012-11-30、2012-12-03
+</p>
+
+<p>
+<code>参考资料</code>：
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

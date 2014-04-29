@@ -1,0 +1,80 @@
+<html>
+<head>
+    <title>可修改的定时任务</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">实现</a>
+<ul>
+<li><a href="#toc_0.2.1">添加任务</a>
+<li><a href="#toc_0.2.2">删除任务</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+公司有个报警系统，需要添加一个定时请求某个URL来验证服务是否可用的功能，一个很明确的定时任务应用场景，麻烦的地方是需要支持通过界面对任务进行增删改的功能。
+</p>
+<h2 id="toc_0.2">实现</h2>
+<p>
+由于功能很简单，很像一个简单的线程池，就决定用Java的ScheduledThreadPoolExecutor类来实现，
+</p>
+
+<h3 id="toc_0.2.1">添加任务</h3>
+<p>
+利用它的<code>scheduleWithFixedDelay</code>方法，因为其会返回一个“ScheduledFuture”的结果，为了后面的删除操作，添加时会把返回结果放到一个map中，key当然是用任务编号或者其他标示了。
+</p>
+<h3 id="toc_0.2.2">删除任务</h3>
+<p>
+利用它的<code>remove</code>方法，参数就用之前map中存入的ScheduledFuture，这里需要强制转型为Runnable类型。
+<hr />
+<code>日期</code>：2014-1-6
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>
