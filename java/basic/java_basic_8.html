@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>java基础8---泛型与注解</title>
+    <title>java中的注解(annotation)</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
 	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
@@ -36,49 +36,78 @@
 
 <div class="toc">
 <ul>
-<li><a href="#toc_0.1">泛型</a>
-<li><a href="#toc_0.2">注解(annotation)</a>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">Java Annotations</a>
 <ul>
-<li><a href="#toc_0.2.1">开发注解</a>
-<li><a href="#toc_0.2.2">处理注解</a>
+<li><a href="#toc_0.2.1">Java内建的注解（Java’s builtin annotations）</a>
+<li><a href="#toc_0.2.2">自定义注解</a>
 <ul>
-<li><a href="#toc_0.2.2.1">编译时刻</a>
-<li><a href="#toc_0.2.2.2">运行时刻</a>
+<li><a href="#toc_0.2.2.1">元注解(meta annotations)</a>
 </ul>
+<li><a href="#toc_0.2.3">处理注解</a>
+<ul>
+<li><a href="#toc_0.2.3.1">编译时刻</a>
+<li><a href="#toc_0.2.3.2">运行时刻</a>
+</ul>
+<li><a href="#toc_0.2.4">实际用途</a>
 </ul>
 </ul>
 </ul>
 </div>
 
 
-<h2 id="toc_0.1">泛型</h2>
-
-<h2 id="toc_0.2">注解(annotation)</h2>
-
+<h2 id="toc_0.1">前言</h2>
 <p>
-JDK5中引入了的注解机制。虽然平时也用，但是了解不多，都是照葫芦画瓢，今天仔细学习一下。
+自从Java 5.0引入注解(annotation)后，越来越多的组件/程序开始使用上了这个新特性，并且变得越来越重要，作为普通开发人员的我，虽然经常使用注解，但是对它并不是很了解，尤其是对于“怎样自定义注解并使用到自己代码中”这一点没有概念。
+</p>
+
+<h2 id="toc_0.2">Java Annotations</h2>
+<p>
+<code>Annotations</code> 这个新特点是从Java 5.0加入的（JSR 175 namely “A Metadata Facility for the JavaTM Programming Language” ）。Java annotations 用来给你的Java代码提供元数据(meta data)，这些元数据不会直接影响你的代码执行，虽然有一些注解可以实现这个目的（影响代码逻辑）。
 </p>
 
 <p>
-注解使得Java源码中不但可以包含功能性的实现代码，还可以添加元数据。它与代码注释类似，不同的是它是实现程序功能的重要组成部分。
+Java注解通常用于以下目的：
 </p>
+<ul>
+<li>
+编译说明(Compiler instructions)
 
+<li>
+构建说明(Build-time instructions)
+
+<li>
+运行时说明(Runtime instructions)
+
+</ul>
+<blockquote>
+通常情况下，Java 注解不会出现在编译后的代码中。但是你可以自定义在运行时有效的注解。这些注解可以通过Java Reflection（反射机制）来访问到，然后用于控制你的程序。
+</blockquote>
+
+<h3 id="toc_0.2.1">Java内建的注解（Java’s builtin annotations）</h3>
 <p>
-Java内置三种注解,定义在java.lang包中。
+Java自带三个注解：
 </p>
 <ol>
 <li>
-<code>@Override</code>  表示当前方法是覆盖父类的方法。
+<code>@Deprecated</code>
 
 <li>
-<code>@Deprecated</code>  表示当前元素是不推荐使用的。
+<code>@Override</code>
 
 <li>
-<code>@SuppressWarnings</code>  表示关闭一下不当的编译器警告信息。
+<code>@SuppressWarnings</code>
 
 </ol>
+ 
+<p>
+它们的Retention都是@Retention(RetentionPolicy.SOURCE)
+</p>
 
-<h3 id="toc_0.2.1">开发注解</h3>
+<p>
+经常用就不解释了
+</p>
+<h3 id="toc_0.2.2">自定义注解</h3>
 
 <pre class="brush:java">
 
@@ -97,33 +126,107 @@ public @interface Test {
 <code>@interface</code>用来声明一个注解，其中的每个方法实际是声明了一个配置参数。方法的名词就是参数名词，返回值类型就是参数的类型，可以通过default来声明参数的默认值。
 </p>
 
-<p>
-<code>元注解</code> :
-</p>
+<h4 id="toc_0.2.2.1">元注解(meta annotations)</h4>
 
 <ol>
 <li>
-@Target  用来声明注解可以被添加到哪些类型的元素上。
+<code>@Target</code>  用来声明注解可以被添加到哪些类型的元素上。
+  可选的参数有：
+
+<ul>
+<li>
+ElementType.ANNOTATION_TYPE
 
 <li>
-@Retention  用来声明注解的保留策略，只有声明为RUNTIME时，才可以在运行时通过反射API来获取注解的信息。
+ElementType.CONSTRUCTOR
 
 <li>
-@Documented  将此注解包含到javadoc中
+ElementType.FIELD
 
 <li>
-@Inherited  允许子类继承父类中的注解
+ElementType.LOCAL_VARIABLE
+
+<li>
+ElementType.METHOD
+
+<li>
+ElementType.PACKAGE
+
+<li>
+ElementType.PARAMETER
+
+<li>
+ElementType.TYPE
+
+</ul>
+<li>
+<code>@Retention</code>  用来声明注解的保留策略，只有声明为RUNTIME时，才可以在运行时通过反射API来获取注解的信息。
+  可选的参数有：
+
+<ul>
+<li>
+RetentionPolicy.CLASS：注解会在编译后包含在class文件中
+
+<li>
+RetentionPolicy.RUNTIME：注解在JVM的运行时依然有效，我们可以使用反射包写自定义代码来解析/处理这些注解
+
+<li>
+RetentionPolicy.SOURCE：注解只存在与源码中，会在编译时被移除，不会出现在编译后的class文件中
+
+</ul>
+<li>
+<code>@Documented</code>  将此注解包含到javadoc中，用的较少
+
+<li>
+<code>@Inherited</code>  允许子类继承父类中的注解
+<pre class="brush:java">
+java.lang.annotation.Inherited
+
+@Inherited
+public @interface MyAnnotation {
+
+}
+
+@MyAnnotation
+public class MySuperClass { ... }
+
+
+public class MySubClass extends MySuperClass { ... }
+</pre>
 
 </ol>
+<p>
+由于注解MyAnnotation使用了元注解@Inherited，所以它是可以被继承的，所以类MySubClass由于继承了MySuperClass，也继承了父类的注解MyAnnotation
+</p>
 
-<h3 id="toc_0.2.2">处理注解</h3>
+
+<h3 id="toc_0.2.3">处理注解</h3>
 <p>
 在程序中添加的注解，可以在编译时刻或者运行时刻来进行处理。
 </p>
 
-<h4 id="toc_0.2.2.1">编译时刻</h4>
+<h4 id="toc_0.2.3.1">编译时刻</h4>
 
-<h4 id="toc_0.2.2.2">运行时刻</h4>
+<h4 id="toc_0.2.3.2">运行时刻</h4>
+<p>
+我们可以通过Java反射API<code>java.lang.reflect.AnnotatedElement</code>接口来获取类、方法、域上的注解。
+</p>
+
+<p>
+AnnotatedElement接口有几个常用的方法：
+</p>
+<ul>
+<li>
+<code>Boolean isAnnotationPresent(Class)</code>
+
+<li>
+<code>Annotation getAnnotation(Class)</code>
+
+<li>
+<code>Annotation[] getAnnotations()</code>
+
+</ul>
+
 <pre class="brush:java">
 public class TestAn{
 	@Test(id=1,description="wo ha ha")
@@ -140,18 +243,77 @@ public class TestAn{
 				System.out.println(method.toString()+" "+ annotaion.toString());
 			}
 		}
+		//Class实现了AnnotatedElement接口
+		Class&lt;Test&gt; tempClass = Test.class;
+		Annotation[] testAnnotaions =  tempClass.getAnnotations();
+		for (Annotation annotation : testAnnotaions) {
+			System.out.println(annotation.toString());
+		}
 	}
 }
 </pre>
-
-
-<hr />
+<h3 id="toc_0.2.4">实际用途</h3>
 <p>
-<code>日期</code>：2013-5-15、2013-7-10、2013-7-11
+有人说annotation使用有三部曲：
+</p>
+<ol>
+<li>
+define annotation interface（定义注解）
+
+<li>
+define parser annotation class（定义注解解析类）
+
+<li>
+user annotation and it's parser（使用注解和解析类）
+
+</ol>
+
+<p>
+举个实际的例子，比如我们有个访问控制的需求，某些操作只有特定权限的用户才能使用。对于实现这个需求，我们就可以通过定义注解来实现。
+</p>
+
+<pre class="brush:java">
+// 定义的权限注解
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface RequiredRoles {
+    String[] value();
+}
+
+// 定义的注解解析类，使用了反射和动态代理
+public class AccessInvocationHandler&lt;T&gt; implements InvocationHandler {
+    final T accessObj;
+    public AccessInvocationHandler(T accessObj) {
+        this.accessObj = accessObj;
+    }
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        RequiredRoles annotation = method.getAnnotation(RequiredRoles.class); //通过反射API获取注解
+        if (annotation != null) {
+            String[] roles = annotation.value();
+            String role = AccessControl.getCurrentRole();
+            if (!Arrays.asList(roles).contains(role)) {
+                throw new AccessControlException("The user is not allowed to invoke this method.");
+            }
+        }
+        return method.invoke(accessObj, args);
+    } 
+} 
+</pre>
+<p>
+这样我们只要使用Proxy.newProxyInstance方法创建一个接口的代理类，竟可以实现想要的权限控制需求了。
 </p>
 
 <p>
-<code>参考</code>：<a href="http://www.infoq.com/cn/articles/cf-java-annotation">Java深度历险（六）——Java注解</a>、<a href="http://yangjunfeng.iteye.com/blog/400085">JAVA 注解示例 详解</a>
+对于注解的使用，有很多开源组件可以参考，比如说Spring中@Cache注解的实现。
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2013-5-15、2013-7-10、2013-7-11、2014-05-15
+</p>
+
+<p>
+<code>参考</code>：<a href="http://www.infoq.com/cn/articles/cf-java-annotation">Java深度历险（六）——Java注解</a>、<a href="http://yangjunfeng.iteye.com/blog/400085">JAVA 注解示例 详解</a>、<a href="http://www.javabeat.net/annotations-in-java-5-0/">Annotations in Java 5.0</a>、<a href="http://tutorials.jenkov.com/java/annotations.html">Java Annotations</a>、<a href="http://www.mkyong.com/java/java-custom-annotations-example/">Java Custom Annotations Example</a>、<a href="http://javapapers.com/core-java/java-annotations/">Java Annotations</a>
 </p>
 
       </section>

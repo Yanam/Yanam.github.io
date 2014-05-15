@@ -39,6 +39,7 @@
 <li><a href="#toc_0.1">前言</a>
 <ul>
 <li><a href="#toc_0.1.1">Tomcat启动失败抛出zipException</a>
+<li><a href="#toc_0.1.2">Win7下查看被占用的端口</a>
 </ul>
 </ul>
 </ul>
@@ -57,13 +58,43 @@
 从一个服务器A上down了个war包（该程序在A上运行良好），然后上传到服务器B的Tomcat下，执行启动脚本后，后台日志提示”java.util.zip.ZipException: error in opening zip file“，明明是同样的war包啊！首先怀疑是运行环境有差异，看了JDK、Tomcat版本都没发现问题。最后还是另一个同事对比一下两个服务器上的war包发现问题的原因：”war不完整！WTF“。
 </p>
 
+<h3 id="toc_0.1.2">Win7下查看被占用的端口</h3>
+<p>
+今天起个netty服务吧，发现9999端口被占用了，Linux下还好说，windows下就抓瞎了，网上搜了一下方法，这里做个记录。
+</p>
+
+<ul>
+<li>
+查看占用端口的进程
+<pre>
+$ netstat -aon|findstr 9999
+</pre>
+
+</ul>
+<p>
+<img src="images/win7_1.jpg" />
+</p>
+
+<ul>
+<li>
+找到进程对应的程序
+<pre>
+$ tasklist|findstr 2968
+</pre>
+
+</ul>
+<p>
+<img src="images/win7_2.jpg" />
+</p>
+
+
 <hr />
 <p>
-<code>日期</code>：2014-04-17
+<code>日期</code>：2014-04-17、2014-05-14
 </p>
 
 <p>
-<code>参考资料</code>
+<code>参考资料</code>：<a href="http://pangwawayu.blog.51cto.com/1708043/584157">win7下查看被占用端口</a>
 </p>
 
       </section>

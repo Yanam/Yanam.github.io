@@ -1,0 +1,319 @@
+<html>
+<head>
+    <title>发布订阅模式（观察者模式）</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">观察者模式(Observer)</a>
+<ul>
+<li><a href="#toc_0.2.1">实现</a>
+<ul>
+<li><a href="#toc_0.2.1.1">使用java内置观察者模式(Observable/Observer)</a>
+<li><a href="#toc_0.2.1.2">自己实现</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<h2 id="toc_0.2">观察者模式(Observer)</h2>
+<p>
+观察者模式又叫 发布订阅模式(Publish/Subscribe)
+</p>
+<blockquote>
+Define a one-to-many dependency between objects so that when one object changes state,all its denpends are notified and updated automatically
+</blockquote>
+
+<p>
+定义对象间的一种 <strong>一对多</strong> 的依赖关系，当一个主题对象的状态发送改变时，所有监听它的观察者对象都得到通知并自动更新。
+</p>
+
+<p>
+类图如下：
+<img src="images/observer_pattern.png" /> 
+</p>
+
+<p>
+涉及到的角色：
+</p>
+<ol>
+<li>
+<code>Subject</code>：抽象主题  角色
+
+<ul>
+<li>
+keep track of its obsevers（保存观察者的记录） 
+
+<li>
+provides an interface for attaching an detaching Observer objects（提供注册和注销观察者对象的接口） 
+
+</ul>
+<li>
+<code>Observer</code>：抽象观察者 角色
+
+<ul>
+<li>
+defines an interface for update notification（定义接口，在得到subject的通知时更新自己） 
+
+</ul>
+<li>
+<code>ConcreteSubject</code>：具体主题 角色
+
+<ul>
+<li>
+the object being observed（被观察的对象） 
+
+<li>
+stores state of interest to ConcreteObserver objects (存储concreteObserver感兴趣的状态)
+
+<li>
+sends a notification to its observers when its state changes（当状态改变时给observer发送通知）
+
+</ul>
+<li>
+<code>ConcreteObserver</code>：具体观察者 角色
+
+<ul>
+<li>
+the observing object （观察对象）
+
+<li>
+stores state that should stay consistent with the subject's（存储和subject一致的状态）
+
+<li>
+implements the Observer update interface to keep its state consistent with the subject's（实现Observer接口的更新方法，使状态保持和subject保持一致）
+
+</ul>
+</ol>
+
+<p>
+时序图：
+<img src="images/observer_pattern_seq.png" />   
+</p>
+
+<h3 id="toc_0.2.1">实现</h3>
+<h4 id="toc_0.2.1.1">使用java内置观察者模式(Observable/Observer)</h4>
+<p>
+源码示例：
+</p>
+<pre class="brush:java">
+import java.util.Observable;
+import java.util.Observer;
+
+public class ObserverPattern {
+
+	public static void main(String[] args) {
+		Screen screen = new Screen();
+		
+		DataStore dataStore = new DataStore();
+		dataStore.addObserver(screen);
+		
+		dataStore.setData("132");
+	}
+}
+
+class DataStore extends Observable{
+	private String data;
+	public String getData() {
+		return data;
+	}
+	public void setData(String data) {
+		this.data = data;
+		//mark the observable as changed
+		setChanged();
+		notifyObservers();
+	}
+}
+class Screen implements Observer{
+
+	@Override
+	public void update(Observable o, Object arg) {
+		DataStore ds = (DataStore) o;
+		System.out.println(ds.getData());
+	}
+	
+}
+</pre>
+
+<p>
+在上面这个例子中涉及到的各角色：
+</p>
+<ol>
+<li>
+<code>Subect</code>（抽象主题角色）：<code>java.util.Observable</code>
+
+<li>
+<code>Observer</code>（抽象观察者角色）：<code>java.util.Observer</code>
+
+<li>
+<code>ConcreteSubject</code>（具体主题角色）：DataStore
+
+<li>
+<code>ConcreteObserver</code>（具体观察者角色）：Screen
+
+</ol>
+<blockquote>
+Java内置观察者的确定就是：Observable是一个类，而Java只允许单继承，如果要实现该模式的类有自己的父类，就无法使用了。
+</blockquote>
+
+<h4 id="toc_0.2.1.2">自己实现</h4>
+<p>
+源码如下：
+</p>
+<pre class="brush:java">
+import java.util.ArrayList;
+import java.util.List;
+
+public class ObserverPattern2 {
+	public static void main(String[] args) {
+		ObserverImp ob1 = new ObserverImp();
+		ObserverImp ob2 = new ObserverImp();
+		
+		SubjectImp subject = new SubjectImp();
+		
+		ob1.setSubject(subject);
+		ob2.setSubject(subject);
+		
+		subject.attach(ob1);
+		subject.attach(ob2);
+		
+		subject.setState("123");
+		subject.notifyObserver();//也可以把它放到setState方法里
+		
+		System.out.println(ob1.getState());
+		System.out.println(ob2.getState());
+	}
+}
+
+interface Subject {
+	boolean attach(Observer o);
+
+	boolean dettach(Observer o);
+
+	void notifyObserver();
+
+	Object getUpdate();
+}
+
+class SubjectImp implements Subject {
+	private String state;
+	private boolean changed;
+	private List&lt;Observer&gt; list;
+
+	public SubjectImp() {
+		list = new ArrayList&lt;&gt;();
+	}
+
+	public void setState(String state) {
+		this.state = state;
+		changed = true;
+	}
+
+	@Override
+	public Object getUpdate() {
+		return state;
+	}
+
+	@Override
+	public boolean attach(Observer o) {
+		return list.add(o);
+	}
+
+	@Override
+	public boolean dettach(Observer o) {
+		return list.remove(o);
+	}
+
+	@Override
+	public void notifyObserver() {
+		if (changed) {
+			for (Observer observer : list) {
+				observer.update();
+			}
+		}
+		changed = false;
+	}
+}
+
+interface Observer {
+	void update();
+
+	void setSubject(Subject s);
+}
+
+class ObserverImp implements Observer {
+	private Subject s;
+	private String state;
+
+	@Override
+	public void update() {
+		this.state = (String) s.getUpdate();
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	@Override
+	public void setSubject(Subject s) {
+		this.s = s;
+	}
+
+}
+</pre>
+
+
+<hr />
+<p>
+<code>日期</code>：2014-05-04
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://java.dzone.com/articles/design-patterns-uncovered">Design Patterns Uncovered: The Observer Pattern</a>、<a href="http://www.dcs.bbk.ac.uk/~oded/OODP13/Sessions/Session6/Observer.pdf">http://www.dcs.bbk.ac.uk/~oded/OODP13/Sessions/Session6/Observer.pdf</a>、<a href="http://javapapers.com/design-patterns/observer-design-pattern/">Observer Design Pattern</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

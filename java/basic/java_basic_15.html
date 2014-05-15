@@ -1,0 +1,244 @@
+<html>
+<head>
+    <title>Java中的switch语句与enum</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">enum</a>
+<ul>
+<li><a href="#toc_0.2.1">定义enum类型</a>
+<li><a href="#toc_0.2.2">enum工具类</a>
+<ul>
+<li><a href="#toc_0.2.2.1">EnumMap vs HashMap</a>
+</ul>
+<li><a href="#toc_0.2.3">Enum vs 静态常量</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+虽然Java自5.0就引入了enum，但平时用的还挺少的，偶尔想到也需要查查资料才能确定用法。switch语句基本是编程语言的标配，自己也是用的，向用的时候还容易记混。这次把这两个用法都做个详细记录，希望能加深一下印象。
+</p>
+
+<h2 id="toc_0.2">enum</h2>
+<p>
+我们定义的enum既不能被继承，也不能继承自其他类，因为我们定义的enum隐式的继承自<code>java.lang.enum</code>，所以它不能继承其他类。
+</p>
+
+<h3 id="toc_0.2.1">定义enum类型</h3>
+<pre class="brush:java">
+/**
+ * 简单定义
+ */
+enum RouteType {
+	driect, queue, other
+}
+
+/**
+ * 带属性和方法的定义
+ */
+enum ServerURL {
+	
+	logServer("http://127.0.0.1:8080/log"), 
+	alarmServer("http://127.0.0.1:8080/alarm"),
+	monitorServer("http://127.0.0.1:8080/monitor");
+
+	private String url;
+
+	//注意构造函数只能是私有的
+	private ServerURL(String url) {
+		this.url = url;
+	}
+	
+	public String getURL() {
+		return url;
+	}
+}
+
+public class EnumTest1 {
+	public static void main(String[] args) {
+		RouteType type = RouteType.queue;
+
+		//这里顺带把switch语法给复习了	
+		switch (type) {
+		case driect:
+			// do something;
+			break;
+		case queue:
+			// do something;
+			break;
+		default:
+			break;
+		}
+		
+		ServerURL server1 = ServerURL.alarmServer;
+		System.out.println(server1.getURL());
+	}
+}
+</pre>
+<h3 id="toc_0.2.2">enum工具类</h3>
+<p>
+Java 5.0除了增加enum类型，还在<code>java.util</code>包中增加了两个工具类：
+</p>
+<ol>
+<li>
+<code>EnumSet</code>：支持在枚举类型的所有值的某个范围进行迭代
+
+<li>
+<code>EnumMap</code>：用来管理使用枚举类型作为keys的映射表
+
+</ol>
+ 
+ 
+<p>
+代码示例：
+</p>
+<pre class="brush:java">
+enum WeekDay {
+	Mon, Tue, Wed, Thu, Fri, Sat, Sun
+}
+
+public class EnumTest1 {
+	public static void main(String[] args) {
+
+		//使用EnumSet 获得给定enum的一个子集
+		for (WeekDay day : EnumSet.range(WeekDay.Mon, WeekDay.Fri)) {
+			System.out.println(day);
+		}
+
+		EnumSet&lt;WeekDay&gt; subset = EnumSet.of(WeekDay.Mon, WeekDay.Wed);
+		for (WeekDay day : subset) {
+			System.out.println(day);
+		}
+	}
+}
+</pre>
+
+<h4 id="toc_0.2.2.1">EnumMap vs HashMap</h4>
+<p>
+很多情况下我们都可以用HashMap实现EnumMap的功能，但是它们还是有一些区别的：
+</p>
+<ol>
+<li>
+EnumMap只能接受enum类型作为key
+
+<li>
+EnumMap的性能比HashMap更好一点
+
+<li>
+EnumMap不会出现HashMap常见的hash碰撞，因为它是数组实现的，使用自然顺序作为索引不需要调用hashCode方法。
+
+</ol>
+<h3 id="toc_0.2.3">Enum vs 静态常量</h3>
+<p>
+在很多情况下，我们在遇到静态值时，都会选择创建一个静态常量进行保存，这样看来enum类型可有可无啊！但是使用enum类型可以给我们带来很多好处。
+</p>
+
+<p>
+先看一下对比代码：
+</p>
+<pre class="brush:java">
+public class SomeClass {
+    public static int RED = 1;
+    public static int BLUE = 2;
+    public static int YELLOW = 3;
+    public static int GREEN = 3; // sic
+
+    private int color;
+
+    public void setColor(int color) {
+        this.color = color;
+    }   
+}
+//UserCase
+new SomeClass().setColor(999);
+
+
+enum Color{
+	RED(1),BLUE(2),YELLOW(3),GREEN(3);
+	
+	private int value
+	private Color(int i){
+		this.value = i;
+	}
+	public int getValue(){
+		return value;
+	}
+}
+new SomeClass().setColor(Color.RED);
+</pre>
+
+<p>
+上面两段代码一对比你会发现使用静态常量会遇到这样几个问题：
+</p>
+<ol>
+<li>
+问题只能在运行时才被发现，而不能在编译时被发现，这导致了排查成本的提高
+
+<li>
+程序必须为错误输入做处理
+
+<li>
+不能保证静态变量的值出现碰撞（比如都定义成了同一个值）
+
+</ol>
+ 
+<p>
+使用enum可以解决以上所有这些问题，所以如果可以的话选择使用enum吧。
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2014-05-14
+</p>
+
+<p>
+<code>参考资料</code>：<a href="https://www.ibm.com/developerworks/cn/java/j-lo-enum/">Java 语言中 Enum 类型的使用介绍</a>、<a href="http://pf-miles.iteye.com/blog/187155">小谈Java Enum的多态性</a>、<a href="http://stackoverflow.com/questions/9254637/java-enum-vs-int">Java: Enum vs. Int</a>、<a href="http://javarevisited.blogspot.com/2012/09/difference-between-enummap-and-hashmap-in-java-vs.html">Difference between EnumMap and HashMap in Java</a>、<a href="http://www.javabeat.net/how-to-use-enum-in-switch/">How to use Enum in Switch?</a>、
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>
