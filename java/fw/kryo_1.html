@@ -1,0 +1,162 @@
+<html>
+<head>
+    <title>Kryo试用</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">Kryo</a>
+<ul>
+<li><a href="#toc_0.1.1">例子</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">Kryo</h2>
+<p>
+<a href="https://github.com/EsotericSoftware/kryo">Kryo</a> 是一个快速高效的Java对象图形序列化框架。
+</p>
+
+<h3 id="toc_0.1.1">例子</h3>
+<p>
+把对象序列化到一个文件：
+</p>
+<pre class="brush:java">
+public class WriteTest {
+
+	public static void main(String[] args) throws IOException {
+		AddressBook addressbook = new AddressBook();
+		List&lt;Person&gt; persons = new ArrayList&lt;&gt;();
+		
+		List&lt;PhoneNumber&gt; phones = new ArrayList&lt;&gt;();
+		
+		PhoneNumber num1 = new PhoneNumber();
+		num1.setNum("123231");
+		num1.setType(PhoneType.HOME);
+		
+		phones.add(num1);
+		
+		PhoneNumber num2 = new PhoneNumber();
+		num2.setNum("453413");
+		num2.setType(PhoneType.WORK);
+		phones.add(num2);
+		
+		Person person = new Person();
+		person.setId("11");
+		person.setName("dfa");
+		person.setPhones(phones);
+		person.setEmail("12321@faf.com");
+		persons.add(person);
+		
+		addressbook.setPersons(persons);
+		
+		
+		Output out = new Output( new FileOutputStream("d:/kryo-test.txt"));
+		
+		Kryo kryo = new Kryo();
+		kryo.writeObject(out,addressbook);
+		out.close();
+	}
+}
+
+</pre>
+
+<p>
+从文件中反序列出对象：
+</p>
+<pre class="brush:java">
+public class ReadTest {
+
+	public static void main(String[] args) throws IOException {
+		
+		Input in = new Input(new FileInputStream("d:/kryo-test.txt"));
+		
+		Kryo kryo = new Kryo();
+		
+		
+		AddressBook addressbook = kryo.readObject(in, AddressBook.class);
+
+		
+		List&lt;Person&gt; lists = addressbook.getPersons();
+		for (Person person : lists) {
+			System.out.println("person id:"+person.getId());
+			
+			System.out.println("person name:"+person.getName());
+			
+			System.out.println("person email:"+person.getEmail());
+			
+			for (PhoneNumber num : person.getPhones()) {
+				switch (num.getType()){
+				case MOBILE:
+					System.out.print(" mobile number:");
+					break;
+				case WORK:
+					System.out.print(" work number:");
+					break;
+				case HOME:
+					System.out.print(" home number:");
+					break;
+				default:
+					System.out.print("error type number:");
+				}
+				
+				System.out.println(num.getNum());
+			}
+		}
+	}
+}
+</pre>
+
+<hr />
+<p>
+<code>日期</code>：2014-05-22
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://x-rip.iteye.com/blog/1555344">Kryo为什么比Hessian快</a>、<a href=".html">.html</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

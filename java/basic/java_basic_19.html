@@ -1,0 +1,493 @@
+<html>
+<head>
+    <title>Java Collections Framework之Map</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">Map</a>
+<li><a href="#toc_0.2">接口</a>
+<ul>
+<li><a href="#toc_0.2.1">SortedMap</a>
+<li><a href="#toc_0.2.2">NavigableMap</a>
+<li><a href="#toc_0.2.3">ConcurrentMap</a>
+<li><a href="#toc_0.2.4">ConcurrentNavigableMap</a>
+</ul>
+<li><a href="#toc_0.3">实现类</a>
+<ul>
+<li><a href="#toc_0.3.1">HashMap</a>
+<li><a href="#toc_0.3.2">HashTable</a>
+<li><a href="#toc_0.3.3">Properties</a>
+<li><a href="#toc_0.3.4">LinkedHashMap</a>
+<li><a href="#toc_0.3.5">WeakHashMap</a>
+<li><a href="#toc_0.3.6">IdentityHashMap</a>
+<li><a href="#toc_0.3.7">EnumMap</a>
+<li><a href="#toc_0.3.8">ConcurrentHashMap</a>
+<li><a href="#toc_0.3.9">TreeMap</a>
+<li><a href="#toc_0.3.10">ConcurrentSkipListMap</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">Map</h2>
+<p>
+<code>Map</code>：存放键值对的对象，不能包含重复的key，它定义了几类方法：
+</p>
+<ol>
+<li>
+<code>基本操作</code>：比如put、get、remove、containsKey、containsValue、size、empty
+
+<li>
+<code>批量操作(bulk operations)</code>：比如putAll、clear
+
+<li>
+<code>集合视图(collection views)</code>：比如keySet、entrySet、values
+
+</ol>
+
+<p>
+Map的UML图：
+<img src="images/collection-map.png" />
+</p>
+
+<h2 id="toc_0.2">接口</h2>
+<h3 id="toc_0.2.1">SortedMap</h3>
+<p>
+<code>SortedMap</code>继承自Map，定义了关于 <strong>键(key)</strong> 的总体排序的方法。
+</p>
+<h3 id="toc_0.2.2">NavigableMap</h3>
+<p>
+<code>NavigableMap</code>继承自SortedMap,定义了针对给定搜索目标返回最接近匹配项的导航方法。
+</p>
+<h3 id="toc_0.2.3">ConcurrentMap</h3>
+<p>
+<code>ConcurrentMap</code>继承自Map，定义了线程安全和原子的方法
+</p>
+
+<p>
+内存一致性效果：将对象放入ConcurrentMap之前的线程的操作happen-before随后通过另一线程从ConcurrentMap中访问或者移除该元素的操作。
+</p>
+<h3 id="toc_0.2.4">ConcurrentNavigableMap</h3>
+<p>
+<code>ConcurrentNavigableMap</code>继承自Concurrent和NavigableMap
+</p>
+<h2 id="toc_0.3">实现类</h2>
+
+<h3 id="toc_0.3.1">HashMap</h3>
+<p>
+<code>HashMap</code>基于哈希表(hash table)的Map接口实现，继承了AbstractMap类，允许使用null值和null键。
+</p>
+
+<p>
+HashMap源码：
+</p>
+<pre class="brush:java">
+
+</pre>
+<h3 id="toc_0.3.2">HashTable</h3>
+<p>
+<code>HashTable</code>也是基于哈希表(hash table)的Map接口实现，任何 <strong>非null</strong> 对象都可以用作键或值。
+</p>
+<blockquote>
+它和HashMap的区别在于它是 <strong>同步</strong> 的，而它还继承了Dictionary类（一个已经过时的类）
+</blockquote>
+
+<p>
+HashTable源码：
+</p>
+<pre class="brush:java">
+    
+    public synchronized V get(Object key) {
+			......
+    }
+    public synchronized V put(K key, V value) {
+        // 这里确保了value不能为null
+        if (value == null) {
+            throw new NullPointerException();
+        }
+
+        // Makes sure the key is not already in the hashtable.
+        Entry&lt;?,?&gt; tab[] = table;
+        // 这里如果key为null会抛出异常，所以key也不能为null
+        int hash = key.hashCode();
+        int index = (hash &amp; 0x7FFFFFFF) % tab.length;
+        @SuppressWarnings("unchecked")
+        Entry&lt;K,V&gt; entry = (Entry&lt;K,V&gt;)tab[index];
+        for(; entry != null ; entry = entry.next) {
+            if ((entry.hash == hash) &amp;&amp; entry.key.equals(key)) {
+                V old = entry.value;
+                entry.value = value;
+                return old;
+            }
+        }
+
+        addEntry(hash, key, value, index);
+        return null;
+    }
+</pre>
+<h3 id="toc_0.3.3">Properties</h3>
+<p>
+<code>Properties</code>继承自 <strong>HashTable</strong> ，它表示一个持久的属性集，可以保存在流中或者从流中加载。
+</p>
+<blockquote>
+属性列表的每个键、值都是字符串
+</blockquote>
+<p>
+一个属性列表可以包含另一个属性列表作为它的“默认值”；如果没有在原有属性列表中搜索到，则搜索第二个属性列表。
+</p>
+
+<p>
+Properties源码：
+</p>
+<pre class="brush:java">
+     //作为默认值
+	protected Properties defaults;
+
+    public Properties() {
+        this(null);
+    }
+
+    public Properties(Properties defaults) {
+        this.defaults = defaults;
+    }
+	//加了同步
+    public synchronized Object setProperty(String key, String value) {
+        return put(key, value);
+    }
+	//可以看到defaults的作用
+    public String getProperty(String key) {
+        Object oval = super.get(key);
+        String sval = (oval instanceof String) ? (String)oval : null;
+        return ((sval == null) &amp;&amp; (defaults != null)) ? defaults.getProperty(key) : sval;
+    }
+	//也可以直接给出默认值
+    public String getProperty(String key, String defaultValue) {
+        String val = getProperty(key);
+        return (val == null) ? defaultValue : val;
+    }
+</pre>
+
+<h3 id="toc_0.3.4">LinkedHashMap</h3>
+<p>
+<code>LinkedHashMap</code>基于哈希表(hash table)和双向链表(doubly-linked)的Map接口实现，继承了HashMap类，具有可预知的迭代顺序。
+</p>
+<blockquote>
+LinkedHashMap提供特殊的构造函数，很适合构建 <strong>LRU缓存</strong> 。并且可以重写removeEldestEntry(Map.Entry)方法来自定义删除策略。
+</blockquote>
+
+<p>
+LinkedHashMap源码：
+</p>
+<pre class="brush:java">
+    //可以出是双向链表
+	static class Entry&lt;K,V&gt; extends HashMap.Node&lt;K,V&gt; {
+        Entry&lt;K,V&gt; before, after;
+        Entry(int hash, K key, V value, Node&lt;K,V&gt; next) {
+            super(hash, key, value, next);
+        }
+    }
+	
+    transient LinkedHashMap.Entry&lt;K,V&gt; head;
+
+    transient LinkedHashMap.Entry&lt;K,V&gt; tail;
+	//排列顺序（true时为按访问顺序，false时为按插入顺序）
+	final boolean accessOrder;
+	
+	/**
+	* 重写了HashMap提供的一些钩子方法，来实现LinkedHashMap自己的特性
+	*/
+	
+	// 在put操作时会被调用
+    Node&lt;K,V&gt; newNode(int hash, K key, V value, Node&lt;K,V&gt; e) {
+        LinkedHashMap.Entry&lt;K,V&gt; p =
+            new LinkedHashMap.Entry&lt;K,V&gt;(hash, key, value, e);
+        linkNodeLast(p);
+        return p;
+    }
+
+    void afterNodeInsertion(boolean evict) { // possibly remove eldest
+        LinkedHashMap.Entry&lt;K,V&gt; first;
+        if (evict &amp;&amp; (first = head) != null &amp;&amp; removeEldestEntry(first)) {
+            K key = first.key;
+            removeNode(hash(key), key, null, false, true);
+        }
+    }
+
+    void afterNodeAccess(Node&lt;K,V&gt; e) { // move node to last
+        LinkedHashMap.Entry&lt;K,V&gt; last;
+        if (accessOrder &amp;&amp; (last = tail) != e) {
+            LinkedHashMap.Entry&lt;K,V&gt; p =
+                (LinkedHashMap.Entry&lt;K,V&gt;)e, b = p.before, a = p.after;
+            p.after = null;
+            if (b == null)
+                head = a;
+            else
+                b.after = a;
+            if (a != null)
+                a.before = b;
+            else
+                last = b;
+            if (last == null)
+                head = p;
+            else {
+                p.before = last;
+                last.after = p;
+            }
+            tail = p;
+            ++modCount;
+        }
+    }
+</pre>
+
+<h3 id="toc_0.3.5">WeakHashMap</h3>
+<p>
+<code>WeakHashMap</code>基于哈希表(hash table)以弱键(weak keys)实现的Map接口，继承了AbstractMap，允许使用null值和null键。
+</p>
+
+
+<p>
+既然敢叫weak，那我们看看源码它是怎么实现的：
+</p>
+<pre class="brush:java">
+    // 可以看到它的Entry是继承了WeakReference
+	private static class Entry&lt;K,V&gt; extends WeakReference&lt;Object&gt; implements Map.Entry&lt;K,V&gt; {
+        V value;
+        final int hash;
+        Entry&lt;K,V&gt; next;
+       
+        Entry(Object key, V value,
+              ReferenceQueue&lt;Object&gt; queue,
+              int hash, Entry&lt;K,V&gt; next) {
+			// 重点！！ 可以看到，key其实是个WeakReference，而value是普通对象StrongReference
+            super(key, queue);
+            this.value = value;
+            this.hash  = hash;
+            this.next  = next;
+        }
+		
+		......
+	}
+	
+	// 移除失效的Entry就靠这个方法了
+	private void expungeStaleEntries() {
+	    // 就是执行ReferenceQueue中元素（也就是Key）的出队操作，然后将其对应的value置为null
+        for (Object x; (x = queue.poll()) != null; ) {
+            synchronized (queue) {
+                @SuppressWarnings("unchecked")
+                    Entry&lt;K,V&gt; e = (Entry&lt;K,V&gt;) x;
+                int i = indexFor(e.hash, table.length);
+
+                Entry&lt;K,V&gt; prev = table[i];
+                Entry&lt;K,V&gt; p = prev;
+                while (p != null) {
+                    Entry&lt;K,V&gt; next = p.next;
+                    if (p == e) {
+                        if (prev == e)
+                            table[i] = next;
+                        else
+                            prev.next = next;
+                        // Must not null out e.next;
+                        // stale entries may be in use by a HashIterator
+                        e.value = null; // Help GC
+                        size--;
+                        break;
+                    }
+                    prev = p;
+                    p = next;
+                }
+            }
+        }
+    }
+	// 这个方法还有size、resize方法都调用了expungeStaleEntries（），而get、put等操作都会调用getTable或者size方法
+	private Entry&lt;K,V&gt;[] getTable() {
+        expungeStaleEntries();
+        return table;
+    }
+</pre>
+
+<p>
+我们知道WeakHashMap的特点是“当某个键不再正常使用时，将自动移除其条目”
+</p>
+
+<p>
+实现该特点主要是因为Key这个WeakReference对象，而WeakReference的特点，使得Key不在被其他对象引用，并被GC回收时，同时放入queue中，当我们之后继续调用get等几乎所有方法是都要调用到expungeStaleEntries()方法，它会遍历queue，然后把value1进行清除。所以跟我们所想的自动清除还是有区别的，这里的自动清除还是需要自己触发的。
+</p>
+<h3 id="toc_0.3.6">IdentityHashMap</h3>
+<p>
+<code>IdentityHashMap</code>基于哈希表(hash table)的Map接口实现，继承了AbstractMap接口，允许null值和null键。
+</p>
+
+<p>
+它的特点是：用==代替了equals来判断key是否重复
+</p>
+
+<p>
+IdentityHashMap源码：
+</p>
+<pre class="brush:java">
+    public V put(K key, V value) {
+        Object k = maskNull(key);
+        Object[] tab = table;
+        int len = tab.length;
+        int i = hash(k, len);
+
+        Object item;
+        while ( (item = tab[i]) != null) {
+			/** 重点！ 它是直接判断的引用是否相等（这正是它的特殊之处），
+			* 而一般的如HashMap“(k = p.key) == key || (key != null &amp;&amp; key.equals(k)))” 或者
+			* HashTable等都是“(entry.hash == hash) &amp;&amp; entry.key.equals(key)” 
+			* 简单来说，就是key的判断它用==代替了equals
+			*/
+            if (item == k) {
+                @SuppressWarnings("unchecked")
+                    V oldValue = (V) tab[i + 1];
+                tab[i + 1] = value;
+                return oldValue;
+            }
+            i = nextKeyIndex(i, len);
+        }
+
+        modCount++;
+        tab[i] = k;
+        tab[i + 1] = value;
+        if (++size &gt;= threshold)
+            resize(len); // len == 2 * current capacity.
+        return null;
+    }
+</pre>
+
+<h3 id="toc_0.3.7">EnumMap</h3>
+<p>
+<code>EnumMap</code>以Enum类型为Key的Map接口实现。
+</p>
+
+<p>
+在enum那篇已经介绍了一下，这里主要放在源码上
+</p>
+
+<p>
+EnumMap源码：
+</p>
+<pre class="brush:java">
+    /**
+	* 因为Enum类型在构造时就可以确定，所以Map的大小，已经每个Key的索引也就确定了
+	*/
+	
+	// Map中使用的Enum类型，
+	private final Class&lt;K&gt; keyType;
+	//key存在一个数组里
+    private transient K[] keyUniverse;
+	// 值存在一个数组里
+    private transient Object[] vals;
+	// map大小
+	private transient int size = 0;
+	
+	public EnumMap(Class&lt;K&gt; keyType) {
+        this.keyType = keyType;
+        keyUniverse = getKeyUniverse(keyType);
+        vals = new Object[keyUniverse.length];
+    }
+	// 都是数组的索引操作
+    public V put(K key, V value) {
+        typeCheck(key);
+
+        int index = key.ordinal();
+        Object oldValue = vals[index];
+        vals[index] = maskNull(value);
+        if (oldValue == null)
+            size++;
+        return unmaskNull(oldValue);
+    }
+</pre>
+
+<p>
+虽然EnumMap的操作基本可以由HashMap替代，但是由于它的长度是固定的，而它的写也不会产生碰撞和resize操作，所以性能比HashMap要好很多。
+</p>
+<h3 id="toc_0.3.8">ConcurrentHashMap</h3>
+<p>
+<code>ConcurrentHashMap</code>基于哈希表(hash table)实现的ConcurrentMap接口，继承了AbstractMap类，支持完全并发索引操作（get等）和可调节并发数的更新操作（put、remove等）。
+</p>
+
+<p>
+由于不同版本的源码一直在变化，本来打算看JDK1.8的源码，但是变化太大（已经不适用segment的结构，由改为和HashMap同样的结构；更新操作内部也使用了synchronized），准备单开一篇，对比一下跟版本的变化，记录一下原理。
+</p>
+
+
+<h3 id="toc_0.3.9">TreeMap</h3>
+<p>
+<code>TreeMap</code>基于红黑树(red black tree)实现的NavigableMap接口，继承了AbstractMap类，
+</p>
+
+<p>
+TreeMap源码：
+</p>
+<pre class="brush:java">
+    private final Comparator&lt;? super K&gt; comparator;
+	// 红黑树的根节点
+    private transient Entry&lt;K,V&gt; root = null;
+	// 红黑树的节点定义
+	static final class Entry&lt;K,V&gt; implements Map.Entry&lt;K,V&gt; {
+        K key;
+        V value;
+        Entry&lt;K,V&gt; left = null;
+        Entry&lt;K,V&gt; right = null;
+        Entry&lt;K,V&gt; parent;
+        boolean color = BLACK;
+		
+		.....
+	}
+</pre>
+<h3 id="toc_0.3.10">ConcurrentSkipListMap</h3>
+<p>
+<code>ConcurrentSkipListMap</code>基于跳表(skip list)的ConcurrentNavigableMap实现
+<hr />
+<code>日期</code>：2014-05-22、2014-05-26、2014-05-29
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.iteye.com/topic/587995">WeakHashMap的神话</a>、<a href=".html">.html</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

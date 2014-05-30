@@ -1,0 +1,176 @@
+<html>
+<head>
+    <title>java.util包中的工具类</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">Arrays</a>
+<ul>
+<li><a href="#toc_0.2.1">TimSort</a>
+<li><a href="#toc_0.2.2">DualPivotQuicksort</a>
+</ul>
+<li><a href="#toc_0.3">Collections</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+最近准备好好看看JDK 的collection包，在翻源码的时候看到一个工具类<code>java.util.Arrays</code>，看名称就知道这是一个数组的工具类，仔细看看还是很有内容的。
+</p>
+
+<h2 id="toc_0.2">Arrays</h2>
+<p>
+它提供了一堆静态方法：
+</p>
+<ul>
+<li>
+sort：排序方法，实际调用的<code>java.util.DualPivotQuicksort</code>（它实现了双基准快速排序）
+
+<li>
+mergeSort：归并排序方法
+
+<li>
+swap：
+
+<li>
+legacyMergeSort：旧的归并排序，1.7以后已经改了
+
+<li>
+rangeCheck：
+
+<li>
+binarySearch：二分查找方法
+
+<li>
+equals
+
+<li>
+deepEquals
+
+<li>
+fill：填充方法，当需要赋默认值的时候，就别再自己写for循环了，直接用它更省事
+
+<li>
+copyOf
+
+<li>
+copyOfRange
+
+<li>
+asList
+
+<li>
+hashCode
+
+<li>
+toString
+
+<li>
+deepToString
+
+</ul>
+ 
+<p>
+这里面比较重要的就属sort方法了，比如下面的Collections的sort也是方法也是间接使用的Arrays的sort方法。
+</p>
+
+<h3 id="toc_0.2.1">TimSort</h3>
+
+<h3 id="toc_0.2.2">DualPivotQuicksort</h3>
+
+<h2 id="toc_0.3">Collections</h2>
+<p>
+它提供了一系列操作collections或者返回collections的方法，包含了很多内部静态类来实现相应的功能。
+</p>
+
+<p>
+主要的方法：
+</p>
+<ul>
+<li>
+<code>Queue&lt;T&gt; asLifoQueue(Deque&lt;T&gt; deque)</code>：返回一个后进先出(lifo)队列
+
+<li>
+<code>boolean disjoint(Collection&lt;?&gt; c1, Collection&lt;?&gt; c2)</code>：如果两个集合没有共同的元素时返回true
+
+<li>
+<code>int frequency(Collection&lt;?&gt; c, Object o)</code>：返回指定对象o在指定集合c中出现的次数
+
+<li>
+<code>void rotate(List&lt;?&gt; list, int distance)</code>：根据指定的距离轮换指定列表的元素
+
+<li>
+max、min方法：返回集合中的最大值最小值，可以传入Comparator来自定义排序规则，默认是自然序列
+
+<li>
+<code>void rotate(List&lt;?&gt; list, int distance)</code>
+
+<li>
+<code>fill(List&lt;? super T&gt; list, T obj)</code>
+
+<li>
+<code>void shuffle(List&lt;?&gt; list)</code>/<code>void shuffle(List&lt;?&gt; list, Random rnd)</code>：使用随机源（自己指定或者默认）对指定list进行赋值
+
+<li>
+一堆关于List的查找方法，因为都是List转换成对应的数组，然后使用Arrays的方法实现的，所以Arrays支持哪种排序、查找方法，它就同样支持
+
+<li>
+将制定的Set、Map、List、Set等转换为不可变的、同步的、进行类型校验的等等
+
+</ul>
+
+<hr />
+<p>
+<code>日期</code>：2014-05-16
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.lifebackup.cn/timsort-java7.html">TimSort in Java 7</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

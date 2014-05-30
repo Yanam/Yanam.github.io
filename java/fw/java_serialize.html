@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>java基础复习1-Object对象</title>
+    <title>各种Java序列化框架试用</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
 	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
@@ -34,45 +34,30 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
 
-<div class="toc">
-<ul>
-<li><a href="#toc_0.1">Object</a>
-</ul>
-</ul>
-</div>
-<h2 id="toc_0.1">Object</h2>
-<p>
-类Object是所有类的父类。所有对象包括数据都实习了这个类的方法。现在我们一一分析一下Object的方法。
-</p>
-<ul>
-<li>
-<code>clone</code>：protected Object clone() throws CloneNotSupportedException
 
-</ul>
-<p>
-创建并返回该对象的副本，该方法执行的是“浅复制”。如果对象的类不支持Cloneable接口，则会抛出CloneNotSupportedException的异常。
-</p>
-<ul>
-<li>
-<code>equals</code>：public boolean equals(Object obj)
 
-</ul>
 <p>
-指示其他某个对象是否与此对象相等。当此方法被重写时，通常要重写hashCode方法，以保证相等的对象必须有相等的哈希码。
+最近做一个异步消息的项目，涉及到序列化的模块，为了使项目得到更广泛的使用，准备支持几个常见的序列化框架的支持。由于以前只是听说过，也时常在一些技术博客上看到对各种序列化框架做的对比、测试，但从未实际使用过，所以特此记录，希望以后有也能有机会进行深入的比较分析。
 </p>
+
 <ul>
 <li>
-<code>finalize</code>：JVM保证调用finalize方法前，这个对象时不可达的，但JVM不保证这个函数一定会被调用。另外还保证它最多 <strong>运行一次</strong> 。所以尽量还是不要用它了，用的时候要避免 <strong>对象再生</strong> 。实现保证对象彻底被销毁的动作时，只能依赖java.lang.ref包。
+<a href="protobuf_1.html">protobuf试用</a> 单纯的序列化框架
+
+<li>
+<a href="thrift_1.html">Thrift试用</a> RPC
+
+<li>
+<a href="hessian_1.html">Hessian试用</a> RPC
+
+<li>
+<a href="kryo_1.html">Kryo试用</a> 单纯的序列化框架，原生支持Java，其他语言需要看是否有对应的版本（目前有Objective-C、Clojure、Scala）
 
 </ul>
  
 <hr />
 <p>
-<code>日期</code>：2013-04-11、2014-05-28 
-</p>
-
-<p>
-<code>参考资料</code>：<a href="http://www.iteye.com/topic/484934">深入理解java的finalize</a>、<a href="http://stackoverflow.com/questions/2506488/java-finalize-method-call">Java Finalize method call</a>、<a href="http://www.ibm.com/developerworks/cn/java/l-JavaMemoryLeak2/">垃圾收集器与Java编程</a>
+<code>参考资料</code>：<a href="https://github.com/eishay/jvm-serializers/wiki">github:jvm-serializers</a>、<a href="http://stackoverflow.com/questions/69316/biggest-differences-of-thrift-vs-protocol-buffers">Biggest differences of Thrift vs Protocol Buffers?</a>、<a href="http://www.slideshare.net/IgorAnishchenko/pb-vs-thrift-vs-avro">pb-vs-thrift-vs-avro</a>、<a href="https://code.google.com/p/thrift-protobuf-compare/wiki/Benchmarking">thrift-protobuf-compare</a>
 </p>
 
       </section>

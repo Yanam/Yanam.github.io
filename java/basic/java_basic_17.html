@@ -34,15 +34,165 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
 
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">泛型命名规则</a>
+<li><a href="#toc_0.3">类型擦除</a>
+<li><a href="#toc_0.4">通配符(wildcars)</a>
+<li><a href="#toc_0.5">常见用法示例</a>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+<code>泛型(generics)</code>自JDK 1.5被引入的新特性。
+</p>
+
+<h2 id="toc_0.2">泛型命名规则</h2>
+<p>
+常见的泛型名称有：
+</p>
+<ol>
+<li>
+<code>E</code>：Element，集合类的元素
+
+<li>
+<code>K</code>：Key，用于Map
+
+<li>
+<code>N</code>：Number
+
+<li>
+<code>T</code>：Type
+
+<li>
+<code>V</code>：Value，用于Map
+
+<li>
+<code>S,U,V etc</code>：2nd,3rd,4th types
+
+</ol>
+<h2 id="toc_0.3">类型擦除</h2>
+<p>
+<code>类型擦除(type erasure)</code>：Java中的泛型是在编译层面上实现的，编译后的字节码是不会包含任何泛型类型信息供运行时使用的。
+</p>
+
+<p>
+由于类型擦除，类型参数不能用来创造对象或者作为静态变量的类型
+</p>
+
+<pre class="brush:java">
+class TypeEarsureInner&lt;T&gt;{
+	private T t;
+	public static T type;//编译错误，类型参数不能用在静态变量
+	
+	public T getType(){
+		return t;
+	}
+	public void newT(){
+		T tes = new T();//编译错误，类型参数不能创建对象
+	}
+}
+</pre>
+
+<p>
+同样是因为有类型擦除机制的存在，编译器要承担全部的类型检查工作，为了确保类型的安全，编译器禁止了某些泛型使用的方式。比如下面：
+</p>
+
+<pre class="brush:java">
+public class TypeEarsureTest {
+
+	public static void main(String[] args) {
+		List&lt;String&gt; list = new ArrayList&lt;String&gt;();
+		list.add("1");
+		list.add("2");
+		TypeEarsureTest.test(list);//编译错误
+	}
+	
+	public static void test(List&lt;Object&gt; list){
+		for (Object o : list) {
+			//....
+		}
+		list.add(1);//注意这句
+	}
+}
+</pre>
+
+<h2 id="toc_0.4">通配符(wildcars)</h2>
+<p>
+有三种类型的通配符：
+</p>
+<ol>
+<li>
+<code>? extends Type</code>：它意味着泛型是Type和Type的子类型
+
+<ul>
+<li>
+示例：List&lt; ? extends Number &gt; ：List可以保存Number或者它的子类型数据
+
+</ul>
+<li>
+<code>? super Type</code>：它意味着泛型是Type和Type的父类型
+
+<ul>
+<li>
+示例：List&lt; ? super Number &gt; ：List可以保存Number或者它的父类型 
+
+</ul>
+<li>
+<code>?</code>：它意味着泛型是任意类型
+
+<ul>
+<li>
+示例：List&lt; Object &gt;：List可以保存Object或者它的子类型 
+
+</ul>
+</ol>
+
+
+<h2 id="toc_0.5">常见用法示例</h2>
+<pre class="brush:java">
+public class GenericTest {
+	public static void main(String[] args) {
+		GenericClassTest1&lt;String&gt; test1 = new GenericClassTest1();
+		test1.set("123");
+		System.out.println(test1.get());
+		
+		GenericClassTest2 test2 = new GenericClassTest2();
+		List&lt;String&gt; list = test2.get();
+		
+	}
+}
+
+
+class GenericClassTest1&lt;T&gt;{
+	private T type;
+	public T get(){
+		return type;
+	}
+	public void set(T type){
+		this.type = type;
+	}
+}
+
+class GenericClassTest2{
+	public &lt;T&gt; List&lt;T&gt; get(){
+		return new ArrayList&lt;T&gt;();
+	}
+}
+</pre>
 
 
 <hr />
 <p>
-<code>日期</code>
+<code>日期</code>：2014-05-19
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://www.javabeat.net/generics-in-java-5-0/">Generics in Java 5.0</a>
+<code>参考资料</code>：<a href="http://www.javabeat.net/generics-in-java-5-0/">Generics in Java 5.0</a>、<a href="http://www.infoq.com/cn/articles/cf-java-generics">Java深度历险（五）——Java泛型</a>、<a href="http://www.oracle.com/technetwork/articles/javase/generics-136597.html">Using and Programming Generics in J2SE 5.0</a>
 </p>
 
       </section>

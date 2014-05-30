@@ -1,0 +1,284 @@
+<html>
+<head>
+    <title>Java Collections Framework之Queue</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">Queue</a>
+<ul>
+<li><a href="#toc_0.1.1">接口</a>
+<ul>
+<li><a href="#toc_0.1.1.1">Deque</a>
+<li><a href="#toc_0.1.1.2">BlockingQueue</a>
+<li><a href="#toc_0.1.1.3">BlockingDeque</a>
+<li><a href="#toc_0.1.1.4">TransferQueue</a>
+</ul>
+<li><a href="#toc_0.1.2">实现类</a>
+<ul>
+<li><a href="#toc_0.1.2.1">ConcurrentLinkedDeque</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">Queue</h2>
+<p>
+<code>Queue</code>在处理元素前用于保存元素的集合。处理基本的Collection操作外，队列还提供其他的插入、提取、检查操作。每个方法都存在两种形式：一种抛出异常（操作失败时），另一种返回一个特殊值（null 或 false，具体取决于操作）。
+</p>
+
+
+<table>
+<tr>
+<th>
+&nbsp;
+</th>
+<th>
+抛出异常
+</th>
+<th>
+返回特殊值
+</th>
+</tr>
+<tr>
+<td>
+插入
+</td>
+<td>
+add(e)
+</td>
+<td>
+offer(e)
+</td>
+</tr>
+<tr>
+<td>
+移除
+</td>
+<td>
+remove()
+</td>
+<td>
+poll()
+</td>
+</tr>
+<tr>
+<td>
+检查
+</td>
+<td>
+element()
+</td>
+<td>
+peek()
+</td>
+</tr>
+</table>
+
+<p>
+Queue的UML图：
+<img src="images/collection-queue.png" />
+</p>
+<blockquote>
+使用Queue时不要试图插入null值，虽然有的实现类支持（有的直接就不支持），但是由于null是某些操作的返回值，有null元素会产生误会。
+</blockquote>
+<h3 id="toc_0.1.1">接口</h3>
+<h4 id="toc_0.1.1.1">Deque</h4>
+<p>
+<code>Deque</code>是"双端队列(double ended queue)"的缩写，一个线性Collection，支持在两端插入和移除元素，继承了Queue接口。
+</p>
+
+<p>
+该接口定义了双端访问元素的方法。提供插入、移除、检查元素的方法
+</p>
+
+<h4 id="toc_0.1.1.2">BlockingQueue</h4>
+<p>
+<code>BlockingQueue</code>继承了Queue接口，新增了两个操作：
+</p>
+<ol>
+<li>
+获取元素时等待队列变为非空
+
+<li>
+存储元素时等待空间变得可用
+
+</ol>
+ 
+<p>
+它的方法以四种形式出现：
+</p>
+
+<table>
+<tr>
+<th>
+&nbsp;
+</th>
+<th>
+抛出异常
+</th>
+<th>
+特殊值
+</th>
+<th>
+阻塞
+</th>
+<th>
+超时
+</th>
+</tr>
+<tr>
+<td>
+插入
+</td>
+<td>
+add(e)
+</td>
+<td>
+offer(e)
+</td>
+<td>
+put(e)
+</td>
+<td>
+offer(e,time,unit)
+</td>
+</tr>
+<tr>
+<td>
+移除
+</td>
+<td>
+remove()
+</td>
+<td>
+poll()
+</td>
+<td>
+tabke()
+</td>
+<td>
+poll(time,unit)
+</td>
+</tr>
+<tr>
+<td>
+检查
+</td>
+<td>
+element()
+</td>
+<td>
+peek()
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+</table>
+<blockquote>
+它不接受null元素。
+</blockquote>
+<blockquote>
+它的实现是 <strong>线程安全的</strong>
+</blockquote>
+<h4 id="toc_0.1.1.3">BlockingDeque</h4>
+<p>
+<code>BlockingDeque</code>继承了BlockingQueue和Deque接口，新增了两个操作：
+</p>
+<ol>
+<li>
+获取元素时等待双端队列变为非空
+
+<li>
+存储元素时等待双端队列中的空间变得可用
+
+</ol>
+ 
+<p>
+它的方法也有四种形式
+</p>
+<blockquote>
+它同样不支持插入null元素，实现同样是 <strong>线程安全</strong> 
+</blockquote>
+<h4 id="toc_0.1.1.4">TransferQueue</h4>
+<p>
+<code>TransferQueue</code>继承了BlockingQueue接口，新增一种特殊的操作“生产者一直阻塞直到所添加到队列的元素被某一个消费者消费” ，是Java7新增的接口。
+</p>
+
+<p>
+它定义了两个tryTransfer方法，一个阻塞，另一个是带有timout参数设置超时时间的。
+还定义了两个辅助方法 
+</p>
+<ol>
+<li>
+getWaitingConsumerCount()：返回等待接收元素的消费者个数
+
+<li>
+hasWaitingConsumer()：是否有至少一个消费者在等待接收元素
+
+</ol>
+ 
+<h3 id="toc_0.1.2">实现类</h3>
+<h4 id="toc_0.1.2.1">ConcurrentLinkedDeque</h4>
+<p>
+<code>ConcurrentLinkedDeque</code>基于双向链表（doubly-linked）的 <strong>无界并发</strong> Deque接口实现。
+</p>
+
+<p>
+迭代操作时，是弱一致性。size方法也不是固定时间的操作。
+</p>
+
+
+<hr />
+<p>
+<code>日期</code>：2014-05-30
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

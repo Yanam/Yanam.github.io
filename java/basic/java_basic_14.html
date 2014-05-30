@@ -38,15 +38,17 @@
 <ul>
 <li><a href="#toc_0.1">java.lang.ref</a>
 <ul>
-<li><a href="#toc_0.1.1">StrongReference</a>
+<li><a href="#toc_0.1.1">ReferenceQueue</a>
+<li><a href="#toc_0.1.2">Reference</a>
+<li><a href="#toc_0.1.3">SoftReference</a>
+<li><a href="#toc_0.1.4">WeakReference</a>
+<li><a href="#toc_0.1.5">PhantomReference</a>
+<li><a href="#toc_0.1.6">引用类型特征总结</a>
 <ul>
-<li><a href="#toc_0.1.1.1">为什么会有内存泄露的情况？</a>
+<li><a href="#toc_0.1.6.1">回收的区别</a>
 </ul>
-<li><a href="#toc_0.1.2">SoftReference</a>
-<li><a href="#toc_0.1.3">WeakReference</a>
-<li><a href="#toc_0.1.4">PhantomReference</a>
-<li><a href="#toc_0.1.5">引用类型特征总结</a>
 </ul>
+<li><a href="#toc_0.2">总结</a>
 </ul>
 </ul>
 </div>
@@ -62,47 +64,58 @@
 </p>
 
 <p>
+ref包的UML图：
+<img src="images/ref.png" />
+</p>
+
+<p>
 接下来我们按引用由弱到强来介绍这个包下的类。
 </p>
 
-<h3 id="toc_0.1.1">StrongReference</h3>
+<h3 id="toc_0.1.1">ReferenceQueue</h3>
 <p>
-第一个叫<code>StrongReference(强引用)</code>，它就是我们经常会用到的普通Java引用，强引用有如下特征：
+<code>ReferenceQueue</code>引用队列，在检测到合适的可达性更改后，垃圾回收器将已注册的引用对象添加到该队列中。
 </p>
-<ol>
-<li>
-强引用可以直接访问对象；
 
-<li>
-强引用所指向的对象在任何适合都不会被垃圾回收（这句话容易让人误解啊）；
+<p>
+从源码看它的功能比较简单，就是实现了一个入队、出队操作，组合后对外暴露出poll和remove接口。
+</p>
 
-<li>
-强引用可能导致内存泄露；
-    它可不是ref包下的类，ref下的类相对它来说都是弱引用。
+<p>
+ReferenceQueue源码：
+</p>
 <pre class="brush:java">
-StringBuffer buffer = new StringBuffer();
+     // 队列的实现主要靠Reference自身的链表结构
+	private volatile Reference&lt;? extends T&gt; head = null;
+    private long queueLength = 0;
+	private Lock lock = new Lock();
+	// 入队实现，注意是加锁的（出队删除设计到修改的操作都是加锁的）
+	boolean enqueue(Reference&lt;? extends T&gt; r) { /* Called only by Reference class */
+        synchronized (lock) {
+            // Check that since getting the lock this reference hasn't already been
+            // enqueued (and even then removed)
+            ReferenceQueue&lt;?&gt; queue = r.queue;
+            if ((queue == NULL) || (queue == ENQUEUED)) {
+                return false;
+            }
+            assert queue == this;
+            r.queue = ENQUEUED;
+            r.next = (head == null) ? r : head;
+            head = r;
+            queueLength++;
+            if (r instanceof FinalReference) {
+                sun.misc.VM.addFinalRefCount(1);
+            }
+            lock.notifyAll();
+            return true;
+        }
+    }
 </pre>
-
-</ol>
-
-<h4 id="toc_0.1.1.1">为什么会有内存泄露的情况？</h4>
+<h3 id="toc_0.1.2">Reference</h3>
+<h3 id="toc_0.1.3">SoftReference</h3>
 <p>
-举个简单的例子，我们经常使用的<code>HashMap</code>类，我们通常会把一些k/v的数据放到HashMap中，只要我们不手动删除，那么放到HashMap中的数据(当然都是对象啦)会一直存在，也就说说这些对象占用的堆内存空间一直不会释放，如果持续向HashMap中put数据那么总会出现内存溢出的情况的。
+<code>SoftReference</code>“软引用”，当SoftReference所指向的对象，没有强引用指向它是，会在内存停留一段时间，垃圾回收器会根据JVM内存情况，以及SoftReference 的get方法调用情况，来决定是否回收。
 </p>
-
-<p>
-感觉弱爆了是不是，难道作为Java程序员还要关心内存回收的问题，我们无法承担如此高深的工作啊，不要怕！ref包为你而来，它提供的不同级别的弱引用可以轻松解决该问题。
-</p>
-
-<h3 id="toc_0.1.2">SoftReference</h3>
-<p>
-这才是我们要介绍的ref包下的第一个类：<code>SoftReference(软引用，先这么翻着吧)</code>。SoftReference指向的对象，当没有强引用指向它时，会在内存驻留一段时间，垃圾回收器会根据JVM的内存使用情况（内存紧缺承担），以及SoftReference的get()方法的使用情况来决定是否对其回收，看不明白的，我们后面会有例子。
-</p>
-
-<pre class="brush:java">
-SoftReference&lt;Bean&gt; bean = new SoftReference&lt;Bean&gt;(new Bean("test",10));
-System.out.println(bean.get());			//"name:10"
-</pre>
 
 <p>
 SoftReference有如下特征：
@@ -118,17 +131,98 @@ SoftReference有如下特征：
 软引用可以避免Heap不足引发的异常。
 
 </ol>
-<h3 id="toc_0.1.3">WeakReference</h3>
+
+<pre class="brush:java">
+/**
+* SoftReference 源码
+*/
+public class SoftReference&lt;T&gt; extends Reference&lt;T&gt; {
+    // 时间戳，由垃圾回收器进行更新
+    static private long clock;
+    // 每次调用get方法时，都会更新。VM可能会根据它来决定是否进行回收，但并不强制要求
+    private long timestamp;
+
+    public SoftReference(T referent) {
+        super(referent);
+        this.timestamp = clock;
+    }
+
+    public SoftReference(T referent, ReferenceQueue&lt;? super T&gt; q) {
+        super(referent, q);
+        this.timestamp = clock;
+    }
+    // 可以看到timestamp的更新
+    public T get() {
+        T o = super.get();
+        if (o != null &amp;&amp; this.timestamp != clock)
+            this.timestamp = clock;
+        return o;
+    }
+
+}
+
+/**
+* 示例
+*/
+public class SoftReferenceTest {
+
+	public static void main(String[] args) throws InterruptedException {
+		Bean bean = new Bean("123", 1);
+		SoftReference&lt;Bean&gt; ph = new SoftReference&lt;&gt;(bean);
+		System.out.println(ph.get());
+		bean = null;
+		System.gc();
+		System.runFinalization();
+		Thread.sleep(10000);
+		System.out.println(ph.get());		//不一定会回收
+	}
+}
+</pre>
+
+
+<h3 id="toc_0.1.4">WeakReference</h3>
 <p>
-WeakReference 是比SoftReference更弱的引用类型，特性也和SoftReference类似，区别在于弱引用指向的对象只要进行垃圾回收，不论内存使用情况是否紧张，都会对其进行回收。
+<code>WeakReference</code>“弱引用”与上面的软引用类似，区别仅限于垃圾回收的选择上。
+</p>
+<h3 id="toc_0.1.5">PhantomReference</h3>
+<p>
+<code>PhantomReference</code>“虚引用”，虚引用的对象，在回收器确定其可另外回收后，被加入队列。它并不用于获取目标对象的引用，而是主要用来 <strong>跟踪对象被垃圾回收的状态</strong> ，通过查看引用队列(referenceQueue)是否包含对象所对应的虚引用来判断他是否 <strong>即将</strong> 被垃圾回收。
 </p>
 
-<h3 id="toc_0.1.4">PhantomReference</h3>
-<p>
-PhantomReference是最弱的做引用，无法像SoftReference、WeakReference那样通过get()方法取得目标对象的强引用。
-</p>
+<pre class="brush:java">
+// PhantomReference源码：
+public class PhantomReference&lt;T&gt; extends Reference&lt;T&gt; {
+    // 永远返回null
+    public T get() {
+        return null;
+    }
+    // 构造的时候，必须要传入ReferenceQueue，因为还需要用queue来实现跟踪回收的状态
+    public PhantomReference(T referent, ReferenceQueue&lt;? super T&gt; q) {
+        super(referent, q);
+    }
+}
 
-<h3 id="toc_0.1.5">引用类型特征总结</h3>
+// 示例
+
+public class PhantomReferenceTest {
+	public static void main(String[] args) throws InterruptedException {
+		Bean bean = new Bean("123", 1);
+		ReferenceQueue&lt;Bean&gt; queue = new ReferenceQueue&lt;&gt;();
+		PhantomReference&lt;Bean&gt; ph = new PhantomReference&lt;&gt;(bean, queue);
+		System.out.println(ph.get());		//null
+		System.out.println(queue.poll());	//null
+		bean = null;
+		// 示例用，并不能保证每次结果都一直
+		System.gc();
+		System.runFinalization();
+		Thread.sleep(10000);
+		System.out.println(queue.poll()==ph);	//true
+
+	}
+}
+</pre>
+
+<h3 id="toc_0.1.6">引用类型特征总结</h3>
 
 <table>
 <tr>
@@ -203,14 +297,111 @@ PhantomReference虚引用
 </tr>
 </table>
 
-
-<hr />
 <p>
-<code>日期</code>：2013-8-23
+它们最大的不同，在于进入队列(ReferenceQueue)的时机。
+</p>
+<ol>
+<li>
+<code>SoftReference</code>：在运行对象的finalize方法前，会将其加入队列
+
+<li>
+<code>WeakReference</code>：同上
+
+<li>
+<code>FinalReference</code>：
+
+<li>
+<code>PhantomReference</code>：在GC开始时，直接调用finalize方法，但不会加入队列，只有在真正对象被GC清除的时候，才计入队列。
+
+</ol>
+ 
+<p>
+网上看到<a href="http://seanzhou.iteye.com/blog/776444">这样（见最后的评论）</a> 的描述，所谓Strong、Soft、Weak、Phantom描述的是对象的可达性，只有完全不可达时，对象才会被回收。 
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://www.ibm.com/developerworks/cn/java/j-lo-langref/">深入探讨 java.lang.ref 包</a>、<a href="https://weblogs.java.net/blog/enicholas/archive/2006/05/understanding_w.html">Understanding Weak References</a>、<a href="http://stackoverflow.com/questions/10599710/weakhashmap-example">WeakHashMap example</a>
+对象回收会至少经过两个周期
+</p>
+<ol>
+<li>
+前finalize期，可达性从Strong -&gt; Soft -&gt; Weak
+
+<li>
+finlize期，对象被finalized之后，对象的可达性为finalize
+
+</ol>
+ 
+<p>
+因此JDK中有5个可达性(有强到弱)：Strong、Soft、Weak、Finalize、Phantom。
+</p>
+
+<p>
+Pahtom是在finalize之后，所以get操作用于返回null。
+</p>
+
+<h4 id="toc_0.1.6.1">回收的区别</h4>
+<pre class="brush:java">
+public class HeapOOMtest {
+	// 测试前记得在VM argument 加上-Xmx2m -Xms2m
+	public static void main(String[] args) {
+		HeapOOMtest test = new HeapOOMtest();
+		// test.strongReferenceTest();		// throw java.lang.OutOfMemoryError: Java heap space
+		// test.softReferenceTest();		// null
+		// test.weakReferenceTest();		// null
+		// test.phantomReferenceTest();		// throw java.lang.OutOfMemoryError: Java heap space
+	}
+
+	public void strongReferenceTest() {
+		Bean[] referent = new Bean[100000];
+		for (int i = 0; i &lt; referent.length; i++) {
+			referent[i] = new Bean("mybean:" + i, 100);//throw java.lang.OutOfMemoryError: Java heap space
+		}
+	}
+
+	public void softReferenceTest() {
+		Reference&lt;Bean&gt;[] referent = new SoftReference[100000];
+		ReferenceQueue&lt;Bean&gt; queue = new ReferenceQueue&lt;Bean&gt;();
+		for (int i = 0; i &lt; referent.length; i++) {
+			referent[i] = new SoftReference&lt;Bean&gt;(new Bean("mybean:" + i, 100),queue);
+		}
+		System.out.println(referent[100].get());// “null”
+		//System.out.println(queue.poll());
+	}
+
+	public void weakReferenceTest() {
+		Reference&lt;Bean&gt;[] referent = new WeakReference[100000];
+		ReferenceQueue&lt;Bean&gt; queue = new ReferenceQueue&lt;Bean&gt;();
+		for (int i = 0; i &lt; referent.length; i++) {
+			referent[i] = new WeakReference&lt;Bean&gt;(new Bean("mybean:" + i, 100),queue);
+		}
+		System.out.println(referent[100].get());// “null”
+		//System.out.println(queue.poll());
+	}
+
+	public void phantomReferenceTest() {
+		Reference&lt;Bean&gt;[] referent = new PhantomReference[100000];
+		ReferenceQueue&lt;Bean&gt; queue = new ReferenceQueue&lt;Bean&gt;();
+		for (int i = 0; i &lt; referent.length; i++) {
+			referent[i] = new PhantomReference&lt;Bean&gt;(new Bean("mybean:" + i,
+					100), queue);//throw java.lang.OutOfMemoryError: Java heap space
+		}
+		System.out.println(referent[100].get());
+	}
+}
+
+</pre>
+<h2 id="toc_0.2">总结</h2>
+<p>
+通过SoftReference、WeakReference、PhantomReference等三种引用类，我们可以更好地和GC进行交互。比如SoftReference就很适合作为Cache，而PhantomReference则可以让我们通过它的queue来监控GC的运行，从而自定义一些清理工作，原来finalize函数还是有很多局限性的。
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2013-8-23、2014-05-26
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.ibm.com/developerworks/cn/java/j-lo-langref/">深入探讨 java.lang.ref 包</a>、<a href="https://weblogs.java.net/blog/enicholas/archive/2006/05/understanding_w.html">Understanding Weak References</a>、<a href="http://stackoverflow.com/questions/10599710/weakhashmap-example">WeakHashMap example</a>、<a href="http://tech-tauk.blogspot.com/2010/05/soft-reference-weak-refernce-phantom.html">Soft Reference /Weak Refernce /Phantom Reference / finalize()</a>、<a href="http://www.iteye.com/topic/401478">理解 Java 的 GC 与 幽灵引用</a>、<a href="http://zhang-xzhi-xjtu.iteye.com/blog/413159">深入理解ReferenceQueue GC finalize Reference</a>
 </p>
 
       </section>

@@ -1,0 +1,236 @@
+<html>
+<head>
+    <title>protobuf试用</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">Protocol Buffers</a>
+<ul>
+<li><a href="#toc_0.1.1">准备工作</a>
+<li><a href="#toc_0.1.2">例子</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">Protocol Buffers</h2>
+<p>
+<a href="https://code.google.com/p/protobuf/ ">protobuf</a>（全称Protocol Buffers），它是一种高效扩展的数据编码结构方式。Google开源并使用它作为其大部分内部RPC服务的协议。
+</p>
+
+<h3 id="toc_0.1.1">准备工作</h3>
+<ol>
+<li>
+下载<a href="https://code.google.com/p/protobuf/downloads/list">protocol buffer complier</a>，windows版的就是个exe文件。
+
+<li>
+写一个<code>.proto</code>脚本
+
+<li>
+使用compiler生成源码
+
+</ol>
+<p>
+生成源码的命令格式：
+</p>
+<pre>
+protoc --proto_path=src --java_out=build/gen  src/foo.proto
+</pre>
+<p>
+windows下将exe文件可以放到一个目录下，然后将路径添加到环境变量PATH上，就可以在命令行直接使用protoc命令了。
+</p>
+
+<p>
+不嫌麻烦的也可以直接这样用：
+</p>
+<pre>
+D:\&gt;d:/soft/bin/protoc.exe --proto_path=d:\tmp --java_out=d:\tmp  d:\tmp\addressbook.proto
+</pre>
+<h3 id="toc_0.1.2">例子</h3>
+<p>
+proto脚本：
+</p>
+<pre>
+package tutorial;
+
+option java_package = "me.liu.Sample.protobuf";
+option java_outer_classname = "AddressBookProtos";
+
+message Person {
+  required string name = 1;
+  required int32 id = 2;
+  optional string email = 3;
+
+  enum PhoneType {
+    MOBILE = 0;
+    HOME = 1;
+    WORK = 2;
+  }
+
+  message PhoneNumber {
+    required string number = 1;
+    optional PhoneType type = 2 [default = HOME];
+  }
+
+  repeated PhoneNumber phone = 4;
+}
+
+message AddressBook {
+  repeated Person person = 1;
+}
+</pre>
+
+<p>
+序列化一个对象到文件中：
+</p>
+<pre class="brush:java">
+public class WriteTest {
+
+	public static void main(String[] args) throws FileNotFoundException, IOException {
+
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		
+		Builder pAddressbook = AddressBook.newBuilder();
+		Person.Builder bPerson = Person.newBuilder();
+		System.out.println("enter id:");
+		bPerson.setId(Integer.valueOf(br.readLine()));
+		
+		System.out.println("enter name:");
+		bPerson.setName(br.readLine());
+		
+		System.out.println("enter email:");
+		bPerson.setEmail(br.readLine());
+		
+		
+		
+		while(true){
+			System.out.println("Enter a phone number (or leave blank to finish): ");
+			String num = br.readLine();
+			
+			if(num.length()&lt;1){
+				break;
+			}
+			
+			Person.PhoneNumber.Builder bPhone = PhoneNumber.newBuilder();
+			
+			bPhone.setNumber(num);
+			System.out.println("Is this a mobile, home, or work phone? ");
+			
+			String type = br.readLine();
+			switch (type){
+				case "mobile":
+					bPhone.setType(Person.PhoneType.MOBILE);
+					break;
+				case "home":
+					bPhone.setType(Person.PhoneType.HOME);
+					break;
+				case "work":
+					bPhone.setType(Person.PhoneType.WORK);
+					break;
+				default:
+					System.out.println("Unknown phone type.  Using default.");
+			}
+			bPerson.addPhone(bPhone);
+		}
+		
+		Person person = bPerson.build();
+		pAddressbook.addPerson(person);
+		
+		FileOutputStream out = new FileOutputStream("d:/test-protobuf.txt");
+		pAddressbook.build().writeTo(out);
+		out.close();
+		
+	}
+}
+
+</pre>
+
+<p>
+从文件中反序列化一个对象：
+</p>
+<pre class="brush:java">
+public class ReadTest {
+
+	public static void main(String[] args) throws FileNotFoundException, IOException {
+		AddressBook addressBook = AddressBook.parseFrom(new FileInputStream("d:/test.txt"));
+		
+		for (Person person : addressBook.getPersonList()) {
+			System.out.println("person id:"+person.getId());
+			
+			System.out.println("person name:"+person.getName());
+			
+			System.out.println("person email:"+person.getEmail());
+			
+			for (PhoneNumber num : person.getPhoneList()) {
+				switch (num.getType()){
+				case MOBILE:
+					System.out.print(" mobile number:");
+					break;
+				case WORK:
+					System.out.print(" work number:");
+					break;
+				case HOME:
+					System.out.print(" home number:");
+					break;
+				default:
+					System.out.print("error type number:");
+				}
+				
+				System.out.println(num.getNumber());
+			}
+		}
+	}
+}
+</pre>
+<hr />
+<p>
+<code>日期</code>：2014-05-21
+</p>
+
+<p>
+<code>参考资料</code>：<a href="https://developers.google.com/protocol-buffers/docs/javatutorial">protobuf java tutorial</a>、<a href="http://www.ibm.com/developerworks/cn/linux/l-cn-gpb/">Google Protocol Buffer 的使用和原理</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

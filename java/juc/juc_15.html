@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>java基础复习1-Object对象</title>
+    <title>Java中的Copy-On-Write容器</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
 	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
@@ -34,45 +34,16 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
 
-<div class="toc">
-<ul>
-<li><a href="#toc_0.1">Object</a>
-</ul>
-</ul>
-</div>
-<h2 id="toc_0.1">Object</h2>
-<p>
-类Object是所有类的父类。所有对象包括数据都实习了这个类的方法。现在我们一一分析一下Object的方法。
-</p>
-<ul>
-<li>
-<code>clone</code>：protected Object clone() throws CloneNotSupportedException
 
-</ul>
-<p>
-创建并返回该对象的副本，该方法执行的是“浅复制”。如果对象的类不支持Cloneable接口，则会抛出CloneNotSupportedException的异常。
-</p>
-<ul>
-<li>
-<code>equals</code>：public boolean equals(Object obj)
 
-</ul>
-<p>
-指示其他某个对象是否与此对象相等。当此方法被重写时，通常要重写hashCode方法，以保证相等的对象必须有相等的哈希码。
-</p>
-<ul>
-<li>
-<code>finalize</code>：JVM保证调用finalize方法前，这个对象时不可达的，但JVM不保证这个函数一定会被调用。另外还保证它最多 <strong>运行一次</strong> 。所以尽量还是不要用它了，用的时候要避免 <strong>对象再生</strong> 。实现保证对象彻底被销毁的动作时，只能依赖java.lang.ref包。
 
-</ul>
- 
 <hr />
 <p>
-<code>日期</code>：2013-04-11、2014-05-28 
+<code>日期</code>：2014-05-22
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://www.iteye.com/topic/484934">深入理解java的finalize</a>、<a href="http://stackoverflow.com/questions/2506488/java-finalize-method-call">Java Finalize method call</a>、<a href="http://www.ibm.com/developerworks/cn/java/l-JavaMemoryLeak2/">垃圾收集器与Java编程</a>
+<code>参考资料</code>：<a href="http://ifeve.com/java-copy-on-write/">聊聊并发-Java中的Copy-On-Write容器</a>
 </p>
 
       </section>
