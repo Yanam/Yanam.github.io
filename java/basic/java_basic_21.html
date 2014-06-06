@@ -47,7 +47,18 @@
 </ul>
 <li><a href="#toc_0.1.2">实现类</a>
 <ul>
-<li><a href="#toc_0.1.2.1">ConcurrentLinkedDeque</a>
+<li><a href="#toc_0.1.2.1">LinkedList</a>
+<li><a href="#toc_0.1.2.2">ConcurrentLinkedDeque</a>
+<li><a href="#toc_0.1.2.3">ArrayDeque</a>
+<li><a href="#toc_0.1.2.4">LinkedBlockingDeque</a>
+<li><a href="#toc_0.1.2.5">PriorityQueue</a>
+<li><a href="#toc_0.1.2.6">PriorityBlockingQueue</a>
+<li><a href="#toc_0.1.2.7">ArrayBlockingQueue</a>
+<li><a href="#toc_0.1.2.8">DelayQueue</a>
+<li><a href="#toc_0.1.2.9">LinkedBlockingQueue</a>
+<li><a href="#toc_0.1.2.10">SynchronousQueue</a>
+<li><a href="#toc_0.1.2.11">LinkedTransferQueue</a>
+<li><a href="#toc_0.1.2.12">ConcurrentLinkedQueue</a>
 </ul>
 </ul>
 </ul>
@@ -256,9 +267,21 @@ hasWaitingConsumer()：是否有至少一个消费者在等待接收元素
 </ol>
  
 <h3 id="toc_0.1.2">实现类</h3>
-<h4 id="toc_0.1.2.1">ConcurrentLinkedDeque</h4>
+<h4 id="toc_0.1.2.1">LinkedList</h4>
 <p>
-<code>ConcurrentLinkedDeque</code>基于双向链表（doubly-linked）的 <strong>无界并发</strong> Deque接口实现。
+<code>LinkedList</code>也实现了Deque接口！
+</p>
+<h4 id="toc_0.1.2.2">ConcurrentLinkedDeque</h4>
+<p>
+Java7新增的类。
+</p>
+
+<p>
+<code>java.util.concurrent.ConcurrentLinkedDeque</code>基于双向链表（doubly-linked）的 <strong>无界并发</strong> Deque接口实现。
+</p>
+
+<p>
+该类支持 <strong>多线程并发</strong> 修改和访问操作
 </p>
 
 <p>
@@ -266,9 +289,294 @@ hasWaitingConsumer()：是否有至少一个消费者在等待接收元素
 </p>
 
 
+<h4 id="toc_0.1.2.3">ArrayDeque</h4>
+<p>
+<code>ArrayDeque</code>基于可变长数组实现的Deque接口， <strong>非线程安全的</strong> 。
+</p>
+
+<p>
+该类在用作堆栈(stack)时比Stack类快，用作队列(Queue)时比LinkedList快。
+</p>
+
+<p>
+ArrayDeque源码：
+</p>
+<pre class="brush:java">
+    // 数组
+    transient Object[] elements; // non-private to simplify nested class access
+
+    // 头尾用的数组的索引值
+    transient int head;
+
+    transient int tail;
+</pre>
+
+<h4 id="toc_0.1.2.4">LinkedBlockingDeque</h4>
+<p>
+<code>java.util.concurrent.LinkedBlockingDeque</code>可选大小的，基于双向链表(doubly-linked)实现的BlockingDeque接口。
+</p>
+
+<p>
+LinkedBlockingDeque源码：
+</p>
+<pre class="brush:java">
+    /**
+    *  由单锁保护的双向链表和使用condition管理的阻塞实现的（翻译不过来啊，感觉还不如直接看英文）
+    *
+    */
+    // 定义了双向链表的节点
+    static final class Node&lt;E&gt; {
+
+        E item;
+
+        Node&lt;E&gt; prev;
+
+        Node&lt;E&gt; next;
+
+        Node(E x) {
+            item = x;
+        }
+    }
+
+
+    transient Node&lt;E&gt; first;
+
+    transient Node&lt;E&gt; last;
+
+    
+    private transient int count;
+
+   
+    private final int capacity;
+
+    // 一个重入锁，所有访问都用的这个锁
+    final ReentrantLock lock = new ReentrantLock();
+
+    // 定义了两个条件，阻塞就靠它俩了
+    private final Condition notEmpty = lock.newCondition();
+
+    private final Condition notFull = lock.newCondition();
+
+    // 可以看到阻塞操作使用Condition实现的
+    public E takeFirst() throws InterruptedException {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            E x;
+            while ( (x = unlinkFirst()) == null)
+                notEmpty.await();
+            return x;
+        } finally {
+            lock.unlock();
+        }
+    }
+</pre>
+<h4 id="toc_0.1.2.5">PriorityQueue</h4>
+<p>
+<code>PriorityQueue</code>基于优先级堆的无界优先级队列，继承自AbstractQueue类。默认按自然顺序排序，可以在构造时传入 <strong>Comparator</strong> 进行自定义。队列的 <strong>头</strong> 是按指定排序方式确定的 <strong>最小</strong> 元素。
+</p>
+
+<p>
+PriorityQueue源码：
+</p>
+<pre class="brush:java">
+    //直接看源码的注释吧
+    /**
+     * Priority queue represented as a balanced binary heap: the two
+     * children of queue[n] are queue[2*n+1] and queue[2*(n+1)].  The
+     * priority queue is ordered by comparator, or by the elements'
+     * natural ordering, if comparator is null: For each node n in the
+     * heap and each descendant d of n, n &lt;= d.  The element with the
+     * lowest value is in queue[0], assuming the queue is nonempty.
+     */
+    transient Object[] queue; 
+</pre>
+
+
+<h4 id="toc_0.1.2.6">PriorityBlockingQueue</h4>
+<p>
+<code>java.util.concurrent.PriorityBlockingQueue</code>基于优先级堆实现的无界优先级BlockingQueue接口，的和PriotityQueue的区别在于所有公共方法都是用一个锁保护的。但是resize操作时用的一个自旋锁(spinlock)来保证并发，阻塞操作是靠Condition实现的。
+</p>
+
+<p>
+PriorityBlockingQueue源码：
+</p>
+<pre class="brush:java">
+    // 和ProrityQueue结构一下
+    private transient Object[] queue;
+
+    private transient int size;
+
+    private transient Comparator&lt;? super E&gt; comparator;
+
+    // 和PriotityQueue的区别就在于它有锁（所有公共方法都使用该锁）跟Condition
+    private final ReentrantLock lock;
+
+    private final Condition notEmpty;
+	
+    /**
+     * Tries to grow array to accommodate at least one more element
+     * (but normally expand by about 50%), giving up (allowing retry)
+     * on contention (which we expect to be rare). Call only while
+     * holding lock.
+     *
+     * @param array the heap array
+     * @param oldCap the length of the array
+     */
+    private void tryGrow(Object[] array, int oldCap) {
+        lock.unlock(); // must release and then re-acquire main lock
+        Object[] newArray = null;
+        if (allocationSpinLock == 0 &amp;&amp;
+            UNSAFE.compareAndSwapInt(this, allocationSpinLockOffset,
+                                     0, 1)) {
+            try {
+                int newCap = oldCap + ((oldCap &lt; 64) ?
+                                       (oldCap + 2) : // grow faster if small
+                                       (oldCap &gt;&gt; 1));
+                if (newCap - MAX_ARRAY_SIZE &gt; 0) {    // possible overflow
+                    int minCap = oldCap + 1;
+                    if (minCap &lt; 0 || minCap &gt; MAX_ARRAY_SIZE)
+                        throw new OutOfMemoryError();
+                    newCap = MAX_ARRAY_SIZE;
+                }
+                if (newCap &gt; oldCap &amp;&amp; queue == array)
+                    newArray = new Object[newCap];
+            } finally {
+                allocationSpinLock = 0;
+            }
+        }
+        if (newArray == null) // back off if another thread is allocating
+            Thread.yield();
+        lock.lock();
+        if (newArray != null &amp;&amp; queue == array) {
+            queue = newArray;
+            System.arraycopy(array, 0, newArray, 0, oldCap);
+        }
+    }	
+</pre>
+
+<h4 id="toc_0.1.2.7">ArrayBlockingQueue</h4>
+<p>
+<code>java.util.concurrent.ArrayBlockingQueue</code>基于数组实现的有界BlockingQueue接口，它按 <strong>先进先出(FIFO)</strong> 顺序进行排序。队列头部存放时间最长的元素。
+</p>
+
+<p>
+ArrayBlockingQueue源码：
+</p>
+<pre class="brush:java">
+    // 源码也不用解释了，结构一目了然
+    /** The queued items */
+    final Object[] items;
+
+    /** items index for next take, poll, peek or remove */
+    int takeIndex;
+
+    /** items index for next put, offer, or add */
+    int putIndex;
+
+    /** Number of elements in the queue */
+    int count;
+
+    /*
+     * Concurrency control uses the classic two-condition algorithm
+     * found in any textbook.
+     */
+
+    /** Main lock guarding all access */
+    final ReentrantLock lock;
+
+    /** Condition for waiting takes */
+    private final Condition notEmpty;
+
+    /** Condition for waiting puts */
+    private final Condition notFull;
+</pre>
+
+<h4 id="toc_0.1.2.8">DelayQueue</h4>
+<p>
+<code>java.util.concurrent.DelayQueue</code>基于PriorityQueue实现的无界BlockingQueue接口，里面存放的元素必须实现了Delayed接口，只有延迟期满时才能从中提取元素。
+</p>
+
+<p>
+DelayQueue源码：
+</p>
+<pre class="brush:java">
+
+</pre>
+<h4 id="toc_0.1.2.9">LinkedBlockingQueue</h4>
+<p>
+<code>java.util.concurrent.LinkedBlockingQueue</code>基于单向链表实现的可选大小的BlockingQueue接口，队列中元素按照先进先出(FIFO)排列，队列头部存放时间最长的元素。
+</p>
+
+<p>
+LinkedBlockingQueue源码：
+</p>
+<pre class="brush:java">
+    /**
+    *  可以看到实现是靠的单向链表和双锁
+    */
+    static class Node&lt;E&gt; {
+        E item;
+        Node&lt;E&gt; next;
+        Node(E x) { item = x; }
+    }
+
+    private final int capacity;
+
+    private final AtomicInteger count = new AtomicInteger();
+
+
+    transient Node&lt;E&gt; head;
+
+    private transient Node&lt;E&gt; last;
+
+    /** Lock held by take, poll, etc */
+    private final ReentrantLock takeLock = new ReentrantLock();
+
+    /** Wait queue for waiting takes */
+    private final Condition notEmpty = takeLock.newCondition();
+
+    /** Lock held by put, offer, etc */
+    private final ReentrantLock putLock = new ReentrantLock();
+
+    /** Wait queue for waiting puts */
+    private final Condition notFull = putLock.newCondition();
+</pre>
+
+<h4 id="toc_0.1.2.10">SynchronousQueue</h4>
+<p>
+<code>java.util.concurrent.SynchronousQueue</code>实现的BlockingQueue接口，它的每个插入操作必须等待另一个线程的对应移除操作，反之亦然。它没有任何内部容量。
+</p>
+
+<p>
+SynchronousQueue源码：
+</p>
+<pre class="brush:java">
+// 它采用了一种无锁算法“dual stack and dual queue”，支持公平和非公平两种模式，公平模式使用fifo queue，它支持更大的吞吐量；非公平模式使用lifo stack，它支持大的并发。
+
+</pre>
+<h4 id="toc_0.1.2.11">LinkedTransferQueue</h4>
+<p>
+Java7添加的类
+</p>
+
+<p>
+<code>java.util.concurrent.LinkedTransferQueue</code>基于单向链表实现的无界TransferQueue接口，队列的元素按先进先出(FIFO)排序，队列头部存放时间最长的元素。
+</p>
+
+<p>
+和大部分集合类不同，它的size操作不是固定时间的，而且批量操作也不保证原子性。
+</p>
+
+<h4 id="toc_0.1.2.12">ConcurrentLinkedQueue</h4>
+<p>
+<code>java.util.concurrent.ConcurrentLinkedQueue</code>基于单向链表实现的无界线程安全Queue接口，队列中元素按先进先出(FIFO)排序，队列头部存放时间最长的元素。
+</p>
+
+
 <hr />
 <p>
-<code>日期</code>：2014-05-30
+<code>日期</code>：2014-05-30、2014-06-03
 </p>
 
       </section>
