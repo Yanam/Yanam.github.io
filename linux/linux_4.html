@@ -73,6 +73,10 @@
 <li><a href="#toc_0.0.8">pidstat</a>
 <li><a href="#toc_0.0.9">top</a>
 <li><a href="#toc_0.0.10">lsof</a>
+<ul>
+<li><a href="#toc_0.0.10.1">查看网络连接</a>
+<li><a href="#toc_0.0.10.2">查看用户、程序相关</a>
+</ul>
 </ul>
 </ul>
 </ul>
@@ -396,13 +400,51 @@ procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
 <h3 id="toc_0.0.8">pidstat</h3>
 <h3 id="toc_0.0.9">top</h3>
 <h3 id="toc_0.0.10">lsof</h3>
+<p>
+<code>lsof(list open files)</code>：它是一个列出当前系统打开文件的工具。
+</p>
+
+<h4 id="toc_0.0.10.1">查看网络连接</h4>
+<pre class="brush:shell">
+# 列出所有网络连接
+$ lsof -i 
+
+# 列出所有tcp网络连接
+$ lsof -i tcp 
+
+# 列出使用 某个端口 的进程
+$ lsof -i :8080 
+
+# 列出 某个ip 的连接
+$ lsof -i @192.168.1.10 
+# 与这个类似
+$ lsof -i |grep 192.168.1.10
+</pre>
+
+<h4 id="toc_0.0.10.2">查看用户、程序相关</h4>
+<pre class="brush:shell">
+# 列出 某个用户 打开的所有文件
+$ lsof -u root 
+
+# 列出 某个程序 打开的所有文件
+$ lsof -c java 
+
+# 列出 某个用户以及某个进程 打开的文件 
+$ lsof -a -u root -c java 
+
+# 列出 某个pid 打开的文件
+$ lsof -p 1231 
+
+# 列出谁在使用 某个文件
+$ lsof /home/temp.txt 
+</pre>
 <hr />
 <p>
-<code>日期</code>：2014-04-28
+<code>日期</code>：2014-04-28、2014-06-13
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://www.cnblogs.com/peida/archive/2012/12/31/2840241.html">每天一个linux命令（48）：watch命令</a>、<a href="http://blog.sina.com.cn/s/blog_3dbab2840100j4ey.html">mpstat使用详解 </a>、<a href="http://www.cnblogs.com/stephen-liu74/archive/2011/12/05/2257887.html">和系统运行状况相关的Shell命令</a>、<a href="http://www.taobaotesting.com/blogs/qa?bid=2265">linux命令free详解</a>、<a href="http://os.51cto.com/art/201004/193160.htm">Linux系统内存监控全面讲解：free命令</a>、<a href="http://www.cnblogs.com/ggjucheng/archive/2012/01/05/2312625.html">Linux vmstat命令实战详解</a>
+<code>参考资料</code>：<a href="http://www.cnblogs.com/peida/archive/2012/12/31/2840241.html">每天一个linux命令（48）：watch命令</a>、<a href="http://blog.sina.com.cn/s/blog_3dbab2840100j4ey.html">mpstat使用详解 </a>、<a href="http://www.cnblogs.com/stephen-liu74/archive/2011/12/05/2257887.html">和系统运行状况相关的Shell命令</a>、<a href="http://www.taobaotesting.com/blogs/qa?bid=2265">linux命令free详解</a>、<a href="http://os.51cto.com/art/201004/193160.htm">Linux系统内存监控全面讲解：free命令</a>、<a href="http://www.cnblogs.com/ggjucheng/archive/2012/01/05/2312625.html">Linux vmstat命令实战详解</a>、<a href="http://www.cnblogs.com/wangkangluo1/archive/2012/04/18/2454916.html">lsof 常用命令</a>
 </p>
 
       </section>
