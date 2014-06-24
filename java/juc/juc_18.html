@@ -1,0 +1,273 @@
+<html>
+<head>
+    <title>Fork/Join框架</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.0.1">简介</a>
+<li><a href="#toc_0.0.2">示例</a>
+<li><a href="#toc_0.0.3">内部实现分析</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h3 id="toc_0.0.1">简介</h3>
+<p>
+<code>Fork/Join</code>框架是自Java7引入的，它通过分治技术(Divide and Conquer Technique)将问题分拆成小任务。
+</p>
+
+<p>
+这个框架基于以下两个操作：
+</p>
+<ol>
+<li>
+<code>分解(Fork)</code>：也就是分隔任务
+
+<li>
+<code>合并(Join)</code>：也就是合并结果
+
+</ol>
+
+<p>
+<img src="images/fork_join_1.jpg" />
+</p>
+
+<p>
+该框架的核心是由两个类组成：
+</p>
+<ol>
+<li>
+<code>ForkJoinPool</code>：该类实现了ExecutorService接口 和 <strong>工作窃取算法(work-stealing algorithm)</strong> 。它的作用在于管理工作者线程，并提供任务的状态信息。
+
+<li>
+<code>ForkJoinTask</code>：它是在ForkJoinPool中执行的任务的基类。它有两个子类：
+
+<ul>
+<li>
+<code>RecursiveAction</code>：用于任务没有返回结果的场景 
+
+<li>
+<code>RecursiveTask</code>：用于任务有返回结果的场景
+
+</ul>
+</ol>
+   
+<p>
+<img src="images/fork_join_3.png" />
+</p>
+   
+<h3 id="toc_0.0.2">示例</h3>
+<p>
+同步执行任务：
+</p>
+<pre class="brush:java">
+public class RecursiveTaskTest {
+
+	public static void main(String[] args) {
+		ForkJoinPool pool = new ForkJoinPool();
+		RecursiveTask&lt;Long&gt; task = new SumTask3(0,1000000000);
+		pool.execute(task);
+		while(!task.isDone()){
+			System.out.println("待处理任务数："+pool.getQueuedTaskCount());
+			System.out.println("活跃线程数："+pool.getActiveThreadCount());
+			System.out.println("运行线程数："+pool.getRunningThreadCount());
+			System.out.println("任务窃取数："+pool.getStealCount());
+		}
+		try {
+			System.out.println("并行累加结果为："+task.get());
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		}  finally {
+			pool.shutdown();
+		}
+		long result1=0;
+		for (int i = 0; i &lt;= 1000000000; i++) {
+			result1+=i;
+		}
+		System.out.println("单线程累加结果为："+result1);
+	}
+}
+
+class SumTask3 extends RecursiveTask&lt;Long&gt;{
+	private static final long serialVersionUID = 1L;
+	
+	private int start;
+	private int end;
+	
+	public SumTask3(int start, int end) {
+		super();
+		this.start = start;
+		this.end = end;
+	}
+
+	@Override
+	protected Long compute() {
+		long result = 0;
+		if(end-start&lt;1000){
+			for (int i=start;i&lt;=end;i++){
+				result+=i;
+			}
+		}else{
+			int mid = (start+end)/2;
+			
+			RecursiveTask&lt;Long&gt; task1 = new SumTask3(start, mid);
+			RecursiveTask&lt;Long&gt; task2 = new SumTask3(mid+1, end);
+			invokeAll(task1,task2);	
+			try {
+				result = task1.get()+task2.get();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+			}
+		}
+		return result;
+	}
+}
+</pre>
+
+<p>
+异步执行任务：
+</p>
+<pre class="brush:java">
+public class RecursiveTaskTest {
+
+	public static void main(String[] args) {
+		ForkJoinPool pool = new ForkJoinPool();
+		RecursiveTask&lt;Long&gt; task = new SumTask(0,1000000000);
+		pool.execute(task);
+		while(!task.isDone()){
+			System.out.println("待处理任务数："+pool.getQueuedTaskCount());
+			System.out.println("活跃线程数："+pool.getActiveThreadCount());
+			System.out.println("运行线程数："+pool.getRunningThreadCount());
+			System.out.println("任务窃取数："+pool.getStealCount());
+		}
+		try {
+			System.out.println("并行累加结果为："+task.get());
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		}  finally {
+			pool.shutdown();
+		}
+		long result1=0;
+		for (int i = 0; i &lt;= 1000000000; i++) {
+			result1+=i;
+		}
+		System.out.println("单线程累加结果为："+result1);
+	}
+}
+
+class SumTask extends RecursiveTask&lt;Long&gt;{
+	private static final long serialVersionUID = 1L;
+	
+	private int start;
+	private int end;
+	
+	public SumTask(int start, int end) {
+		super();
+		this.start = start;
+		this.end = end;
+	}
+
+	@Override
+	public Long compute() {//方法重写时，把访问权限改成了public
+		long result = 0;
+		if(end-start&lt;1000){
+			for (int i=start;i&lt;=end;i++){
+				result+=i;
+			}
+		}else{
+			int mid = (start+end)/2;
+			
+			SumTask task1 = new SumTask(start, mid);
+			SumTask task2 = new SumTask(mid+1, end);
+			task1.fork();
+			long right = task2.compute();		//注意compute 和 fork的调用顺序，错了就不能并行执行了
+			long left = task1.join();		
+			result = right+left;
+
+// 另一种方式
+//			SumTask2 task1 = new SumTask2(start, mid);
+//			SumTask2 task2 = new SumTask2(mid+1, end);
+//			task1.fork();
+//			task2.fork();
+//			long right = task2.join();
+//			long left = task1.join();		
+//			result = right+left;
+		}
+		return result;
+	}
+}
+</pre>
+
+<p>
+注意事项：
+</p>
+<ol>
+<li>
+注意fork和compute的调用顺序
+
+<li>
+除非想要顺序执行，否则不要在RecursiveTask和RecursiveAction内执行invoke方法。
+
+<li>
+由于多方面的原因，并行计算的效率可能会低于你的预期
+
+</ol>
+
+<h3 id="toc_0.0.3">内部实现分析</h3>
+<p>
+待完成
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2014-06-20
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.infoq.com/cn/articles/fork-join-introduction">聊聊并发（八）——Fork/Join框架介绍</a>、<a href="http://ifeve.com/java7-concurrency-cookbook-4/">《Java 7并发编程实战手册》第五章Fork/Join框架</a>、<a href="http://homes.cs.washington.edu/~djg/teachingMaterials/spac/grossmanSPAC_forkJoinFramework.html">Beginner's Introduction to Java's ForkJoin Framework</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

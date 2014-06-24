@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>java基础复习1-Object对象</title>
+    <title>Object、Thread类</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
 	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
@@ -36,11 +36,16 @@
 
 <div class="toc">
 <ul>
-<li><a href="#toc_0.1">Object</a>
+<li><a href="#toc_0.0.1">Object</a>
+<li><a href="#toc_0.0.2">Thread</a>
+<ul>
+<li><a href="#toc_0.0.2.1">Thread.State</a>
+</ul>
+</ul>
 </ul>
 </ul>
 </div>
-<h2 id="toc_0.1">Object</h2>
+<h3 id="toc_0.0.1">Object</h3>
 <p>
 类Object是所有类的父类。所有对象包括数据都实习了这个类的方法。现在我们一一分析一下Object的方法。
 </p>
@@ -66,13 +71,72 @@
 
 </ul>
  
-<hr />
+<h3 id="toc_0.0.2">Thread</h3>
+<ul>
+<li>
+<code>join()</code>：等待该线程终止
+<pre class="brush:java">
+public class JoinTest {
+
+	public static void main(String[] args) {
+		Thread thread = new Thread(new Runnable(){
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		thread.start();
+		//等待子线程执行结束
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("finish");
+	}
+}
+</pre>
+
+<li>
+<code>yield()</code>：直接看这个吧<a href="http://stackoverflow.com/questions/6979796/what-are-the-main-uses-of-yield-and-how-does-it-differ-from-join-and-interr">What are the main uses of yield()</a>
+
+</ul>
+<h4 id="toc_0.0.2.1">Thread.State</h4>
 <p>
+线程状态。线程可以处于一下状态：
+</p>
+<ul>
+<li>
+<code>NEW</code>：尚未启动的  线程处于该状态
+
+<li>
+<code>RUNNABLE</code>：正在执行的  线程处于该状态
+
+<li>
+<code>BLOCKED</code>：受阻塞并且等待某个监视器锁的  线程处于该状态
+
+<li>
+<code>WAITING</code>：无限期地等待另一个线程来执行某一特定操作的 线程处于该状态
+
+<li>
+<code>TIMED_WAITING</code>：具有指定等待时间的某一等待线程的线程状态
+
+<li>
+<code>TERMINATED</code>：已经退出的  线程处于该状态
+
+</ul>
+<p>
+还是看<a href="http://docs.oracle.com/javase/7/docs/api/">api</a>更清楚 
+<hr />
 <code>日期</code>：2013-04-11、2014-05-28 
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://www.iteye.com/topic/484934">深入理解java的finalize</a>、<a href="http://stackoverflow.com/questions/2506488/java-finalize-method-call">Java Finalize method call</a>、<a href="http://www.ibm.com/developerworks/cn/java/l-JavaMemoryLeak2/">垃圾收集器与Java编程</a>
+<code>参考资料</code>：<a href="http://www.iteye.com/topic/484934">深入理解java的finalize</a>、<a href="http://stackoverflow.com/questions/2506488/java-finalize-method-call">Java Finalize method call</a>、<a href="http://www.ibm.com/developerworks/cn/java/l-JavaMemoryLeak2/">垃圾收集器与Java编程</a>、<a href="http://www.tutorialspoint.com/java/lang/java_lang_thread.htm">http://www.tutorialspoint.com/java/lang/java_lang_thread.htm</a>
 </p>
 
       </section>

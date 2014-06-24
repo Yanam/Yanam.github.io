@@ -1,0 +1,353 @@
+<html>
+<head>
+    <title>Executor Framework</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.0.1">前言</a>
+<li><a href="#toc_0.0.2">线程池</a>
+<ul>
+<li><a href="#toc_0.0.2.1">Executor接口</a>
+<li><a href="#toc_0.0.2.2">ExecutorService接口</a>
+<li><a href="#toc_0.0.2.3">ScheduledExecutorService接口</a>
+<li><a href="#toc_0.0.2.4">ThreadPoolExecutor类</a>
+<li><a href="#toc_0.0.2.5">ForkJoinPool类</a>
+<li><a href="#toc_0.0.2.6">ScheduledThreadPoolExecutor类</a>
+<li><a href="#toc_0.0.2.7">Executors类</a>
+</ul>
+<li><a href="#toc_0.0.3">合理配置线程池大小</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h3 id="toc_0.0.1">前言</h3>
+<p>
+<code>Executor Framework（执行器框架）</code>是自Java5引入，它将任务的创建和执行进行了分离，通过该框架，只需要实现Runnable接口的对象和使用Executor对象，然后将Runnable对象发给执行器。执行器负责运行这些任务的线程操作（创建、管理、结束等）
+</p>
+
+<h3 id="toc_0.0.2">线程池</h3>
+<p>
+线程池的好处多多，什么降低资源消耗啊，提高响应速度啊等等。JDK 1.5新增了一下类和结构来方便我们创建线程池，有原厂的，再也不用自己造轮子啦。
+</p>
+
+<p>
+类图如下：
+<img src="images/threadpool_1.png" />
+</p>
+
+<h4 id="toc_0.0.2.1">Executor接口</h4>
+<p>
+<code>Executor</code> 该接口提供一种将 任务提交 和 任务如何运行的机制（如线程使用的细节、调度等）解耦的方法。
+</p>
+<blockquote>
+建议使用Executor而不是显示创建线程。
+</blockquote>
+
+<p>
+示例：
+</p>
+<pre class="brush:java">
+public class ExecutorTest {
+
+	public static void main(String[] args) throws InterruptedException {
+		/**
+		 * 该接口并未有要求一定是异步执行
+		 */
+		Executor tempExecutor = new Executor(){
+			@Override
+			public void execute(Runnable command) {
+				//在当前线程中执行
+				command.run();
+				//新创建线程执行
+				new Thread(command).start();
+			}
+			
+		};
+		
+		tempExecutor.execute(new Runnable(){
+			@Override
+			public void run() {
+				System.out.println("1");
+			}
+			
+		});
+		
+		Thread.sleep(Integer.MAX_VALUE);
+	}
+}
+</pre>
+
+<h4 id="toc_0.0.2.2">ExecutorService接口</h4>
+<p>
+<code>ExecutorService</code> 继承自Executor接口，描述了在后台异步执行任务的方法，这让它看起来很像线程池，而且它在concurrent的实现也的确是个线程池。它定义了两类方法：
+</p>
+<ol>
+<li>
+关闭ExecutorService的方法，将导致其拒绝接受新任务。
+
+<ul>
+<li>
+shutdown() 终止前允许执行以前提交的任务
+
+<li>
+shutdownNuow() 阻止等待任务启动，并试图停止正在执行的任务。
+
+</ul>
+<li>
+提交Runnable/Callable 任务后返回Future来跟踪结果的方法。
+
+<ul>
+<li>
+提交单个任务的submit系列方法 
+
+<li>
+提交批量任务的invoke系列方法
+
+</ul>
+</ol>
+   
+<h4 id="toc_0.0.2.3">ScheduledExecutorService接口</h4>
+<p>
+<code>ScheduledExecutorService</code> 继承自ExecutorService ,定义了执行给定延迟后运行的任务和定期执行任务的方法
+</p>
+<h4 id="toc_0.0.2.4">ThreadPoolExecutor类</h4>
+<p>
+<code>ThreadPoolExecutor</code> 
+</p>
+
+<p>
+内部结构如图：
+<img src="images/threadpool_2.png" />
+</p>
+
+<p>
+对应的程序源码：
+</p>
+<pre class="brush:java">
+    private final BlockingQueue&lt;Runnable&gt; workQueue;
+	
+    private volatile int corePoolSize;
+
+    private volatile int maximumPoolSize;
+
+    public void execute(Runnable command) {
+        if (command == null)
+            throw new NullPointerException();
+
+		 // 第一步：如果线程数&lt; corePoolSize 就new一个线程运行该任务
+        int c = ctl.get();
+        if (workerCountOf(c) &lt; corePoolSize) {
+            if (addWorker(command, true))
+                return;
+            c = ctl.get();
+        }
+		// 第二步：如果成功入队列，在进行二次检测
+        if (isRunning(c) &amp;&amp; workQueue.offer(command)) {
+            int recheck = ctl.get();
+            if (! isRunning(recheck) &amp;&amp; remove(command))
+                reject(command);
+            else if (workerCountOf(recheck) == 0)
+                addWorker(null, false);
+        }
+		// 第三步：如果不能入队，我们尝试new一个新的线程，如果失败了，就拒绝该任务
+        else if (!addWorker(command, false))
+            reject(command);
+    }
+
+	/**
+	* 可以看到addWoker的目的就是new 一个Thread然后运行它
+	*/
+    private boolean addWorker(Runnable firstTask, boolean core) {
+        retry:
+        for (;;) {
+            int c = ctl.get();
+            int rs = runStateOf(c);
+
+            // Check if queue empty only if necessary.
+            if (rs &gt;= SHUTDOWN &amp;&amp;
+                ! (rs == SHUTDOWN &amp;&amp;
+                   firstTask == null &amp;&amp;
+                   ! workQueue.isEmpty()))
+                return false;
+
+            for (;;) {
+                int wc = workerCountOf(c);
+                if (wc &gt;= CAPACITY ||
+                    wc &gt;= (core ? corePoolSize : maximumPoolSize))
+                    return false;
+                if (compareAndIncrementWorkerCount(c))
+                    break retry;
+                c = ctl.get();  // Re-read ctl
+                if (runStateOf(c) != rs)
+                    continue retry;
+                // else CAS failed due to workerCount change; retry inner loop
+            }
+        }
+
+        Worker w = new Worker(firstTask);
+        Thread t = w.thread;
+
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try {
+            int c = ctl.get();
+            int rs = runStateOf(c);
+
+            if (t == null ||
+                (rs &gt;= SHUTDOWN &amp;&amp;
+                 ! (rs == SHUTDOWN &amp;&amp;
+                    firstTask == null))) {
+                decrementWorkerCount();
+                tryTerminate();
+                return false;
+            }
+
+            workers.add(w);
+
+            int s = workers.size();
+            if (s &gt; largestPoolSize)
+                largestPoolSize = s;
+        } finally {
+            mainLock.unlock();
+        }
+
+        t.start();
+        if (runStateOf(ctl.get()) == STOP &amp;&amp; ! t.isInterrupted())
+            t.interrupt();
+
+        return true;
+    }
+
+</pre>
+
+
+<p>
+从API文档可以看到，BlockingQueue是用于传输和保持提交的任务。
+它有三种排队策略：
+</p>
+<ol>
+<li>
+<code>直接提交</code>：默认选项是SynchronousQueue，由于它的特性，它将任务直接交给线程而不保持它们。
+
+<li>
+<code>无界队列</code>：默认选项是LinkedBlockingQueue，创建的线程数不会超过corePoolSize（maximumPoolSize也就无效了），将导致所有corePoolSize线程都忙时新任务会在队列中等待。
+
+<li>
+<code>有界队列</code>：默认选项是ArrayBlockingQueue，当使用有限的maximumPoolSizes时，有助于防止资源耗尽。
+
+</ol>
+
+<h4 id="toc_0.0.2.5">ForkJoinPool类</h4>
+<p>
+<code>ForkJoinPool</code>
+</p>
+<h4 id="toc_0.0.2.6">ScheduledThreadPoolExecutor类</h4>
+<p>
+<code>ScheduleThreadPoolExecutor</code>
+</p>
+<h4 id="toc_0.0.2.7">Executors类</h4>
+<p>
+<code>Executors</code> 一个工具类，实现了用以创建并返回 ExecutorService、SecheduledExecutorService、ThreadFactory、Callale的方法。
+</p>
+
+<p>
+它内部其实是通过调用上面的实现类：ScheduledThreadPool、ThreadPoolExecutor、ForkJoinPool来实现的。
+</p>
+
+<p>
+源码：
+</p>
+<pre class="brush:java">
+    /**
+	* 创建一个可重用的固定大小的线程池，
+	* 当新来的任务没有线程可用时就放入队列等待，
+	* 当有的线程执行时发生异常挂掉了，会有新的线程补上，保证线程的个数
+	*/
+	public static ExecutorService newFixedThreadPool(int nThreads) {
+	// 这里内部队列使用的是LinkedBlockingQueue，当线程被沾满后用来存放等待执行的任务
+	// workQueue.offer(command)时，如果队列未满则会入队成功（而它是无限长度的队列），
+        return new ThreadPoolExecutor(nThreads, nThreads,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue&lt;Runnable&gt;());
+    }
+	/**
+	* 创建一个不限制线程个数（需要时就创建）的线程池，
+	* 它会重用池中空闲的线程，如果没有就创建新的，
+	* 线程的有效空闲时间为60秒，之后会被回收
+	*/
+    public static ExecutorService newCachedThreadPool() {
+        // 这里内部队列使用的是SynchronousQueue，
+		// workQueue.offer(command)时，如果线程池中有空闲的就会操作成功然后由以创建过的线程执行，
+		// 如果失败就创建新的线程执行
+        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                      60L, TimeUnit.SECONDS,
+                                      new SynchronousQueue&lt;Runnable&gt;());
+    }
+</pre>
+<h3 id="toc_0.0.3">合理配置线程池大小</h3>
+<ol>
+<li>
+<code>CPU密集型</code> 线程尽可能小，例如N+1 个（N为核数）
+
+<li>
+<code>IO密集型</code> 线程尽可能多，例如2*N 个 （N为核数），因为任务大多在等待IO
+
+</ol>
+<blockquote>
+Java中获得CPU个数的代码为：Runtime.getRuntime().avabilableProcessors()
+</blockquote>
+
+
+<hr />
+<p>
+<code>日期</code>：2014-06-17、2014-06-18
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.infoq.com/cn/articles/java-threadPool">聊聊并发（三）Java线程池的分析和使用</a>、<a href=".html">.html</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

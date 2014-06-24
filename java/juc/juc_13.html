@@ -37,6 +37,14 @@
 <div class="toc">
 <ul>
 <li><a href="#toc_0.1">监视器（monitor）</a>
+<ul>
+<li><a href="#toc_0.1.1">等待/通知机制</a>
+<ul>
+<li><a href="#toc_0.1.1.1">notify()和notifyAll()的区别</a>
+<li><a href="#toc_0.1.1.2">wait()和sleep()的区别</a>
+<li><a href="#toc_0.1.1.3">例子</a>
+</ul>
+</ul>
 </ul>
 </ul>
 </div>
@@ -55,14 +63,142 @@ java Monitor 就像有一间每次之允许一个线程访问的特殊房间的�
 <img src="images/java_monitor.gif" />
 </p>
 
-
-<hr />
+<h3 id="toc_0.1.1">等待/通知机制</h3>
 <p>
-<code>日期</code>：2013-08-12
+<code>等待/通知机制</code>是一种线程间 <strong>通信</strong> 的机制， 一个线程一旦调用了任意对象的wait()方法，就会变为非运行状态，直到另一个线程调用了同一个对象的notify()方法，这样就完成了两个线程间的交互。
+</p>
+
+
+<p>
+java.lang.Object定义了三个方法：wait()、notify()、notifyAll()来实现该机制。
+</p>
+<blockquote>
+为了调用wait()或者notify()方法，线程必须获取那个对象的锁。也就是线程必须在同步块里调用wait()或notify()。
+</blockquote>
+
+
+<h4 id="toc_0.1.1.1">notify()和notifyAll()的区别</h4>
+<p>
+<code>notify()</code>：线程调用一个对象的notify()方法，正在等待该对象的所有线程中将有 <strong>一个</strong> 线程被唤醒，最后也只有这个线程执行完，其他依然在wait。
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://www.artima.com/insidejvm/ed2/threadsynch.html">Chapter 20 of Inside the Java Virtual Machine</a>、<a href="http://bbs.csdn.net/topics/80052746">深入探讨JVM</a>、<a href="http://ifeve.com/java-concurrency-constructs/">Java并发结构</a>
+<code>notifyAll()</code>：线程调用一个对象的notifyAll()方法，正在等待该对象的 <strong>所有</strong> 线程都会被唤醒，但只有一个线程可以退出wait方法（因为要获取锁），但最后所有等待线程都会执行完。
+</p>
+
+<p>
+一旦一个线程被唤醒，不会立刻就退出wait()方法调用，要等到调用notify()的线程对出了自己的同步块，也就是说：
+</p>
+<blockquote>
+被唤醒的线程必须重新获得监视器对象的锁，才可以退出wait()的方法调用，因为wiat方法运行在同步块中。
+</blockquote>
+
+
+<h4 id="toc_0.1.1.2">wait()和sleep()的区别</h4>
+<p>
+<code>wait()</code>：来自Object类，只能在同步块(a block synchronized on the monitor object)中调用，一旦线程调用了wait方法，就会释放所持有的监视器对象的锁。
+</p>
+
+<p>
+<code>sleep()</code>：来自Thread类，可以在任何地方使用，并且不会释放锁。
+</p>
+
+<h4 id="toc_0.1.1.3">例子</h4>
+<pre class="brush:java">
+public class WaitNotifyTest {
+	private boolean flag=false;
+	
+	public boolean isFlag() {
+		return flag;
+	}
+
+	public void setFlag(boolean flag) {
+		this.flag = flag;
+	}
+
+	public static void main(String[] args) throws InterruptedException {
+		WaitNotifyTest t = new WaitNotifyTest();
+		
+		Thread thread1 = new Thread(new WaitTask(t));
+		thread1.setName("waitTask1");
+		thread1.start();
+		Thread thread2 = new Thread(new WaitTask(t));
+		thread2.setName("waitTask2");
+		thread2.start();
+		Thread thread3 = new Thread(new WaitTask(t));
+		thread3.setName("waitTask3");
+		thread3.start();
+		Thread thread4 = new Thread(new NotifyTask(t));
+		thread4.setName("notifyTask1");
+		thread4.start();
+		
+		Thread.sleep(Integer.MAX_VALUE);
+	}
+}
+
+class WaitTask implements Runnable{
+	private WaitNotifyTest t;
+	public WaitTask(WaitNotifyTest t) {
+		this.t = t;
+	}
+	@Override
+	public void run() {
+		synchronized (t) {
+			if(!t.isFlag()){//false就等待
+				try {
+					System.out.println("waittask: "+Thread.currentThread().getName()+" wait");
+					t.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			System.out.println("waittask:  "+Thread.currentThread().getName()+" wake up and set flag = false");
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			t.setFlag(false);
+		}
+	}
+	
+}
+
+class NotifyTask implements Runnable{
+	private WaitNotifyTest t;
+	public NotifyTask(WaitNotifyTest t) {
+		this.t = t;
+	}
+	@Override
+	public void run() {
+		synchronized (t) {
+			if(!t.isFlag()){//false就等待
+				System.out.println("notifytask: "+Thread.currentThread().getName()+" set flag = true");
+				t.setFlag(true);
+			}
+			System.out.println("notifytask: "+Thread.currentThread().getName()+"  notify");
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			t.notify();//  只唤醒一个线程，并且这个线程在获得监视器对象锁后执行，最后结果是：唤醒的线程执行结束，其他线程依然阻塞
+			//t.notifyAll();// 会唤醒所有线程，但只有获得锁的线程能够执行，最后结果是：唤醒的所有线程都执行结束
+		}
+	}
+	
+}
+</pre>
+
+<hr />
+<p>
+<code>日期</code>：2013-08-12、2014-06-16
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.artima.com/insidejvm/ed2/threadsynch.html">Chapter 20 of Inside the Java Virtual Machine</a>、<a href="http://bbs.csdn.net/topics/80052746">深入探讨JVM</a>、<a href="http://ifeve.com/java-concurrency-constructs/">Java并发结构</a>、<a href="http://ifeve.com/thread-signaling/">Java并发性和多线程介绍--线程通信</a>、<a href="http://stackoverflow.com/questions/1036754/difference-between-wait-and-sleep">Difference between wait() and sleep()</a>
 </p>
 
       </section>
