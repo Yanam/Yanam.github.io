@@ -1,0 +1,339 @@
+<html>
+<head>
+    <title>java.util.concurrent包中的工具类</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<ul>
+<li><a href="#toc_0.1.1">CountDownLatch</a>
+<li><a href="#toc_0.1.2">CyclicBarrier</a>
+<li><a href="#toc_0.1.3">Exchanger</a>
+<li><a href="#toc_0.1.4">Phaser</a>
+<li><a href="#toc_0.1.5">Semaphore</a>
+<li><a href="#toc_0.1.6">总结</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<h3 id="toc_0.1.1">CountDownLatch</h3>
+<p>
+<code>CountDownLatch</code>：相当于一个正数计数器（一次性的），初始化的时候设置计数器大小，然后利用它的countDown()方法进行减操作，await()方法进行等待计数器到达0。
+</p>
+
+<p>
+示例：
+</p>
+<pre class="brush:java">
+public class CountDownLatchTest1 {
+
+	public static void main(String[] args) {
+		final CountDownLatch startLatch = new CountDownLatch(1);
+		final CountDownLatch endLatch = new CountDownLatch(3);
+		
+		ExecutorService pool = Executors.newCachedThreadPool();
+		for (int i = 0; i &lt; 3; i++) {
+			pool.submit(new Runnable() {
+				
+				@Override
+				public void run() {
+					try {
+						System.out.println("等待开始信号！");
+						startLatch.await();
+						System.out.println("执行！");
+						Thread.sleep(2000);
+						endLatch.countDown();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			});
+		}
+		
+		try {
+			Thread.sleep(2000);
+			System.out.println("开始！");
+			startLatch.countDown();
+			System.out.println("等待结束信号！");
+			endLatch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("结束！");
+		pool.shutdown();
+	}
+}
+
+</pre>
+
+<p>
+其内部是由继承自AbstractQueuedSynchronizer类的Sync实现的。
+</p>
+
+<h3 id="toc_0.1.2">CyclicBarrier</h3>
+<p>
+<code>CyclicBarrier</code>：它要求一组线程相互等待，直到达到某个公共屏障点(common barrier point)，才能继续往下运行。
+</p>
+<blockquote>
+和CountDownLatch不同的是它可以循环使用，通过reset()
+</blockquote>
+
+<p>
+<img src="images/cyclic-barrier_1.png" />
+</p>
+
+<p>
+示例：
+</p>
+<pre class="brush:java">
+public class CyclicBarrierTest1 {
+
+	public static void main(String[] args) {
+		// Runnable对象在最后一个线程到达后执行该对象
+		final CyclicBarrier barrier1 = new CyclicBarrier(2, new Runnable() {
+			@Override
+			public void run() {
+				System.out.println(Thread.currentThread().getName()+ " barrier1's action executed");
+			}
+		});
+		final CyclicBarrier barrier2 = new CyclicBarrier(2);
+
+		ExecutorService pool = Executors.newCachedThreadPool();
+		for (int i = 0; i &lt; 2; i++) {
+			pool.execute(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(1000);
+						System.out.println(Thread.currentThread().getName()+ " waiting at barrier 1");
+						barrier1.await();
+						Thread.sleep(1000);
+						System.out.println(Thread.currentThread().getName()+ " waiting at barrier 2");
+						barrier2.await();
+						System.out.println(Thread.currentThread().getName()+ " done!");
+					} catch (InterruptedException | BrokenBarrierException e) {
+						e.printStackTrace();
+					}
+				}
+
+			});
+		}
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		pool.shutdown();
+	}
+}
+
+</pre>
+
+
+<h3 id="toc_0.1.3">Exchanger</h3>
+<p>
+<code>Exchanger</code>：可以看做是 <code>SynchronousQueue</code> 的双向形式。线程通过exchange方法将数据传输给伙伴线程，并在返回时得到伙伴线程传输的数据。
+</p>
+
+<p>
+<img src="images/exchanger_1.png" />
+</p>
+
+<p>
+示例：
+</p>
+<pre class="brush:java">
+public class ExchangerTest {
+
+	public static void main(String[] args) {
+		final Exchanger&lt;Integer&gt; exchanger = new Exchanger&lt;&gt;();
+		
+		ExecutorService pool = Executors.newCachedThreadPool();
+
+		pool.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					System.out.println("线程："+Thread.currentThread().getName()+"发出 123，  得到另一个线程传来的值："+exchanger.exchange(123));
+				} catch (InterruptedException  e) {
+					e.printStackTrace();
+				}
+			}
+
+		});
+		pool.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					System.out.println("线程："+Thread.currentThread().getName()+"发出 789， 得到另一个线程传来的值："+exchanger.exchange(789));
+				} catch (InterruptedException  e) {
+					e.printStackTrace();
+				}
+			}
+
+		});
+
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		pool.shutdown();
+	}
+}
+
+</pre>
+<h3 id="toc_0.1.4">Phaser</h3>
+<p>
+<code>Phaser</code>：Java7新增的辅助类。
+</p>
+
+<p>
+示例：
+</p>
+<pre class="brush:java">
+public class PhaserTest {
+
+	public static void main(String[] args) {
+		final Phaser phaser = new Phaser();
+		phaser.register();//主线程加入
+		ExecutorService pool = Executors.newCachedThreadPool();
+		for (int i = 0; i &lt; 3; i++) {
+			pool.execute(new Runnable() {
+				@Override
+				public void run() {
+					phaser.register();//子线程加入
+					System.out.println(Thread.currentThread().getName()+ "第一阶段等待。。");
+					phaser.arriveAndAwaitAdvance();
+					System.out.println(Thread.currentThread().getName()+ "第一阶段执行。。");
+					System.out.println(Thread.currentThread().getName()+ "第二阶段等待。。");
+					phaser.arriveAndAwaitAdvance();
+					System.out.println(Thread.currentThread().getName()+ "第二阶段执行。。");
+					phaser.arriveAndDeregister();//取消自己的注册
+				}
+
+			});
+		}
+		
+		try {
+			Thread.sleep(3000);
+			System.out.println("第一阶段放行。。");
+			phaser.arriveAndAwaitAdvance();
+			Thread.sleep(3000);
+			System.out.println("第二阶段放行。。");
+			phaser.arriveAndAwaitAdvance();
+			Thread.sleep(10000);
+			System.out.println("结束。。");
+			phaser.arriveAndDeregister();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		pool.shutdown();
+	}
+}
+
+</pre>
+<h3 id="toc_0.1.5">Semaphore</h3>
+<p>
+<code>Semaphore</code>：一个计数信号量。它维护了一个许可集。通常用于限制可以访问某些资源的线程数目。
+</p>
+
+<p>
+示例：
+</p>
+<pre class="brush:java">
+public class SemaphoreTest {
+
+	public static void main(String[] args) {
+		//第二个参数，表明是公平模式
+		final Semaphore semaphore = new Semaphore(2,true);
+		//5个线程，同一时刻只许两个线程运行
+		ExecutorService pool = Executors.newCachedThreadPool();
+		for (int i = 0; i &lt; 5; i++) {
+			pool.execute(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						semaphore.acquire();
+						System.out.println(Thread.currentThread().getName()+ " 抢到资源，执行任务！");
+						Thread.sleep(1000);
+						System.out.println(Thread.currentThread().getName()+ " 执行完毕，释放资源！");
+						semaphore.release();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+
+			});
+		}
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		pool.shutdown();
+	}
+}
+
+</pre>
+
+<h3 id="toc_0.1.6">总结</h3>
+
+
+<hr />
+<p>
+<code>日期</code>：2014-06-25
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://tutorials.jenkov.com/java-util-concurrent/index.html">java.util.concurrent - Java Concurrency Utilities</a>、<a href="http://ifeve.com/semaphore-countdownlatch-cyclicbarrier-phaser-exchanger-in-java/">Java中的5种同步辅助类</a>、<a href="http://stackoverflow.com/questions/6830904/java-tutorials-explanations-of-jsr166y-phaser">溢栈的问题</a>、<a href="http://whitesock.iteye.com/blog/1135457">What's New on Java 7 Phaser</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

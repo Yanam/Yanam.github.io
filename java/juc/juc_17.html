@@ -37,17 +37,18 @@
 <div class="toc">
 <ul>
 <li><a href="#toc_0.0.1">前言</a>
-<li><a href="#toc_0.0.2">线程池</a>
 <ul>
-<li><a href="#toc_0.0.2.1">Executor接口</a>
-<li><a href="#toc_0.0.2.2">ExecutorService接口</a>
-<li><a href="#toc_0.0.2.3">ScheduledExecutorService接口</a>
-<li><a href="#toc_0.0.2.4">ThreadPoolExecutor类</a>
-<li><a href="#toc_0.0.2.5">ForkJoinPool类</a>
-<li><a href="#toc_0.0.2.6">ScheduledThreadPoolExecutor类</a>
-<li><a href="#toc_0.0.2.7">Executors类</a>
+<li><a href="#toc_0.0.1.1">Executor接口</a>
+<li><a href="#toc_0.0.1.2">ExecutorService接口</a>
+<li><a href="#toc_0.0.1.3">ScheduledExecutorService接口</a>
+<li><a href="#toc_0.0.1.4">ThreadPoolExecutor类</a>
+<li><a href="#toc_0.0.1.5">ForkJoinPool类</a>
+<li><a href="#toc_0.0.1.6">ScheduledThreadPoolExecutor类</a>
+<li><a href="#toc_0.0.1.7">Executors类</a>
+<li><a href="#toc_0.0.1.8">CompletionService</a>
+<li><a href="#toc_0.0.1.9">CompletionService和ExcutorService的区别</a>
 </ul>
-<li><a href="#toc_0.0.3">合理配置线程池大小</a>
+<li><a href="#toc_0.0.2">合理配置线程池大小</a>
 </ul>
 </ul>
 </ul>
@@ -58,17 +59,12 @@
 <code>Executor Framework（执行器框架）</code>是自Java5引入，它将任务的创建和执行进行了分离，通过该框架，只需要实现Runnable接口的对象和使用Executor对象，然后将Runnable对象发给执行器。执行器负责运行这些任务的线程操作（创建、管理、结束等）
 </p>
 
-<h3 id="toc_0.0.2">线程池</h3>
-<p>
-线程池的好处多多，什么降低资源消耗啊，提高响应速度啊等等。JDK 1.5新增了一下类和结构来方便我们创建线程池，有原厂的，再也不用自己造轮子啦。
-</p>
-
 <p>
 类图如下：
 <img src="images/threadpool_1.png" />
 </p>
 
-<h4 id="toc_0.0.2.1">Executor接口</h4>
+<h4 id="toc_0.0.1.1">Executor接口</h4>
 <p>
 <code>Executor</code> 该接口提供一种将 任务提交 和 任务如何运行的机制（如线程使用的细节、调度等）解耦的方法。
 </p>
@@ -110,7 +106,7 @@ public class ExecutorTest {
 }
 </pre>
 
-<h4 id="toc_0.0.2.2">ExecutorService接口</h4>
+<h4 id="toc_0.0.1.2">ExecutorService接口</h4>
 <p>
 <code>ExecutorService</code> 继承自Executor接口，描述了在后台异步执行任务的方法，这让它看起来很像线程池，而且它在concurrent的实现也的确是个线程池。它定义了两类方法：
 </p>
@@ -139,11 +135,11 @@ shutdownNuow() 阻止等待任务启动，并试图停止正在执行的任务�
 </ul>
 </ol>
    
-<h4 id="toc_0.0.2.3">ScheduledExecutorService接口</h4>
+<h4 id="toc_0.0.1.3">ScheduledExecutorService接口</h4>
 <p>
 <code>ScheduledExecutorService</code> 继承自ExecutorService ,定义了执行给定延迟后运行的任务和定期执行任务的方法
 </p>
-<h4 id="toc_0.0.2.4">ThreadPoolExecutor类</h4>
+<h4 id="toc_0.0.1.4">ThreadPoolExecutor类</h4>
 <p>
 <code>ThreadPoolExecutor</code> 
 </p>
@@ -270,15 +266,15 @@ shutdownNuow() 阻止等待任务启动，并试图停止正在执行的任务�
 
 </ol>
 
-<h4 id="toc_0.0.2.5">ForkJoinPool类</h4>
+<h4 id="toc_0.0.1.5">ForkJoinPool类</h4>
 <p>
 <code>ForkJoinPool</code>
 </p>
-<h4 id="toc_0.0.2.6">ScheduledThreadPoolExecutor类</h4>
+<h4 id="toc_0.0.1.6">ScheduledThreadPoolExecutor类</h4>
 <p>
 <code>ScheduleThreadPoolExecutor</code>
 </p>
-<h4 id="toc_0.0.2.7">Executors类</h4>
+<h4 id="toc_0.0.1.7">Executors类</h4>
 <p>
 <code>Executors</code> 一个工具类，实现了用以创建并返回 ExecutorService、SecheduledExecutorService、ThreadFactory、Callale的方法。
 </p>
@@ -317,7 +313,125 @@ shutdownNuow() 阻止等待任务启动，并试图停止正在执行的任务�
                                       new SynchronousQueue&lt;Runnable&gt;());
     }
 </pre>
-<h3 id="toc_0.0.3">合理配置线程池大小</h3>
+
+
+<h4 id="toc_0.0.1.8">CompletionService</h4>
+<p>
+<code>CompletionService</code>：是将提交异步任务和使用已完成任务结果的操作分离开来的
+</p>
+
+<p>
+示例：
+</p>
+<pre class="brush:java">
+public class CompletionServiceTest {
+
+	public static void main(String[] args) {
+		ExecutorService pool = Executors.newCachedThreadPool();
+
+		CompletionService&lt;Integer&gt; cs = new ExecutorCompletionService&lt;&gt;(pool);
+		for (int i = 0; i &lt; 5; i++) {
+			cs.submit(new CallableTask1("task" + i, i));//提交任务
+		}
+
+		for (int i = 0; i &lt; 5; i++) {
+			System.out.println("trying to take from Completion service");
+			try {
+				Future&lt;Integer&gt; future = cs.take();//获取结果，可以把cs传给其他对象来进行任务结果的处理
+				Integer result = future.get();
+				System.out.println("result:"+result);
+			} catch (InterruptedException|ExecutionException e) {
+				e.printStackTrace();
+			}
+		}
+		pool.shutdown();
+	}
+}
+
+class CallableTask1 implements Callable&lt;Integer&gt; {
+	private String taskName;
+	private int temp;
+	
+	public CallableTask1(String taskName, int temp) {
+		super();
+		this.taskName = taskName;
+		this.temp = temp;
+	}
+	
+	@Override
+	public Integer call() throws Exception {
+		System.out.println(" Task " + taskName + " Started -----");
+		try {
+			Thread.sleep(200);
+		} catch (InterruptedException e) {
+			System.out.println(" Task " + taskName + " Interrupted !! ");
+			e.printStackTrace();
+		}
+		System.out.println(" Task " + taskName + " Completed");
+		return temp;
+	}
+}
+</pre>
+
+<h4 id="toc_0.0.1.9">CompletionService和ExcutorService的区别</h4>
+<p>
+stackoverflow有人这样解释它俩的区别：
+</p>
+<ul>
+<li>
+<code>ExecutorService</code> = incoming queue + worker threads
+
+<li>
+<code>CompletionService</code> = incoming queue + worker threads + output queue
+
+</ul>
+ 
+<p>
+看CompletionService源码和上边的例子可以发现，它内部使用了ExecutorService
+</p>
+
+<p>
+源码：
+</p>
+<pre class="brush:java">
+public class ExecutorCompletionService&lt;V&gt; implements CompletionService&lt;V&gt; {
+    private final Executor executor;
+    private final AbstractExecutorService aes;
+    // 存放任务执行完的结果
+    private final BlockingQueue&lt;Future&lt;V&gt;&gt; completionQueue;
+	
+	 // 为支持入队操作对FutureTask进行了扩展
+    private class QueueingFuture extends FutureTask&lt;Void&gt; {
+        QueueingFuture(RunnableFuture&lt;V&gt; task) {
+            super(task, null);
+            this.task = task;
+        }
+		// 可以看到任务执行完后有个入队操作
+        protected void done() { completionQueue.add(task); }
+        private final Future&lt;V&gt; task;
+    }
+	
+	public Future&lt;V&gt; submit(Callable&lt;V&gt; task) {
+        if (task == null) throw new NullPointerException();
+        RunnableFuture&lt;V&gt; f = newTaskFor(task);
+        executor.execute(new QueueingFuture(f));
+        return f;
+    }
+
+    public Future&lt;V&gt; submit(Runnable task, V result) {
+        if (task == null) throw new NullPointerException();
+        RunnableFuture&lt;V&gt; f = newTaskFor(task, result);
+        executor.execute(new QueueingFuture(f));
+        return f;
+    }
+
+	// 可以看到结果就是从队列里阻塞的取数据
+	public Future&lt;V&gt; take() throws InterruptedException {
+        return completionQueue.take();
+    }
+}
+</pre>
+<h3 id="toc_0.0.2">合理配置线程池大小</h3>
 <ol>
 <li>
 <code>CPU密集型</code> 线程尽可能小，例如N+1 个（N为核数）
@@ -333,11 +447,11 @@ Java中获得CPU个数的代码为：Runtime.getRuntime().avabilableProcessors()
 
 <hr />
 <p>
-<code>日期</code>：2014-06-17、2014-06-18
+<code>日期</code>：2014-06-17、2014-06-18、2014-06-25
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://www.infoq.com/cn/articles/java-threadPool">聊聊并发（三）Java线程池的分析和使用</a>、<a href=".html">.html</a>
+<code>参考资料</code>：<a href="http://www.infoq.com/cn/articles/java-threadPool">聊聊并发（三）Java线程池的分析和使用</a>、<a href="http://stackoverflow.com/questions/4912228/when-should-i-use-a-completionservice-over-an-executorservice">When should I use a CompletionService over an ExecutorService?</a>
 </p>
 
       </section>
