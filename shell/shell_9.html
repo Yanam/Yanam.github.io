@@ -166,6 +166,9 @@ $ tar -jxvf collected.tar.bz2
 
 # 指定路径（~/img）、排除目录（test）
 $ tar -czvpf test.tar.gz --directory ~/img --exclude=test 
+
+# 解压到指定目录
+$ tar -zxvf apache-tomcat-7.0.54.tar.gz -C /data/ 
 </pre>
 <blockquote>
 源码包解压后，进入解压目录，一般都会有个INSTALL文本文件，里面是安装的详细说明，可以打开看一下。
