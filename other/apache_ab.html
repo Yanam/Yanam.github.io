@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>shell中与网络相关命令</title>
+    <title>使用Apache的ab进行压力测试</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
 	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
@@ -36,68 +36,59 @@
 
 <div class="toc">
 <ul>
-<li><a href="#toc_0.1">netstat</a>
-<li><a href="#toc_0.2">tcpdump</a>
-<li><a href="#toc_0.3">ifconfig</a>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">使用</a>
 </ul>
 </ul>
 </div>
 
 
-<h2 id="toc_0.1">netstat</h2>
+<h2 id="toc_0.1">前言</h2>
 <p>
-<code>netstat</code>：该命令用来查看本机的网络信息，如网络连接、路由表等。
+最近做的异步消息模块主要功能基本完成，但一直对性能好坏没底，想着做个压测看看效果如何。开发人员嘛，压测工具肯定选简单好用的，越省事越好，这不就想到ab了。
+<code>ab</code> is a tool for benchmarking your http server.<a href="http://httpd.apache.org/docs/2.4/programs/ab.html">官网</a>
 </p>
 
 <p>
-常用参数：
+ab简单好用，非常适合开发人员进行压力测试，以前也用过但隔得时间久了已经忘得一干二净，正好借这次机会记录一下。
 </p>
-<ol>
-<li>
-<code>-t</code>：显示TCP端口
-
-<li>
-<code>-u</code>：显示UDP端口
-
-<li>
-<code>-l</code>：列出在Listen（监听）的服务状态
-
-<li>
-<code>-n</code>：不显示计算机名，而显示ip地址
-
-<li>
-<code>-p</code>：显示建立连接的程序名（pid）
-
-<li>
-<code>-a</code>：显示所有信息
-
-</ol>
-
-<pre class="brush:shell">
-$ netstat -nlp|grep LISTEN		//查看所有监听端口
-
-$ netstat -nlp|grep 80			//查看所有80端口
-</pre>
-<h2 id="toc_0.2">tcpdump</h2>
+<h2 id="toc_0.2">使用</h2>
 <p>
-<code>tcpdump</code>：这是一个将网络中传输的数据包“头”完全截获下来提供分析的命令。
+1）安装
+</p>
+  
+<p>
+  ab作为apache http 服务器的一部分，安装好apache服务器就行了。
 </p>
 
 <p>
-看<a href="../other/network/wireshark.html">这篇wiki</a>
+  我一般就用直接下载gz包然后解压安装，觉得这个麻烦的话可以这样：
+  ubuntu 可以使用这个命令：<code>apt-get install apache2-utils</code>
+  centos 可以使用这个命令：<code>yum install httpd-tools</code>
 </p>
-<h2 id="toc_0.3">ifconfig</h2>
+
 <p>
-<code>ifconfig</code>：是linux中用于显示或者配置网络设备的命令。
+  安装好后，就可以看到bin目录下的ab目录了。
 </p>
+
+<p>
+2）使用
+  测试自己是否安装好了，可以去apache的bin目录（比如我的就是/data/httpd-2.2.27/bin）下执行<code>./ab -V</code> 看是否能正确执行。
+</p>
+
+<p>
+示例：
+./ab -k -n 1 -p /root/temp.txt -T 'text/plain' <a href="http://172.30.204.180:9765/test">http://172.30.204.180:9765/test</a>
+</p>
+
 
 <hr />
 <p>
-<code>日期</code>：2014-1-23
+<code>日期</code>：2014-07-11
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://www.xshell.net/linux/netstat.html">inux用netstat查看服务及监听端口</a>、<a href="http://www.cnblogs.com/ggjucheng/archive/2012/01/08/2316661.html">Linux netstat命令详解</a>、<a href="http://www.cnblogs.com/taobataoma/archive/2007/12/27/1016689.html">Linux系统下ifconfig命令使用及结果分析</a>、<a href="http://baike.baidu.com/link?url=nZSt7a9rLKnzsbFwfbg7K9DzhfBGRBG7MJedNAACLBbXJdIAII_gMhjYfcl5Vjoe1pz2hldLRgIXkl8RQfUuGa">百度百科--ifconfig</a>、<a href="http://blog.csdn.net/zjl_1026_2001/article/details/7303118">TCPDUMP命令详解</a>、<a href=".html">.html</a>
+<code>参考资料</code>：<a href="http://www.oschina.net/question/123890_28974">The timeout specified has expired (70007)的问题</a>、<a href="http://blog.miniasp.com/post/2009/10/Explain-ApacheBench-ab-for-the-Failed-request-field.aspx">Failed requests的问题</a>
 </p>
 
       </section>

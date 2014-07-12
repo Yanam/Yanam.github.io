@@ -130,7 +130,8 @@ $ tcpdump -i eth0 src port 80 and dst port 6100
 # 获取主机210.27.48.1除了和主机210.27.48.2之外所有主机进行通信的ip包
 $ tcpdump ip host 210.27.48.1 and ! 210.27.48.2 
 
-
+# 信息保存到文件
+$ tcpdump ip host 192.168.1.123 -w /data/temp.cap 
 </pre>
 
 <h4 id="toc_0.1.1.4">输出信息介绍</h4>

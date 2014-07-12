@@ -41,6 +41,7 @@
 <li><a href="#toc_0.1.1">Tomcat启动失败抛出zipException</a>
 <li><a href="#toc_0.1.2">Win7下查看被占用的端口</a>
 <li><a href="#toc_0.1.3">服务无法接收新请求</a>
+<li><a href="#toc_0.1.4">content-length的问题</a>
 </ul>
 </ul>
 </ul>
@@ -89,14 +90,48 @@ $ tasklist|findstr 2968
 </p>
 
 <h3 id="toc_0.1.3">服务无法接收新请求</h3>
-
-<hr />
 <p>
-<code>日期</code>：2014-04-17、2014-05-14
+问题描述：
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://pangwawayu.blog.51cto.com/1708043/584157">win7下查看被占用端口</a>
+前两天同事找我咨询一个问题，他有一个服务（以Netty为基础对外提供接口）会不定期出现无法接收请求的情况（此次CPU负载为0），而且很频繁，一时找不到原因。
+</p>
+
+<p>
+排查过程：
+</p>
+
+<p>
+1）他怀疑是垃圾回收的问题，FullGC的时候的确会stop the world。我跟他一起查看了一下服务器上垃圾回收的情况，发现PermGen长期处于99.X的状态，OldGen也长期处于80~90的状态，gc的确很频繁，尤其是Young区的，但是当问题重现服务再次不可用时，分析后台的垃圾回收日志发现并没有花费很长时间。
+</p>
+
+<p>
+2）排除垃圾回收的问题，我们又通过jvisualvm查看了服务不可用时，系统中各线程的状态，发现当问题出现时，Netty的worker线程（这里是9个）都处于监控状态(monitor)，通过查询相关资料，了解到线程处于此状态时是由于程序在等待synchronized锁（也就是监视器锁），询问他发现，程序中的确有用到，建议他将这部分代码放到线程池中异步执行以及时释放worker线程，使得它能够空闲下来处理后续请求。
+</p>
+
+<p>
+3）程序修改上线后，问题依旧，我们再次通过jvisualvm查看发现，这时问题出现时，处于监控状态(monitor)的线程变成了ThreadPool的线程，也就是我们改动的异步处理部分。这时不得不dump一下线程的日志，发现线程都卡在了HttpClient的请求上，好奇怪啊！因为涉及到第三方系统，经过测试排除了其他系统响应慢的原因。返回去一步步跟他的代码，发现同事的系统里有个HttpUtil工具类，所有的http请求，都由它的sendRequest方法进行执行，怪异的是这个类有个静态的HttpClient（他用的HttpClient3.1.0）对象，也就是说所有请求都是公用的一个HttpClient对象！立刻让他把这HttpClient的定义和初始化放到方法内部。
+</p>
+
+<p>
+4）程序再次修改上线，经过一段时间观察，问题未在复现。
+</p>
+
+<p>
+后记：
+最近一段时间因为使用HttpClient造成系统出现问题的事件出现了多次，建议以后再使用该包时多加注意，尤其是调用别人写好的工具类的时候。
+</p>
+
+<h3 id="toc_0.1.4">content-length的问题</h3>
+<p>
+最近在用Netty写Http服务的时候，发现Request的Content怎么都发不出去，由于Netty用的少只能去源码和实例里找，试了各种方法都没搞定，百思不得其解，以至于都放弃用Netty写客户端改用HttpClient了，前天不甘心又返回去想怎么解决，最终发现是content-length没设置导致
+<hr />
+<code>日期</code>：2014-04-17、2014-05-14、2014-07-09
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://pangwawayu.blog.51cto.com/1708043/584157">win7下查看被占用端口</a>、<a href="http://www.blogjava.net/anchor110/articles/336371.html">http返回头中content-length与Transfer-Encoding: chunked的问题释疑</a>、<a href="http://shellblog.sinaapp.com/?p=316">HTTP协议：不可小觑的Content-Length</a>
 </p>
 
       </section>
