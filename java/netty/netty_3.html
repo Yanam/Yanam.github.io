@@ -1,0 +1,282 @@
+<html>
+<head>
+    <title>Netty中的EventLoopGroup、EventLoop</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.0.1">前言</a>
+<li><a href="#toc_0.0.2">结构图</a>
+<li><a href="#toc_0.0.3">EventLoopGroup</a>
+<li><a href="#toc_0.0.4">EventLoop</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h3 id="toc_0.0.1">前言</h3>
+<p>
+我们一提到Netty就不得不提它的Reactor模型。Netty是基于Multiple Reactor模型，Mulitple Reactor模型有这样的特点：
+</p>
+<ol>
+<li>
+有一个NIO线程专门用于监听服务，接受客户端的请求
+
+<li>
+网络IO操作（读、写等）有一个NIO线程池负责
+
+<li>
+一个NIO线程可以同时处理N个连接，但一个连接只对应一个NIO线程
+
+</ol>
+
+<p>
+<img src="images/netty_multi_reactor.png" />
+</p>
+
+
+<p>
+对应到Netty的代码，过程如下：
+</p>
+
+<p>
+<img src="images/netty_model.png" />
+</p>
+
+<p>
+从图中我们可以看到这里的NIO线程池被包装成了一个叫EventLoopGroup的对象，下面我们就重点分析一下这个对象做了哪些事情。
+</p>
+
+<h3 id="toc_0.0.2">结构图</h3>
+
+<p>
+<img src="images/netty_eventLoopGroup.png" />
+</p>
+
+<h3 id="toc_0.0.3">EventLoopGroup</h3>
+<p>
+<img src="images/netty_eventLoopGroup_model.png" />
+</p>
+
+<p>
+<code>EventLoopGroup</code>没有什么特别的，就是个包装过的线程池，池子里的是EventLoop
+</p>
+
+<p>
+看它的父类<code>MultithreadEventExecutorGroup</code>，可以看到它有一个EventExecutor类型的数组属性children，我们group.register(channel)时就会从这里选一个EventLoop进行分配。
+</p>
+
+<h3 id="toc_0.0.4">EventLoop</h3>
+<p>
+<img src="images/netty_eventLoop_model.png" />
+</p>
+
+<p>
+看它的父类<code>SingleThreadEventExecutor</code>，可以发现它是内部带一个taskQueue和delayTaskQueue的单线程执行器。
+</p>
+
+<p>
+<code>EventLoop.execute(runnable)</code>是一个很重要的方法。如果线程没启动它会启动线程，然后将任务放到队列里。像Unsafe和ChannelHandlerContext的很多方法都是调用它。
+</p>
+<pre class="brush:java">
+    @Override
+    public void execute(Runnable task) {
+        if (task == null) {
+            throw new NullPointerException("task");
+        }
+
+        boolean inEventLoop = inEventLoop();
+        if (inEventLoop) {
+            addTask(task);
+        } else {
+            startThread();
+            addTask(task);
+            if (isShutdown() &amp;&amp; removeTask(task)) {
+                reject();
+            }
+        }
+
+        if (!addTaskWakesUp &amp;&amp; wakesUpForTask(task)) {
+            wakeup(inEventLoop);
+        }
+    }
+</pre>
+
+
+<p>
+startTread()其实真正执行的是<code>EventLoop</code>中另一个重要的方法<code>run()</code>，它EventLoop名字的由来，应该也是由于这个实现是个无限循环的原因吧？
+</p>
+
+<pre class="brush:java">
+public final class NioEventLoop extends SingleThreadEventLoop {
+    @Override
+    protected void run() {
+        for (;;) {
+            oldWakenUp = wakenUp.getAndSet(false);
+            try {
+                if (hasTasks()) {
+                    selectNow();
+                } else {
+                    select();
+                    if (wakenUp.get()) {
+                        selector.wakeup();
+                    }
+                }
+
+                cancelledKeys = 0;
+                needsToSelectAgain = false;
+                final int ioRatio = this.ioRatio;
+                if (ioRatio == 100) {
+                    processSelectedKeys();
+                    runAllTasks();
+                } else {
+                    final long ioStartTime = System.nanoTime();
+
+                    processSelectedKeys();
+	            // NioEventLoop在单线程里同时处理IO事件和其他任务，
+                    // NioEventLoop尽量（但不能保证）按照给定的比率（默认为50%）
+                    // 来分配花在这两种任务上的时间
+                    final long ioTime = System.nanoTime() - ioStartTime;
+                    runAllTasks(ioTime * (100 - ioRatio) / ioRatio);
+                }
+
+                if (isShuttingDown()) {
+                    closeAll();
+                    if (confirmShutdown()) {
+                        break;
+                    }
+                }
+            } catch (Throwable t) {
+                logger.warn("Unexpected exception in the selector loop.", t);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // Ignore.
+                }
+            }
+        }
+    }
+	
+    private void processSelectedKeys() {
+        if (selectedKeys != null) {
+	    //该方法即代表使用了优化的SelectedKeys，优化是在openSelector()方法做的，具体咋优化的看参考资料
+            processSelectedKeysOptimized(selectedKeys.flip());
+        } else {
+            processSelectedKeysPlain(selector.selectedKeys());
+        }
+    }
+    private void processSelectedKeysOptimized(SelectionKey[] selectedKeys) {
+        for (int i = 0;; i ++) {
+            final SelectionKey k = selectedKeys[i];
+            if (k == null) {
+                break;
+            }
+
+            final Object a = k.attachment();
+	    //这里可以看出一个EventLoop（也就是一个线程）对应着多个Channel
+            if (a instanceof AbstractNioChannel) {
+                processSelectedKey(k, (AbstractNioChannel) a);
+            } else {
+                @SuppressWarnings("unchecked")
+                NioTask&lt;SelectableChannel&gt; task = (NioTask&lt;SelectableChannel&gt;) a;
+                processSelectedKey(k, task);
+            }
+
+            if (needsToSelectAgain) {
+                selectAgain();
+                selectedKeys = this.selectedKeys.flip();
+                i = -1;
+            }
+        }
+    }
+    //这里已经是我们熟悉的Java NIO代码了
+    private static void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
+        final NioUnsafe unsafe = ch.unsafe();
+        if (!k.isValid()) {
+            // close the channel if the key is not valid anymore
+            unsafe.close(unsafe.voidPromise());
+            return;
+        }
+
+        try {
+            int readyOps = k.readyOps();
+            if ((readyOps &amp; (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
+                unsafe.read();
+                if (!ch.isOpen()) {
+                    return;
+                }
+            }
+            if ((readyOps &amp; SelectionKey.OP_WRITE) != 0) {
+                ch.unsafe().forceFlush();
+            }
+            if ((readyOps &amp; SelectionKey.OP_CONNECT) != 0) {
+                int ops = k.interestOps();
+                ops &amp;= ~SelectionKey.OP_CONNECT;
+                k.interestOps(ops);
+
+                unsafe.finishConnect();
+            }
+        } catch (CancelledKeyException e) {
+            unsafe.close(unsafe.voidPromise());
+        }
+    }
+}
+</pre>
+<blockquote>
+我们不应该在NioEventLoop里执行耗时的操作（比如数据库操作），这样会卡死NioEventLoop，降低程序的响应性。
+</blockquote>
+
+
+<hr />
+<p>
+<code>日期</code>：2014-07-17、2014-07-23
+</p>
+
+
+<p>
+<code>参考资料</code>：<a href="http://blog.csdn.net/zxhoo/article/details/17634683">Netty4学习笔记（5）-- NioEventLoopGroup继承层次结构</a>、<a href="http://blog.csdn.net/zxhoo/article/details/17709765">Netty4学习笔记（6）-- NioEventLoop继承层次结构</a>、<a href="http://www.infoq.com/cn/articles/netty-threading-model">Netty系列之Netty线程模型</a>、<a href="http://hongweiyi.com/2014/01/netty-4-x-thread-model/">Netty 4.x学习笔记 – 线程模型</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

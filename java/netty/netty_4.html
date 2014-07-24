@@ -1,0 +1,352 @@
+<html>
+<head>
+    <title>Netty之ByteBuf</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.0.1">前言</a>
+<li><a href="#toc_0.0.2">ByteBuf</a>
+<ul>
+<li><a href="#toc_0.0.2.1">可读字节部分(readable bytes)</a>
+<li><a href="#toc_0.0.2.2">可写字节部分(writable bytes)</a>
+<li><a href="#toc_0.0.2.3">丢弃字节部分(discardable bytes)</a>
+<li><a href="#toc_0.0.2.4">清除缓冲区的索引</a>
+</ul>
+<li><a href="#toc_0.0.3">ByteBufAllocator</a>
+<li><a href="#toc_0.0.4">ByteBuf的实现类</a>
+<ul>
+<li><a href="#toc_0.0.4.1">HeapByteBuf和DirectByteBud</a>
+<li><a href="#toc_0.0.4.2">PooledByteBuf和UnpooledByteBuf</a>
+<li><a href="#toc_0.0.4.3">zero-copy（零拷贝）</a>
+<li><a href="#toc_0.0.4.4">CompositeByteBuf</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h3 id="toc_0.0.1">前言</h3>
+<p>
+Java NIO里有一个Buffer，Netty再次基础上定义了一个ByteBuf，提供了更多的特性，更方便的API。
+</p>
+
+<p>
+io.netty.buffer包的类图如下：
+</p>
+
+<p>
+<img src="images/netty_bytebuf.png" />
+</p>
+
+<h3 id="toc_0.0.2">ByteBuf</h3>
+<p>
+<code>ByteBuf</code>是一种支持随机和连续访问的byte数组。相比于普通的byte[]或 NIO Buffer它定义更为方便的API。比如说它同时支持读写，而不需要像的ByteBuffer那些必须调用flip()来进行读写状态切换。
+</p>
+
+<p>
+ByteBuf的结构：
+</p>
+
+<p>
+<img src="images/netty_bytebuf2.png" />
+</p>
+
+<p>
+ByteBuf通过两个重要的指针参数（或者叫数组索引），将byte[]分成了三部分。
+</p>
+<ol>
+<li>
+<code>readerIndex</code>
+
+<li>
+<code>writerIndex</code>
+
+</ol>
+ 
+<h4 id="toc_0.0.2.1">可读字节部分(readable bytes)</h4>
+<p>
+可读字节部分就是真实数据存储的地方。
+</p>
+
+<p>
+任何以read或skip开头的方法都会影响readerIndex，操作后readerIndex都会增加相应的字节数。如果请求的参数也是ByteBuf而且没有指定索引(index)，那被操作的buffer的writerIndex也会增加。
+</p>
+
+<p>
+示例代码：
+</p>
+
+<pre class="brush:java">
+ // Iterates the readable bytes of a buffer.
+ ByteBuf buffer = ...;
+ while (buffer.readable()) {
+     System.out.println(buffer.readByte());
+ }
+</pre>
+
+
+<h4 id="toc_0.0.2.2">可写字节部分(writable bytes)</h4>
+<p>
+可写字节部分是定义用来添加数据的地方。
+</p>
+
+<p>
+任何以write开头的方法都会影响writerIndex，操作后writerIndex都会增加相应的字节数。如果参数也是ByteBuf而且没有指定索引(index)，那么被操作的buffer的readerIndex也会增加。
+</p>
+
+<p>
+示例代码：
+</p>
+
+<pre class="brush:java">
+ // Fills the writable bytes of a buffer with random integers.
+ ByteBuf buffer = ...;
+ while (buffer.maxWritableBytes() &gt;= 4) {
+     buffer.writeInt(random.nextInt());
+ }
+</pre>
+<h4 id="toc_0.0.2.3">丢弃字节部分(discardable bytes)</h4>
+<p>
+丢弃部分是那些执行了读操作的地方。
+</p>
+
+<p>
+初始的时候，丢弃部分是0，随着读操作的进行这部分大小会增长到writerIndex。
+</p>
+
+<p>
+已读字节部分可以被丢弃通过<code>discardReadBytes()</code>，它的效果如下：
+</p>
+
+<p>
+执行discardReadBytes()之前：
+</p>
+
+<p>
+<img src="images/netty_bytebuf3.png" />
+</p>
+
+<p>
+执行discardReadBytes()之后：
+</p>
+
+<p>
+<img src="images/netty_bytebuf4.png" />
+</p>
+
+<h4 id="toc_0.0.2.4">清除缓冲区的索引</h4>
+<p>
+通过<code>clear()</code>方法，你可以将readerIndex和writerIndex都清零。
+</p>
+<blockquote>
+注意：它只清除索引，不清楚buffer的内容。这个跟NIO的<a href="http://docs.oracle.com/javase/7/docs/api/java/nio/Buffer.html?is-external=true#clear()">Buffer.clear()</a>不同。
+</blockquote>
+
+<p>
+执行clear()之前：
+</p>
+
+<p>
+<img src="images/netty_bytebuf5.png" />
+</p>
+
+<p>
+执行clear()之后：
+</p>
+
+<p>
+<img src="images/netty_bytebuf6.png" />
+</p>
+
+
+<h3 id="toc_0.0.3">ByteBufAllocator</h3>
+<p>
+在Netty中，我们使用ByteBuf时通常都是由ByteBufAllocator创建。
+</p>
+
+<p>
+它俩的关系如下：
+</p>
+
+<p>
+<img src="images/netty_bytebufalloactor.png" />
+</p>
+
+<p>
+ByteBufAlloactor的buffer()方法创建ByteBuf对象，ByteBuf的alloc()方法返回创建它的ByteBufAllocator对象。
+</p>
+
+<h3 id="toc_0.0.4">ByteBuf的实现类</h3>
+<p>
+从上面的类图我们可以发现，ByteBuf的实现类主要是Pooled、Unpooled和Heap、Direct的组合。
+</p>
+
+<h4 id="toc_0.0.4.1">HeapByteBuf和DirectByteBud</h4>
+<p>
+Heap和Direct的最大区别，在于它的实现方式，我们以UnpooleDirectByteBuf和UnpooledHeapByteBuf的源码为例：
+</p>
+<pre class="brush:java">
+public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
+
+    private final ByteBufAllocator alloc;
+    // 可以看到就是个byte数组
+    private byte[] array;
+    private ByteBuffer tmpNioBuf;
+}
+
+public class UnpooledDirectByteBuf extends AbstractReferenceCountedByteBuf {
+
+    private final ByteBufAllocator alloc;
+    //可以看到它内部用的是ByteBuffer,
+    //看它的分配代码就会发现是java.nio.DirectByteBuffoer
+    private ByteBuffer buffer;
+    private ByteBuffer tmpNioBuf;
+}
+</pre>
+
+<p>
+现在应该清楚了，HeapByteBuf就是由JVM的heap管理；而DirectByteBuf就是使用的堆外内存。
+</p>
+
+<p>
+关于Direct I/O（直接I/O）的解释可以看<a href="../../linux/linux_1.html">这里</a>
+</p>
+
+<h4 id="toc_0.0.4.2">PooledByteBuf和UnpooledByteBuf</h4>
+<p>
+Pooled是Netty 4.X的新特性，它实现了一个高性能的buffer池，有以下优势：
+</p>
+<ul>
+<li>
+频繁分配、释放buffer时减少GC压力
+
+<li>
+在初始化新buffer时减少内存消耗
+
+<li>
+及时释放direct buffer
+
+</ul>
+ 
+<p>
+当然了，这些也不是Netty自卖自夸，有twttier的文章为证：<a href="https://blog.twitter.com/2013/netty-4-at-twitter-reduced-gc-overhead">Netty 4 at Twitter: Reduced GC Overhead</a>
+</p>
+
+<h4 id="toc_0.0.4.3">zero-copy（零拷贝）</h4>
+<p>
+提起Netty怎么能不提它的零拷贝技术。
+</p>
+
+<p>
+Netty的零拷贝体现在这几方面：
+</p>
+<ol>
+<li>
+提供了使用direct I/O的ByteBuffer（也就是directByteBuf），对于处理接收、发送ByteBuf采用directByteBuf可以避免数据在JVM的堆内存和直接内存的相互拷贝，提高了效率。
+
+<li>
+允许我们将多个ByteBuf合并成一整个ByteBuf供用户使用，而不需要对数据进行拷贝操作。
+
+</ol>
+ 
+<h4 id="toc_0.0.4.4">CompositeByteBuf</h4>
+<p>
+API是这样描述它的：将多个ByteBuf虚拟成一个ByteBuf，建议使用<code>ByteBufAllocator.compositeBuffer()</code>或<code>Unpooled.wrappedBuffer(ByteBuf ...)</code>来创建。
+</p>
+
+<p>
+我们知道TCP报文有个特点，就是在传输的时候，会把应用层的数据拆开成字节，然后按自己的传输需要，选择合适的字节大小进行传输。
+</p>
+
+<p>
+比如：
+我们发送数据是这样的：
+</p>
+<pre>
+*------*------*------*
+! ABC  ! DEF  ! GHI  !
+*------*------*------*
+</pre>
+
+<p>
+接受时可能就变成这样了：
+</p>
+
+<pre>
+*----*-------*---*---*
+! AB ! CDEFG ! H ! I !
+*----*-------*---*---*
+</pre>
+
+<p>
+例如我们处理Http请求的时候，就会遇到这种情况：
+</p>
+
+<p>
+<img src="images/netty_http.png" />
+</p>
+
+<pre class="brush:java">
+   ByteBuf requestPart1 = byteBuf1.slice();
+   ByteBuf requestPart2 = byteBuf2.slice();
+            
+   ByteBuf request Unpooled.wrappedBuffer(requestPart1,requestPart2);
+</pre>
+
+<p>
+一条信息可能会被分割成多个数据包传输（对应Netty的多个ByteBuf），而单个数据包对我们是无意义的，必须合并成我们想要的完整信息才能进行后续处理，而Netty通过零拷贝的方式，使得我们合并数据包的过程没有进行JVM堆内存和直接内存的数据拷贝，而只是通过保存多个ByteBuf的多个引用，将它们虚拟成一个ByteBuf（也就是CompositeByteBuf）。
+</p>
+
+
+<hr />
+<p>
+<code>日期</code>：2014-07-23、2014-07-24
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://hongweiyi.com/2014/01/netty-4-x-bytebuf/">Netty 4.x学习笔记 – ByteBuf</a>、<a href="http://netty.io/4.0/api/index.html">Netty 4.0 API</a>、<a href="http://www.infoq.com/cn/articles/netty-high-performance">Netty系列之Netty高性能之道</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>
