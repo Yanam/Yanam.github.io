@@ -78,13 +78,18 @@ ab简单好用，非常适合开发人员进行压力测试，以前也用过但
 
 <p>
 示例：
-./ab -k -n 1 -p /root/temp.txt -T 'text/plain' <a href="http://172.30.204.180:9765/test">http://172.30.204.180:9765/test</a>
 </p>
+<pre class="brush:shell">
+./ab -k -n 1 -p /root/temp.txt -T 'text/plain' http://172.30.204.180:9765/test
 
+# get 请求的给url加上双引号就行了
+./ab -k -n 1 "htttp://172/30/204/180:8080/test?a=1&amp;b=2" 
+
+</pre>
 
 <hr />
 <p>
-<code>日期</code>：2014-07-11
+<code>日期</code>：2014-07-11、2014-08-12
 </p>
 
 <p>

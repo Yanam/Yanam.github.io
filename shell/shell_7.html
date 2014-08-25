@@ -39,6 +39,7 @@
 <li><a href="#toc_0.1">netstat</a>
 <li><a href="#toc_0.2">tcpdump</a>
 <li><a href="#toc_0.3">ifconfig</a>
+<li><a href="#toc_0.4">tcpflow</a>
 </ul>
 </ul>
 </div>
@@ -91,13 +92,29 @@ $ netstat -nlp|grep 80			//查看所有80端口
 <code>ifconfig</code>：是linux中用于显示或者配置网络设备的命令。
 </p>
 
+<h2 id="toc_0.4">tcpflow</h2>
+<p>
+<code>tcpflow</code>是有一种抓包工具，它和tcpdump的区别在于它是以流为单位显示数据，而不是像tcpdump以包为单位显示数据。分析Http数据会更方便，还有windows版的。
+</p>
+
+<p>
+<a href="https://github.com/simsong/tcpflow">tcpflow官网</a>
+</p>
+
+<p>
+使用示例：
+</p>
+<pre class="brush:shell">
+
+</pre>
+
 <hr />
 <p>
 <code>日期</code>：2014-1-23
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://www.xshell.net/linux/netstat.html">inux用netstat查看服务及监听端口</a>、<a href="http://www.cnblogs.com/ggjucheng/archive/2012/01/08/2316661.html">Linux netstat命令详解</a>、<a href="http://www.cnblogs.com/taobataoma/archive/2007/12/27/1016689.html">Linux系统下ifconfig命令使用及结果分析</a>、<a href="http://baike.baidu.com/link?url=nZSt7a9rLKnzsbFwfbg7K9DzhfBGRBG7MJedNAACLBbXJdIAII_gMhjYfcl5Vjoe1pz2hldLRgIXkl8RQfUuGa">百度百科--ifconfig</a>、<a href="http://blog.csdn.net/zjl_1026_2001/article/details/7303118">TCPDUMP命令详解</a>、<a href=".html">.html</a>
+<code>参考资料</code>：<a href="http://www.xshell.net/linux/netstat.html">inux用netstat查看服务及监听端口</a>、<a href="http://www.cnblogs.com/ggjucheng/archive/2012/01/08/2316661.html">Linux netstat命令详解</a>、<a href="http://www.cnblogs.com/taobataoma/archive/2007/12/27/1016689.html">Linux系统下ifconfig命令使用及结果分析</a>、<a href="http://baike.baidu.com/link?url=nZSt7a9rLKnzsbFwfbg7K9DzhfBGRBG7MJedNAACLBbXJdIAII_gMhjYfcl5Vjoe1pz2hldLRgIXkl8RQfUuGa">百度百科--ifconfig</a>、<a href="http://blog.csdn.net/zjl_1026_2001/article/details/7303118">TCPDUMP命令详解</a>、<a href="http://blog.csdn.net/kobejayandy/article/details/20865203">Linux下抓包命令tcpflow使用总结</a>
 </p>
 
       </section>

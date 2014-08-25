@@ -1,0 +1,330 @@
+<html>
+<head>
+    <title>Netty的引用计数器对象</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.0.1">前言</a>
+<li><a href="#toc_0.0.2">reference coutns</a>
+<ul>
+<li><a href="#toc_0.0.2.1">引用计数对象的基本概念</a>
+<li><a href="#toc_0.0.2.2">谁来销毁引用计数对象</a>
+<li><a href="#toc_0.0.2.3">派生出的缓冲区(derived buffers)</a>
+<li><a href="#toc_0.0.2.4">ByteBufHodler接口</a>
+<li><a href="#toc_0.0.2.5">引用计数在ChannelHandler的使用</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h3 id="toc_0.0.1">前言</h3>
+<p>
+最近在给以Netty为基础开发的http服务做压力测试，发现有内存泄露的提示：
+</p>
+<pre class="brush:java">
+2014-08-14 15:58:41,093 ERROR [io.netty.util.ResourceLeakDetector] - LEAK: ByteBuf.release() was not called before it's garbage-collected.
+ Enable advanced leak reporting to find out where the leak occurred.
+ To enable advanced leak reporting, specify the JVM option '-Dio.netty.leakDetectionLevel=advanced' or call ResourceLeakDetector.setLevel()
+</pre>
+<p>
+加上上面所说的JVM启动参数后，发现如下异常：
+</p>
+<pre class="brush:java">
+2014-08-14 16:16:39,768 ERROR [io.netty.util.ResourceLeakDetector] - LEAK: ByteBuf.release() was not called before it's garbage-collected.
+Recent access records: 0
+Created at:
+	io.netty.buffer.CompositeByteBuf.&lt;init&gt;(CompositeByteBuf.java:59)
+	io.netty.buffer.Unpooled.compositeBuffer(Unpooled.java:355)
+	io.netty.handler.codec.http.HttpObjectAggregator.decode(HttpObjectAggregator.java:147)
+	io.netty.handler.codec.http.HttpObjectAggregator.decode(HttpObjectAggregator.java:52)
+	io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:89)
+	io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:341)
+	io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:327)
+	io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:163)
+	io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:148)
+	io.netty.channel.DefaultChannelHandlerContext.invokeChannelRead(DefaultChannelHandlerContext.java:341)
+	io.netty.channel.DefaultChannelHandlerContext.fireChannelRead(DefaultChannelHandlerContext.java:327)
+	io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:785)
+	io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:126)
+	io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:507)
+	io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:464)
+	io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:378)
+	io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:350)
+	io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:116)
+	java.lang.Thread.run(Thread.java:744)
+</pre>
+
+<p>
+可以看到内存泄露指向了Unpooled类，还以为是Netty的bug，经过一番google发现，是自己使用ByteBuf不当造成的，多亏这次发现了问题，要不以后也是隐患。
+</p>
+
+<p>
+ps：各种组件的更新摘要一定要仔细看啊，Netty的文章还重点指出了ByteBuf的问题<a href="http://netty.io/wiki/new-and-noteworthy-in-4.0.html">New and noteworthy in 4.0</a> 
+</p>
+
+<p>
+下面基本上是对官网文章的蹩脚翻译。
+</p>
+
+<h3 id="toc_0.0.2">reference coutns</h3>
+<p>
+从Netty 4开始，它的一些对象的生命周期就不是由垃圾回收器管理而是由引用计数器。而<code>ByteBuf</code>是特别需要注意的，它利用引用计数提高了申请和释放的性能。
+</p>
+
+<h4 id="toc_0.0.2.1">引用计数对象的基本概念</h4>
+<ul>
+<li>
+初始时，引用计数对象的引用数为1。
+<pre class="brush:java">
+ByteBuf buf = ctx.alloc().directBuffer();
+assert buf.refCnt() == 1;
+</pre>
+
+<li>
+当释放引用计数对象时，它的引用计数会减1。如果引用计数到0，这个引用计数对象就会被回收或者返回它属于的对象池。
+<pre class="brush:java">
+assert buf.refCnt() == 1;
+boolean destroyed = buf.release();
+assert destroyed
+assert buf.refCnt() == 0;
+</pre>
+
+<li>
+尝试访问引用计数为0的引用计数对象，会触发<code>IllegelReferenceCountException</code>
+<pre class="brush:java">
+assert buf.refCnt() == 0;
+try{
+	buf.writeLong(0xdeadbeef);
+	throw new Error("should not reach here");
+} catch (IllegalReferenceCountException e){
+
+}
+</pre>
+
+</ul>
+
+<ul>
+<li>
+增加引用计数，通过<code>retain()</code>方法可以增加引用计数对象的引用计数。
+<pre class="brush:java">
+ByteBuf buf = ctx.alloc().directBuffer();
+assert buf.refCnt() == 1;
+
+buf.retain();
+assert buf.refCnt() == 2;
+
+boolean destroyed = buf.release();
+assert !destroyed;
+assert buf.refCnt() == 1;
+
+</pre>
+
+</ul>
+<h4 id="toc_0.0.2.2">谁来销毁引用计数对象</h4>
+<p>
+基本规则就是：谁最后访问了引用计数对象，谁就有责任销毁它。
+</p>
+<h4 id="toc_0.0.2.3">派生出的缓冲区(derived buffers)</h4>
+<p>
+<code>ByteBuf.duplicate()</code>,<code>ByteBuf.slice()</code>,<code>ByteBuf.order(ByteOrder)</code>会创建和父缓冲区共享内存空间的派生缓存区。这些派生的缓冲区没有自己的引用计数，而是共享父缓冲区的引用计数。
+</p>
+<pre class="brush:java">
+ByteBuf parent = ctx.alloc().directBuffer();
+ByteBuf derived = parent.duplicate();
+
+// 创建派生缓冲区不会增加引用计数
+assert parent.refCnt() == 1;
+assert derived.refCnt() == 1;
+</pre>
+
+<p>
+注意，由于父缓冲区和派生出的缓冲区共享引用计数，引用计数不会随着派生缓冲区的创建而增加。因此，如果你将一个派生缓存区传入你应用的其他组件，你需要先调用<code>retain()</code>（这里这样提示，是因为上面那条规则“谁最后调用谁销毁”，如果不retain()来增加计数的话，在释放派生缓存区时就会出错）。
+</p>
+
+<pre class="brush:java">
+ByteBuf parent = ctx.alloc().directBuffer(512);
+parent.writeBytes(....);
+
+try{
+	while(parent.isReadable(16)){
+		ByteBuf derived = parent.readSlice(16);
+		derived.retain();
+		process(derived);
+	}
+}finally{
+	parent.release();
+}
+
+public void process(ByteBuf buf){
+	buf.release();
+}
+</pre>
+
+<h4 id="toc_0.0.2.4">ByteBufHodler接口</h4>
+<p>
+有时，一个ByteBuf对象被一个buffer holder持有，比如：DatagramPacket,HttpContent,WebSocketframe等。这些类都继承了通用接口<code>ByteBufHodler</code>。
+</p>
+
+<p>
+buffer holder和它持有的buffer共享引用计数，就是derived buffer。
+</p>
+
+<h4 id="toc_0.0.2.5">引用计数在ChannelHandler的使用</h4>
+<ul>
+<li>
+<code>Inbound messages</code>
+
+</ul>
+<p>
+当event loop把数据读到<code>ByteBuf</code>然后触发<code>channlRead()</code>事件时，当前pipeline的ChannleHandler有责任释放该buffer。因此，消费了所收到数据的handler应该在channelRead()中调用数据<code>release()</code> 方法：
+</p>
+<pre class="brush:java">
+pubilc void channlRead(ChannelHandlerContext ctx,Object msg){
+	ByteBuf buf = (ByteBuf) msg;
+	try{
+		....
+	} finally{
+		buf.release();
+	}
+}
+</pre>
+
+<p>
+为了解释之前“谁销毁？”的问题，如果你的handler把buffer（或者其他引用计数对象）传给了下一个handler，你就不需要release了。
+</p>
+<pre class="brush:java">
+public void channelRead(ChannelHandlerContext ctx, Object msg){
+	ByteBuf buf = (ByteBuf) msg;
+	...
+	ctx.fireChannelRead(buf);
+}
+</pre>
+
+<p>
+注意在Netty中，不光<code>ByteBuf</code>是引用计数类型的，如果你要处理decoder生成的message,那这个message非常可能也是引用计数类型的。
+</p>
+
+<pre class="brush:java">
+public void channelRead(ChannelHandlerContext ctx,Obejct msg){
+	if(msg instanceof HttpRequest){
+		HttpRequest req = (HttpRquest)msg;
+		...
+	}
+	if(msg instanceof HttpContent){
+		HttpContent content = (HttpContent)msg;
+		try{
+			...
+		} finally{
+			content.release();
+		}
+	}
+}
+</pre>
+
+<p>
+如果你拿不准或者想方便的释放消息，你可以使用<code>ReferenceCountUtil.release()</code>方法。
+</p>
+<pre class="brush:java">
+public void channelRead(ChannelHandlerContext ctx,Object msg){
+	try{
+		...
+	} finally{
+		ReferenceUtil.release(msg);
+	}
+}
+
+</pre>
+
+<p>
+另外，你可以考虑自己写的Hanlder继承<code>SimpleChannelHandler</code>，它会对所有收到的message调用ReferenceCountUtil.release(msg)。
+</p>
+
+<ul>
+<li>
+<code>Outbound messages</code>
+
+</ul>
+ 
+<p>
+与inbound message不同，你的应用创建的message，Netty有责任在将其写到线上后进行释放。然而，拦截了你的写请求的handler需要确保释放了临时对象。
+</p>
+
+<pre class="brush:java">
+// 这种简单的传递的，不需要释放，由Netty负责
+public void write(ChannelHandlerContext ctx,Object message,ChannelPromise promise){
+	System.err.println("Writing"+message);
+	ctx.write(message,promise);
+}
+
+// 这种创建了临时对象的，需要释放
+public void write(ChannelHandlerContext ctx, Object message,ChannelPromise promise){
+	if(message instanceof HttpContent){
+		//content对象并没有传递到下一个Handler，需要进行释放
+		HttpContent content = (HttpContent)message;
+		try{
+			ByteBuf transfomed = ctx.alloc().buffer();
+			...
+			ctx.write(transformed,promise);
+		} finally{
+			content.release();
+		}
+	}else{
+		ctx.write(message,promise);
+	}
+}
+</pre>
+
+<hr />
+<p>
+<code>日期</code>：2014-08-14
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://netty.io/wiki/reference-counted-objects.html">Reference counted objects</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

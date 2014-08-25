@@ -90,6 +90,26 @@
 ChannelHandler接口没有定义太多方法，。为了处理ChannelInboundInvoker或ChannelOutboundInvoker操作你需要实现它的子接口。它有许多子接口，最常用的是<code>ChannelInboundHandlerAdapter</code>和<code>ChannelOutboundHandlerAdapter</code>。
 </p>
 
+<p>
+<img src="images/netty_pipeline.png" />
+</p>
+
+<p>
+Pipeline中有两种ChannelHandler：
+</p>
+<ol>
+<li>
+<code>Inbound Handler</code>：代表从Netty内部IO线程读到I/O数据，依次调用N个Handler到达最内部的处理逻辑。
+
+<li>
+<code>Outbound Handler</code>：代表从Channel发出I/O请求，依次调用N个Handler到达Netty的内部I/O线程。
+
+</ol>
+ 
+<p>
+<img src="images/netty_channelHandler.png" />
+</p>
+
 <h4 id="toc_0.1.2.1">@Sharable annotation</h4>
 <p>
 当一个ChannelHandler有<code>@Shareable</code> 注解修饰时，意味着你可以创建一个Handler实例然后将它赋给多个ChannelPipeline中而不存在静态条件。
@@ -358,6 +378,12 @@ public class ChannelOutboundHandlerAdapter extends ChannelHandlerAdapter impleme
 <p>
 <img src="images/netty_eventFlow.jpg" />
 </p>
+
+<p>
+上面这个过程总结下来就是：Channel.write() -&gt; ChannelPipeline.write() -&gt; ChannelHandlerContext.write() -&gt; ChannelHandlerInvoker.write() -&gt; ChannelHandler.write()
+</p>
+
+
 
 <hr />
 <p>

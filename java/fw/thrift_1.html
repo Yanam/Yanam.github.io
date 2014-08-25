@@ -40,7 +40,7 @@
 <ul>
 <li><a href="#toc_0.1.1">序列化</a>
 <ul>
-<li><a href="#toc_0.1.1.1">Thrift脚本</a>
+<li><a href="#toc_0.1.1.1">Thrift的schema</a>
 <li><a href="#toc_0.1.1.2">准备工作</a>
 <li><a href="#toc_0.1.1.3">例子</a>
 </ul>
@@ -59,9 +59,9 @@
 无论是官网还是其他网站上关于Thrift的例子都是以发布一个RPC服务为内容介绍的，由于项目的需求，只用序列化的部分，所以下面的例子只涉及序列化
 </p>
 
-<h4 id="toc_0.1.1.1">Thrift脚本</h4>
+<h4 id="toc_0.1.1.1">Thrift的schema</h4>
 <p>
-Thrift 脚本可定义的数据类型包括以下几种类型：
+Thrift 的schema可定义的数据类型包括以下几种类型：
 </p>
 <ol>
 <li>
@@ -138,7 +138,7 @@ service：对应服务的类
 下载<a href="http://thrift.apache.org/download">Apache Thrift compiler</a>，windows版的就是个exe文件。
 
 <li>
-写一个 <code>.thrift</code>格式文件
+写一个 <code>.thrift</code> schema文件
 
 <li>
 使用compiler生成源码
@@ -168,7 +168,7 @@ D:\&gt;d:/soft/bin/thrift.exe -gen java d:\thrift\addressbook.thrift
 </p>
 <h4 id="toc_0.1.1.3">例子</h4>
 <p>
-示例脚本（为了方便对比，跟之前protobuf试用一样，使用了AddressBook的结构）：
+示例schema（为了方便对比，跟之前protobuf试用一样，使用了AddressBook的结构）：
 </p>
 <pre>
 namespace java me.liu.Sample.thrift
@@ -197,7 +197,7 @@ struct AddressBook{
 </pre>
 
 <p>
-有了Thrift脚本，使用compiler生产文件并拷到对应的包中即可。
+有了Thrift schema文件，使用compiler生产文件并拷到对应的包中即可。
 </p>
 
 <p>
