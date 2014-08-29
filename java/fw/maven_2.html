@@ -34,15 +34,62 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
 
+<div class="toc">
+<ul>
+<li><a href="#toc_0.0.1">项目的版本</a>
+<li><a href="#toc_0.0.2">Pom文件</a>
+<ul>
+<li><a href="#toc_0.0.2.1">依赖范围(denpendency scope)</a>
+</ul>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h3 id="toc_0.0.1">项目的版本</h3>
+<p>
+对于经常引用各种jar包的开发人员来说，version在常见不过了，但是它的格式可能很多人不清楚
+</p>
+<blockquote>
+&lt;major version&gt;.&lt;minor version&gt;.&lt;incremental version&gt;-&lt;qualifier&gt;
+</blockquote>
+<blockquote>
+&lt;主版本&gt;.&lt;次版本&gt;.&lt;增量版本&gt;-&lt;限定符&gt;
+</blockquote>
+
+<p>
+qualifier（限定符）是指alpha、beta等用来表示里程碑。
+</p>
+
+<h3 id="toc_0.0.2">Pom文件</h3>
+
+<h4 id="toc_0.0.2.1">依赖范围(denpendency scope)</h4>
+<ol>
+<li>
+<code>compile（编译范围）</code>：Maven的默认范围
+
+<li>
+<code>provided（已提供范围）</code>：比如你要开发一个web工程，在编译的时候需要用Servlet API的包，但是不想再打好的war包中包含这个jar。
+
+<li>
+<code>runtime（运行时范围）</code>：在运行和测试系统的时候需要，在编译的时候不需要，比如：JDBC API 的jar，只有在运行时才需要它的实现。
+
+<li>
+<code>test（测试范围）</code>：
+
+<li>
+<code>system（系统范围）</code>：类似于provided，但是必须显示提供一个本地系统的jar文件路径。
+
+</ol>
 
 
 <hr />
 <p>
-<code>日期</code>：2014-08-14
+<code>日期</code>：2014-08-29
 </p>
 
 <p>
-<code>参考资料</code>：<a href=".html">.html</a>
+<code>参考资料</code>：<a href="http://blog.csdn.net/zhuxinhua/article/details/5788546">maven核心，pom.xml详解</a>、<a href="http://blog.csdn.net/zhuxinhua/article/details/5789278">mave的依赖范围</a>
 </p>
 
       </section>
