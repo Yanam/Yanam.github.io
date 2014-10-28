@@ -83,9 +83,21 @@ ab简单好用，非常适合开发人员进行压力测试，以前也用过但
 ./ab -k -n 1 -p /root/temp.txt -T 'text/plain' http://172.30.204.180:9765/test
 
 # get 请求的给url加上双引号就行了
-./ab -k -n 1 "htttp://172/30/204/180:8080/test?a=1&amp;b=2" 
+./ab -k -n 1 -c 1"http://172.30.204.180:8080/test?a=1&amp;b=2" 
 
 </pre>
+
+<ol>
+<li>
+<code>-n</code> 是请求总数
+
+<li>
+<code>-c</code> 是并发总数
+
+<li>
+<code>-k</code> 是保持连接
+
+</ol>
 
 <hr />
 <p>

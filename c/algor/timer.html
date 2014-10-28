@@ -1,0 +1,129 @@
+<html>
+<head>
+    <title>定时器Timer的几种实现方式</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">定时器(Timer)</a>
+<ul>
+<li><a href="#toc_0.2.1">定时器模型</a>
+<li><a href="#toc_0.2.2">基于链表实现的定时器</a>
+<li><a href="#toc_0.2.3">基于最小堆实现的定时器</a>
+<li><a href="#toc_0.2.4">基于时间轮(Timing-Wheel)方式实现的定时器</a>
+<li><a href="#toc_0.2.5">比较</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+读Netty的文档是看它有个Hashed wheel timer，一种特殊的Timer用来处理它内部的网络超时问题，定时器(Timer)是一个我们在平时开发过程中常会用到的组件，比如说在处理网络消息的超时等。
+</p>
+
+<h2 id="toc_0.2">定时器(Timer)</h2>
+
+<h3 id="toc_0.2.1">定时器模型</h3>
+<ol>
+<li>
+<code>StartTimer(interval,timerId,expiryAction)</code>：注册一个时间间隔为interval后执行expiryAction的定时器实例，其中，返回timerId以区分定时器。
+
+<li>
+<code>StopTimer(timerId)</code>：根据timerId找到注册的定时器，并执行stop。
+
+<li>
+<code>PerTickBookkeeping()</code>：在一个Tick内，定时器系统需要执行的动作，它最主要的行为，就是检查定时系统中，是否有实例已经到期。这里的Tick隐含一个时间粒度的概念。
+
+<li>
+<code>ExpiryProcessing()</code>：在定时器实例到期之后，执行预先注册号的expiryAction行为。
+
+</ol>
+ 
+<p>
+这种定义方式看着不太直观，其实定时器的管理需要实现三个步骤：
+</p>
+<ol>
+<li>
+生成定时器 
+
+<li>
+将定时器放入某个数据结构中，以便定时扫码发现那些需要触发。
+
+<li>
+定时检查定时器是否到期
+
+</ol>
+ 
+<p>
+两种基本行为的定时器：
+</p>
+<ol>
+<li>
+<code>Single-Shot Timer</code>：从注册到终止，只执行一次。
+
+<li>
+<code>Repeating Timer</code>：每次终止之后，都会自动重新开始。
+
+</ol>
+<h3 id="toc_0.2.2">基于链表实现的定时器</h3>
+
+<h3 id="toc_0.2.3">基于最小堆实现的定时器</h3>
+
+<h3 id="toc_0.2.4">基于时间轮(Timing-Wheel)方式实现的定时器</h3>
+
+<h3 id="toc_0.2.5">比较</h3>
+
+<hr />
+<p>
+<code>日期</code>：2014-09-17
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.ibm.com/developerworks/cn/linux/l-cn-timers/">Linux 下定时器的实现方式分析</a>、<a href="http://www.slideshare.net/tianjiaguo/ss-13232346?from=ss_embed">时间轮</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

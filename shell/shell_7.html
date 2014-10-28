@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>shell中与网络相关命令</title>
+    <title>shell中与网络相关命令与工具</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
 	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
@@ -40,6 +40,8 @@
 <li><a href="#toc_0.2">tcpdump</a>
 <li><a href="#toc_0.3">ifconfig</a>
 <li><a href="#toc_0.4">tcpflow</a>
+<li><a href="#toc_0.5">ethtool</a>
+<li><a href="#toc_0.6">ifstat</a>
 </ul>
 </ul>
 </div>
@@ -107,6 +109,29 @@ $ netstat -nlp|grep 80			//查看所有80端口
 <pre class="brush:shell">
 
 </pre>
+
+<h2 id="toc_0.5">ethtool</h2>
+<p>
+<code>ethtool</code>适用于查询及设置网卡参数的命令
+</p>
+
+<p>
+使用示例：
+</p>
+<pre class="brush:shell">
+# 查看网卡etho的信息
+$ ethtool eth0 
+</pre>
+
+<h2 id="toc_0.6">ifstat</h2>
+<p>
+<code>ifstat</code>是一个统计网络接口活动状态的工具，系统中没有，需要自己装，<a href="http://gael.roualland.free.fr/ifstat/">ifstat官网</a>。
+</p>
+
+<p>
+如果是通过源码编译安装的，可能会出现在找不到ifstat命令的问题，可以去安装目录下执行./ifstat
+</p>
+
 
 <hr />
 <p>

@@ -1,0 +1,354 @@
+<html>
+<head>
+    <title>把Netty作为一个通用类库使用</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<ul>
+<li><a href="#toc_0.1.1">Buffer API</a>
+<ul>
+<li><a href="#toc_0.1.1.1">易用性(User-friendliness)</a>
+<li><a href="#toc_0.1.1.2">扩展(Extensibility)</a>
+<li><a href="#toc_0.1.1.3">性能(Performance)</a>
+</ul>
+<li><a href="#toc_0.1.2">可监听的future和事件循环(event loops)</a>
+<ul>
+<li><a href="#toc_0.1.2.1">全局事件循环(the global event loop)</a>
+</ul>
+<li><a href="#toc_0.1.3">依赖平台的操作</a>
+<li><a href="#toc_0.1.4">其他工具集</a>
+<ul>
+<li><a href="#toc_0.1.4.1">Thread-local对象池</a>
+<li><a href="#toc_0.1.4.2">User-exensible enum（可扩展的枚举）</a>
+<li><a href="#toc_0.1.4.3">Attribute map</a>
+<li><a href="#toc_0.1.4.4">Hashed wheel timer（哈希轮计数器）</a>
+<li><a href="#toc_0.1.4.5">其他混杂的工具集</a>
+</ul>
+<li><a href="#toc_0.1.5">和Guava和JDK 8的对比</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+这篇是完全翻译自Netty官网，原文地址见最下面的参考资料。
+</p>
+
+<p>
+Netty 是一个用来构建网络应用的框架，但它还提供了一些方便使用的基础类供其他程序使用，即使这些程序不是运行的 socket I/O。
+</p>
+
+<h3 id="toc_0.1.1">Buffer API</h3>
+<p>
+<code>io.netty.buffer</code>提供了一个通用缓冲类型叫做<code>ByteBuf</code>。它类似于<code>java.nio.ByteBuffer</code>，但更快，使用更友好，更易扩展。
+</p>
+
+<h4 id="toc_0.1.1.1">易用性(User-friendliness)</h4>
+<p>
+你是否曾经因为忘记调用<code>java.nio.ByteBuffer.flip()</code>然后想知道为什么缓冲区里没有东西？这种事永远不会发生在<code>ByteBuf</code>身上，因为它有两个索引，一个用来读，一个用来写。
+</p>
+
+<pre class="brush:java">
+ByteBuf buf = ...;
+buf.writeUnsignedInt(42);
+assertThat(buf.readUnsignedInt(),is(42));
+</pre>
+
+<p>
+它有一系列丰富的方法来更方便的访问缓存区的内容。例如，它有 有符号整数、无符号证书、查询、字符串操作等访问方法。
+</p>
+<h4 id="toc_0.1.1.2">扩展(Extensibility)</h4>
+<h4 id="toc_0.1.1.3">性能(Performance)</h4>
+<p>
+当我们申请一个新的<code>java.nio.ByteBuffer</code>时，它的内容是被0填充的。这些“0”消耗了CPU时钟周期和内存带宽。通常，缓存区会立即被某些数据源填充，所以这些0填充毫无益处。
+</p>
+
+<p>
+对于回收，<code>java.nio.ByteBuffer</code>依赖于JVM的垃圾回收器。这对于堆内存(Heap buffers)是有效的，但是对于直接内存(Direct buffers)无效。从设计上说，直接内存希望长期存活。因此，申请许多短期直接NIO内存经常会导致<code>OutOfMemoryError</code>。而且，通过API显示的释放一个直接内存速度也不快。
+</p>
+
+<p>
+<code>ByteBuf</code>的生命周期是和引用计数器绑定的。当它的引用计数变成0后，它底层的内存区域(byte[]或直接内存)会显示的被解除管理、被释放或者返回池中。
+</p>
+
+<p>
+Netty也提供了稳定的缓冲区池实现，来避免0填充带来的CPU时钟周期或者内存带宽的浪费。
+</p>
+
+<pre class="brush:java">
+ByteBufAllocator alloc = PooledByteBufAllocator.DEFAULT;
+ByteBuf buf = alloc.directBuffer(1024);
+...
+buf.release();		//直接内存放回了池中
+</pre>
+
+<p>
+但是，引用计数并不是圣杯。如果在底层内存区域被放回池中之前JVM对缓存池进行了垃圾回收，池里的资源将会因为泄露而耗尽。
+</p>
+
+<p>
+为了帮助你定位泄露，Netty提供了泄露定位机制来让你灵活的处理你的应用性能和泄露报告的关系。更多细节，请看<a href="http://netty.io/wiki/reference-counted-objects.html">Reference counted objects</a>
+</p>
+
+<h3 id="toc_0.1.2">可监听的future和事件循环(event loops)</h3>
+<p>
+异步执行一个任务——执行计划任务并在完成时获得通知——通用且应该简单。当<code>java.util.concurrent.Future</code>刚出现时，我们的兴奋并未持续很久。我们必须阻塞来等待完成的通知。在异步程序里，你希望是指定在完成时需要执行什么而不是等待输出。
+</p>
+
+<p>
+<code>io.netty.concurrent.Future</code>是JDK<code>Future</code>的子类。它允许你添加一个listener在事件循环完成时被调用。
+</p>
+
+<p>
+<code>io.netty.util.concurrent.EventExecutor</code>是单线程的事件循环，它继承自<code>java.util.concurrent.ScheduledExecutorService</code>。你可以构建自己的事件循环或者把它当做一个future功能更丰富的任务执行器。通常，你会创建多个<code>EventExecutor</code>来提示并行计算的能力。
+</p>
+
+<pre class="brush:java">
+EventExecutorGroup group = new DefaultEventExecutorGroup(4);
+Future&lt;?&gt; f = group.submit(new Runnable(){ ... });
+f.addListener(new FutureListener&lt;?&gt;{
+	public void operationComplete(Future&lt;?&gt; f){
+		...	
+	}
+});
+</pre>
+
+<h4 id="toc_0.1.2.1">全局事件循环(the global event loop)</h4>
+<p>
+有时你想要一个唯一的执行器，它需要一直有效而且不需要生命周期的管理。<code>GlobalEventExecutor</code>是一个单线程、单例的<code>EventExecutor</code>，它会延迟启动线程，并且在一段时间没有任务后结束线程。
+</p>
+
+<pre class="brush:java">
+GlobalEventExecutor.INSTANCE.execute(new Runnable(){ ... });
+</pre>
+
+<p>
+在内部，Netty使用它来通知其他EventExecutor运行终止。
+</p>
+<h3 id="toc_0.1.3">依赖平台的操作</h3>
+<h3 id="toc_0.1.4">其他工具集</h3>
+<p>
+为了构建一个高性能网络应用框架，我们引入了工具集。你可能会发现一些对自己有用的。
+</p>
+
+<h4 id="toc_0.1.4.1">Thread-local对象池</h4>
+<p>
+如果你的线程是长期运行，而你会申请许多短期对象，你可以使用这个叫做<code>Recycler</code>的thread-local 对象池。它降低你的垃圾回收频率，来节省内存带宽的消耗和垃圾回收器的负载。
+</p>
+
+<pre class="brush:java">
+public class MyObject {
+
+  private static final Recycler&lt;MyObject&gt; RECYCLER = new Recycler&lt;MyObject&gt;() {
+    protected MyObject newObject(Recycler.Handle&lt;MyObject&gt; handle) {
+      return new MyObject(handle);
+    }
+  }
+
+  public static MyObject newInstance(int a, String b) {
+    MyObject obj = RECYCLER.get();
+    obj.myFieldA = a;
+    obj.myFieldB = b;
+    return obj;
+  }
+
+  private final Recycler.Handle&lt;MyObject&gt; handle;
+  private int myFieldA;
+  private String myFieldB;
+
+  private MyObject(Handle&lt;MyObject&gt; handle) {
+    this.handle = handle;
+  }
+
+  public boolean recycle() {
+    myFieldA = 0;
+    myFieldB = null;
+    return handle.recycle(this);
+  }
+}
+
+MyObject obj = MyObject.newInstance(42, "foo");
+...
+obj.recycle();
+
+</pre>
+
+<h4 id="toc_0.1.4.2">User-exensible enum（可扩展的枚举）</h4>
+<p>
+<code>enum</code>非常适合用于静态常量集，但是你不能继承一个enum。当你需要在运行时添加更多的常量，或者允许第三方组件定义格外的常量时，可以使用可扩展的<code>io.netty.util.ConstantPool</code>来替代：
+</p>
+
+<pre class="brush:java">
+public final class Foo extends AbstractConstant&lt;Foo&gt; {
+  Foo(int id, String name) {
+    super(id, name);
+  }
+}
+
+public final class MyConstants {
+
+  private static final ConstantPool&lt;Foo&gt; pool = new ConstantPool&lt;Foo&gt;() {
+    @Override
+    protected Foo newConstant(int id, String name) {
+      return new Foo(id, name);
+    }
+  };
+
+  public static Foo valueOf(String name) {
+    return pool.valueOf(name);
+  }
+
+  public static final Foo A = valueOf("A");
+  public static final Foo B = valueOf("B");
+}
+
+private final class YourConstants {
+  public static final Foo C = MyConstants.valueOf("C");
+  public static final Foo D = MyConstants.valueOf("D");
+}
+</pre>
+
+<p>
+Netty使用<code>ConstantPool</code>来定义<code>ChannelOption</code>，所以非核心的传输可以类型安全的定义特定的传输参数。
+</p>
+<h4 id="toc_0.1.4.3">Attribute map</h4>
+<p>
+快速、类型安全、线程安全的键值对集合<code>io.netty.util.AttributeMap</code>。
+</p>
+
+<pre class="brush:java">
+public class foo extends DefaultAttributeMap{
+	...
+}
+
+public static final AttributeKey&lt;String&gt; ATTR_A = AttributeKey.valueOf("A");
+
+public static final AttributeKey&lt;Integer&gt; ATTR_B = AttributeKey.valueOf("B");
+
+Foo o = ...;
+o.attr(ATTR_A).set("foo");
+o.attr(ATTR_B).set(42);
+</pre>
+
+<p>
+可能你已经注意到了，<code>AttributeKey</code>是常量。
+</p>
+
+<h4 id="toc_0.1.4.4">Hashed wheel timer（哈希轮计数器）</h4>
+<p>
+哈希轮计数器 是可扩展的用来替代<code>java.util.Timer</code>和<code>java.util.concurrent.ScheduledThreadPoolExecutor</code>。它可以处理许多计划任务而且任务的取消更有效率，就像下面的表格所展示的：
+</p>
+
+
+<table>
+<tr>
+<th>
+&nbsp;
+</th>
+<th>
+Shcedule a new task
+</th>
+<th>
+Cannel a task
+</th>
+</tr>
+<tr>
+<td>
+HashedWheelTimer
+</td>
+<td>
+O(1)
+</td>
+<td>
+O(1)
+</td>
+</tr>
+<tr>
+<td>
+java.util.Timer 和 ScheduledThreadPoolExecutor
+</td>
+<td>
+O(logN)
+</td>
+<td>
+O(logN) N = number of pending tasks
+</td>
+</tr>
+</table>
+
+<p>
+在内部，它
+</p>
+
+<h4 id="toc_0.1.4.5">其他混杂的工具集</h4>
+<p>
+下面这些类很有用，但你可能会在其他lib比如Guava里发现更好的：
+</p>
+<ul>
+<li>
+<code>io.netty.util.CharsetUtil</code>提供了常用的<code>java.nio.charset.Charset</code>
+
+<li>
+<code>io.netty.util.NetUtil</code>提供了常用的网络相关的常量，例如给IPV4和IPV6用的回环地址<code>InetAddress</code>
+
+<li>
+<code>io.netty.util.DefaultThreadFactory</code>是通用的<code>ThreadFactory</code>实现，可以让你轻松的自定义你的执行器线程。
+
+</ul>
+ 
+<h3 id="toc_0.1.5">和Guava和JDK 8的对比</h3>
+
+<hr />
+<p>
+<code>日期</code>：2014-09-15
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://netty.io/wiki/using-as-a-generic-library.html#wiki-h2-5">Using as a generic library</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>
