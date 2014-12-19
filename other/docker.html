@@ -1,0 +1,108 @@
+<html>
+<head>
+    <title>docker试用</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">docker学习</a>
+<ul>
+<li><a href="#toc_0.2.1">docker服务启动失败</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+Docker现在真是火热
+</p>
+
+<h2 id="toc_0.2">docker学习</h2>
+<p>
+学习docker其实靠 <a href="https://docs.docker.com/userguide/">官方用户指南</a> 一步步来就足够了，虽然是英文的但我这种水平都能看懂，一般人应该也没啥问题了。
+</p>
+
+<p>
+中文资料比较有名的就算这个 <a href="Docker —— 从入门到实践.html">http://yeasy.gitbooks.io/docker_practice</a>
+</p>
+
+<p>
+作为一个工具没啥可说的多用多看官方文档。
+</p>
+
+<h3 id="toc_0.2.1">docker服务启动失败</h3>
+<p>
+手欠把docker服务进程给kill掉了，导致执行docker命令时提示：“Cannot connect to the Docker daemon. Is 'docker -d' running on this host?”
+</p>
+
+<p>
+怎么办呢？
+</p>
+
+
+<pre class="brush:sh">
+# 启动一下服务
+$ sudo service docker start
+
+# 或者
+$ sudo docker -d 
+</pre>
+
+<p>
+在启动服务的时候可能会提示“/var/run/docker.pid still exists...”
+</p>
+
+<p>
+把这个文件删掉在执行启动服务就行了。
+</p>
+
+<hr />
+<p>
+<code>日期</code>：2014-12-10
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<html>
+<head>
+    <title>yum和apt-get、rpm和dpkg </title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<ul>
+<li><a href="#toc_0.1.1">YUM</a>
+<li><a href="#toc_0.1.2">RPM</a>
+<li><a href="#toc_0.1.3">dpkg</a>
+<li><a href="#toc_0.1.4">APT</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+Linux的发行版本大致有两类：1）商业公司维护的；2）社区组织维护的。
+</p>
+
+<ul>
+<li>
+商业维护的代表：<code>RedHat</code>，Centos、Fedora
+
+<ol>
+<li>
+安装包格式<code>rpm</code>，命令是：rpm -参数
+
+<li>
+包管理工具<code>yum</code>
+
+</ol>
+</ul>
+
+<ul>
+<li>
+社区组织维护的代表：<code>Debian</code>，Debian、Ubuntu
+
+<ol>
+<li>
+安装包格式<code>deb</code>，命令是：dpkg -参数 
+
+<li>
+包管理工具<code>apt-get</code>
+
+</ol>
+</ul>
+<blockquote>
+tar包只是一种压缩文件格式，rpm相当于windows中的安装文件。
+</blockquote>
+
+<h3 id="toc_0.1.1">YUM</h3>
+<p>
+<code>YUM</code>(Yellow dog Updater,Modified)，开源的基于RPM的命令行包管理工具。能够从指定服务器下载RPM包并安装，并自动处理依赖关系。<a href="http://yum.baseurl.org/">YUM官网</a>
+</p>
+
+<p>
+命令用法通过man可以看到，这里给出几个常用的例子。
+</p>
+
+<p>
+示例：
+</p>
+
+<pre class="brush:shell">
+# 安装软件
+$ yum install foo-x.x.x.rpm
+
+# 删除软件
+$ yum remove foo-x.x.x.rpm 
+
+$ yum erase foo-x.x.x.rpm
+
+# 升级软件
+$ yum update foo 
+
+$ yum upgrade foo
+
+# 搜索软件
+$ yum search foo 
+</pre>
+<h3 id="toc_0.1.2">RPM</h3>
+<p>
+<code>RPM</code> RedHat Package Manager（RedHat软件包管理工具）。
+</p>
+
+<p>
+本来打算列一下常用的属性，想想还是直接man一下更清楚。
+</p>
+
+<p>
+常用示例：
+</p>
+<pre class="brush:shell">
+$ rpm -q httpd		# 查询httpd是否安装
+
+$ rpm -ivh   /home/temp/jdk-8u25-linux-x64.rpm	# 按路径安装并显示进度
+
+$ rpm -ivh --relocate 
+
+$ rpm -ivh --test jdk-8u25-linux-x64.rpm	# 用来检测依赖关系，并不真正安装
+
+$ rpm -Uvh --oldpackage jdk-8u25-linux-x64.rpm 	# 新版本降级为旧版本
+
+$ rpm -ql httpd 	# list所有文件安装目录
+
+$ rpm -ivh jdk-8u25-linux-x64.rpm	#安装
+
+$ rpm -Uvh jdk-8u25-linux-x64.rpm	#升级
+
+$ rpm -e jdk-8u25-linux-x64.rpm	#删除
+
+
+</pre>
+
+<h3 id="toc_0.1.3">dpkg</h3>
+<p>
+<code>dpkg</code>(Debian Package的简写)，它是Debian及其派生版linux的包管理器。
+</p>
+
+<h3 id="toc_0.1.4">APT</h3>
+<p>
+<code>APT</code>(Advanced Packaging Tools)，高级包装工具，是Debian及其派生版的软件包管理器。
+</p>
+
+<p>
+它有以下几个主要命令组成：
+</p>
+<ol>
+<li>
+<code>apt-get</code>
+
+<li>
+<code>apt-cache</code>
+
+<li>
+<code>apt-file</code>
+
+</ol>
+
+<p>
+示例：
+</p>
+<pre class="brush:shell">
+# 搜索
+$ apt-get search xxx 
+
+# 安装
+$ apt-get install xxxx 
+
+# 卸载
+$ apt-get remove xxx 
+
+# 升级
+$ apt-get update 
+</pre>
+
+<hr />
+<p>
+<code>日期</code>：2014-11-02
+</p>
+
+<p>
+<code>参考资料</code>：<a href="http://www.cnblogs.com/xiaochaohuashengmi/archive/2011/10/08/2203153.html">Linux rpm 命令参数使用详解</a>、<a href="http://zh.wikipedia.org/wiki/%E9%AB%98%E7%BA%A7%E5%8C%85%E8%A3%85%E5%B7%A5%E5%85%B7">维基百科-APT</a>、<a href=".html">.html</a>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>
