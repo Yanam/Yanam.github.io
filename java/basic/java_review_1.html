@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>排序算法1</title>
+    <title>再看java.lang.ref包</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
 	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
@@ -37,65 +37,56 @@
 <div class="toc">
 <ul>
 <li><a href="#toc_0.1">前言</a>
-<li><a href="#toc_0.2">希尔排序</a>
-<ul>
-<li><a href="#toc_0.2.1">概述</a>
-<li><a href="#toc_0.2.2">基本思想</a>
-</ul>
+<li><a href="#toc_0.2">基础知识</a>
+<li><a href="#toc_0.3">使用示例</a>
 </ul>
 </ul>
 </div>
 
+
 <h2 id="toc_0.1">前言</h2>
 <p>
-看K&amp;R时，有个例子提到了几种排序，正好借机复习，这里记录一下。
-</p>
-<h2 id="toc_0.2">希尔排序</h2>
-<h3 id="toc_0.2.1">概述</h3>
-<p>
-<code>希尔排序（shell sort）</code>：也称递减增量排序，是插入排序的一种改进算法，由DL.SShell 于1959年提出而得名。
+WeakReference虽然之前看过，但是感觉理解的不是很深刻，所以到用的时候就很纠结，生怕用错，弄巧成拙。这次再次复习一下，但重点在使用上。
 </p>
 
-<h3 id="toc_0.2.2">基本思想</h3>
+<h2 id="toc_0.2">基础知识</h2>
 <p>
-先取一个gap<sub><small>1</small></sub>&lt; size ，然后将数列中间隔为gap<sub><small>1</small></sub>的数放到一组，进行直接插入排序，然后取gap<sub><small>2</small></sub>&lt;gap<sub><small>1</small></sub>重复上面的步骤，直到gap=1，也就是将所有元素放到了一个组里排序为止。
+网上关于WeakReference或者其他java.lang.ref包的经常会推荐这样一片文章<a href="https://weblogs.java.net/blog/enicholas/archive/2006/05/understanding_w.html">Understanding Weak References</a>，不用说自然是写的很清楚的，这里就不copy人家的内容了，只写几个总结。
 </p>
 
+<ol>
+<li>
+<code>SoftReference</code>：普遍推荐用在缓存上，因为当对象变为弱引用(weakly reachable)时，并不会立即被回收，而是在内存不足时才会被回收（这里java进程启动参数不同，行为也略有不同）。
+
+<li>
+<code>WeakReference</code>：当对象为弱引用时就会被放入ReferenceQueue中（如果构造WeakReference传入了Queue的话），但是它的入队操作还会受finalize()方法的影响。
+
+<li>
+<code>PhantomReference</code>：当对象真正被回收时才会被放入ReferenceQueue中，完全避免了finalize()方法的影响。
+
+</ol>
+ 
+ 
 <p>
-<a href="算法演示动画.html">shellsort.swf</a>
+<a href="https://github.com/Yanam/myAttempts/blob/master/javaBasic/src/main/java/com/buzhao46/myAttempts/javaBasic/reference/ReferenceSample.java">示例</a>
 </p>
 
-
+<h2 id="toc_0.3">使用示例</h2>
 <p>
-代码示例：
+从各种组件使用WeakReference或者ref包其他类的方式上看，主要是利用的ReferenceQueue的入队，通过判断对象是否入队来进行后续的释放资源操作，相对于finalize的各种缺点或者说不确定性，ref包中的类的确是一个好的选择。
 </p>
-<pre class="brush:c">
-void shellsort(char num[],int size){
-    int gap,i,j,temp;
-    while((gap/=2)&gt;0){//设置步长
-        for(i=gap;i&lt;size;i++){//分组
-            for(j=i-gap;j&gt;0&amp;&amp;num[i]&gt;num[j];j-=gap){//间隔为gap的元素进行插入排序
-                    temp = num[j+gap];//加gap是因为for里面提前减了gap
-                    num[j+gap]=num[i];
-                    num[i]=temp;
-            }
-        }
-    }
-}
-</pre>
 
 <p>
-由于主要涉及代码的实现，所有程序已经放入Github中，地址如下：<a href="https://github.com/Yanam/myAttempts/tree/master/javaBasic/src/main/java/com/buzhao46/myAttempts/javaBasic/sort">github</a>
+<a href="https://github.com/Yanam/myAttempts/blob/master/javaBasic/src/main/java/com/buzhao46/myAttempts/javaBasic/reference/ReferenceCacheSample.java">使用SoftReference实现的缓存示例</a>
 </p>
 
+<p>
+Spring中的WeakReferenceMonitor，它的实现就利用了Reference的ReferenceQueue
+</p>
 
 <hr />
 <p>
-<code>日期</code>：2013-10-30、2014-12-24
-</p>
-
-<p>
-<code>参考资料</code>：<a href="http://zh.wikipedia.org/wiki/%E5%B8%8C%E5%B0%94%E6%8E%92%E5%BA%8F">维基--希尔排序</a>、<a href="http://student.zjzk.cn/course_ware/data_structure/web/paixu/paixu8.2.2.1.htm">希尔排序介绍</a>、<a href="http://baike.baidu.com/view/178698.htm">百度百科--希尔排序</a>
+<code>日期</code>：2014-12-29
 </p>
 
       </section>

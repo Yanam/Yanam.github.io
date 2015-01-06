@@ -70,7 +70,10 @@
 <code>finalize</code>：JVM保证调用finalize方法前，这个对象时不可达的，但JVM不保证这个函数一定会被调用。另外还保证它最多 <strong>运行一次</strong> 。所以尽量还是不要用它了，用的时候要避免 <strong>对象再生</strong> 。实现保证对象彻底被销毁的动作时，只能依赖java.lang.ref包。
 
 </ul>
- 
+<blockquote>
+使用finalize()时需要注意，记得调用super.finalize()
+</blockquote>
+
 <h3 id="toc_0.0.2">Thread</h3>
 <ul>
 <li>

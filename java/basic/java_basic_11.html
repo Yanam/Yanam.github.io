@@ -64,16 +64,34 @@
 <ol>
 <li>
 <code>阻塞式I/O</code> Java的BIO就是这种模式。
- <img src="images/io_2.png" />
 
+</ol>
+ 
+<p>
+ <img src="images/io_2.png" />
+</p>
+
+<ol>
 <li>
 <code>非阻塞式I/O</code> 制定系统调用read/write的参数为非阻塞，在内核fd未就绪时，不阻塞进程，而是返回一个错误码，应用程序轮询，直至fd就绪。
- <img src="images/io_3.png" />
 
+</ol>
+ 
+<p>
+ <img src="images/io_3.png" />
+</p>
+
+<ol>
 <li>
 <code>I/O复用</code> linux提供select/poll，进程通过将一个或多个fd传递给select或poll系统调用，阻塞在select；这样select/poll可以帮我们侦测到许多fd是否就绪；但select/poll是顺序扫描fd是否就绪，而且支持的fd数量有限。linux还提供了一个epoll系统调用，epoll是基于事件驱动方式，而不是顺序扫描，当有fd就绪时，立即回调函数rollback。
- <img src="images/io_4.png" />
 
+</ol>
+ 
+<p>
+ <img src="images/io_4.png" />
+</p>
+
+<ol>
 <li>
 <code>信号驱动式I/O</code> 
 
@@ -661,6 +679,9 @@ public class AsyClientSocketTest2 {
 }
 
 </pre>
+<blockquote>
+Netty作为Java界最著名的IO库，它一直使用的NIO，原因请看<a href="https://github.com/netty/netty/issues/2515">https://github.com/netty/netty/issues/2515</a>
+</blockquote>
 
 
 <hr />

@@ -1,0 +1,236 @@
+<html>
+<head>
+    <title>JVM垃圾回收</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushPowerShell.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="../../syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+
+	<link rel="Stylesheet" type="text/css" href="../../stylesheets/stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shCoreDefault.css" />
+	<link type="text/css" rel="Stylesheet" href="../../syntaxhighlighter_3.0.83/styles/shThemeMidnight.css" />
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Yanam">View on GitHub</a>
+
+          <h1 id="project_title">胡诌</h1>
+          <h2 id="project_tagline"></h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">前言</a>
+<li><a href="#toc_0.2">Java虚拟机内部结构模型</a>
+<ul>
+<li><a href="#toc_0.2.0.1">线程独享区域</a>
+<li><a href="#toc_0.2.0.2">线程共享区域</a>
+</ul>
+</ul>
+<li><a href="#toc_0.3">垃圾回收策略</a>
+<ul>
+<li><a href="#toc_0.3.1">垃圾标记策略</a>
+<li><a href="#toc_0.3.2">垃圾回收策略</a>
+<li><a href="#toc_0.3.3">堆模型</a>
+</ul>
+</ul>
+</ul>
+</div>
+
+
+<h2 id="toc_0.1">前言</h2>
+<p>
+做Java开发，垃圾回收是避不开的话题，虽然Java程序员不用像C或者C++程序员那样自己申请\释放内存空间，这些都由JVM替我们完成了，但是开发过程中还是需要了解其中内存回收也就是垃圾回收的机制。
+</p>
+
+
+<p>
+这里我们先提出三个问题：
+</p>
+
+<ol>
+<li>
+那些内存需要回收？
+
+<li>
+什么时候回收？
+
+<li>
+如何回收？
+
+</ol>
+ 
+<h2 id="toc_0.2">Java虚拟机内部结构模型</h2>
+
+<p>
+<img src="images/jvm_gc_1.jpg" />
+</p>
+
+
+
+<h4 id="toc_0.2.0.1">线程独享区域</h4>
+
+<p>
+<img src="images/jvm_gc_2.png" />
+</p>
+
+<ol>
+<li>
+<code>程序计数器(program counter register)</code>：记录当前程序执行的字节码行号
+
+<li>
+<code>Java虚拟机栈(java virtual machine stack)</code>：LIFO的数据结构，每次方法调用都会创建一个 <strong>栈帧(frame)</strong> 并添加到栈的顶部。
+
+<li>
+<code>本地方法栈(native method stack)</code>：为JNI(java 本地调用)服务，作用同上。
+
+</ol>
+ 
+<p>
+Stack 可以是动态或者固定大小的，当线程申请的栈容量大于最大容量时会抛出<code>StackOverflowError</code>，当线程创建一个新栈帧(frame)但没有申请到足够内存空间时会抛出<code>OutOfMemoryError</code>。
+</p>
+ 
+<h4 id="toc_0.2.0.2">线程共享区域</h4>
+
+<p>
+<img src="images/jvm_gc_3.png" />
+</p>
+
+<ol>
+<li>
+<code>方法区(method area)</code>：它主要存放JVM已经加载过的类的信息、静态变量、常量等，它有个重要的区域叫 <strong>常量池(The Constant Pool)</strong> 
+
+<li>
+<code>堆(heap)</code>：为类实例(class instance)和数组对象(array)分配内存的区域。
+
+</ol>
+ 
+<p>
+如果方法区的内存空间不足时，会抛出<code>OutOfMemoryError</code>，堆如果超过自动内存管理器所能提供的最大容量时，也会抛出<code>OutOfMemoryError</code>。
+</p>
+
+<h2 id="toc_0.3">垃圾回收策略</h2>
+<h3 id="toc_0.3.1">垃圾标记策略</h3>
+<ol>
+<li>
+<code>引用计数(reference counting)</code>
+
+<li>
+<code>根索引</code>
+
+</ol>
+<blockquote>
+Java 1.2 之前主要用 <strong>引用计数算法</strong> 进行垃圾标记，1.2之后 主要用 <strong>根搜索算法</strong> 进行垃圾标记。
+</blockquote>
+
+<h3 id="toc_0.3.2">垃圾回收策略</h3>
+<ol>
+<li>
+<code>标记-清除(Mark-Sweep)</code>
+
+<li>
+<code>复制(Copying)</code>
+
+<li>
+<code>标记-整理(Mark-Compact)</code>
+
+</ol>
+<blockquote>
+新生代(minor GC)主要采用 <strong>标记-整理</strong> 策略，老生代采用 *标记清除*策略
+</blockquote>
+
+<h3 id="toc_0.3.3">堆模型</h3>
+<p>
+JVM为了优化回收效率，采用了按代回收的策略。采用这一策略是基于以下假设（弱年代假设）：
+</p>
+<ul>
+<li>
+大多数对象短时间内会变的不可达
+
+<li>
+少数大龄对象会持有指向新生对象的引用
+
+</ul>
+ 
+<p>
+HotSpot JVM在实现时，根据这一策略，对Heap进行了如下划分：
+</p>
+
+<p>
+<img src="images/jvm_gc_heap.png" />
+</p>
+
+<ol>
+<li>
+<code>新生代(Young)</code>：它又被划分为三个区，<code>Eden</code>区和两个大小严格相同的<code>Survivor</code>区。
+
+<li>
+<code>老年代(Tenured)</code>：存放生命周期长的对象，这些对象是在经过几次Young区的复制转移后，被转移到这的。例如：一般系统中application级别的缓存，缓存的对象就放在此区。
+
+<li>
+<code>持久代(Perm)</code>：存放class、method、filed对象，一般不会溢出，但是在涉及到热部署应用时，可能会遇到java.lang.OutOfMemoryError :  PermGen space 的问题。
+
+</ol>
+<blockquote>
+Java8中已经没有PermGen 取而代之的是Metaspace
+</blockquote>
+
+<p>
+HotSpot提供了多个垃圾回收器，我们可以根据需要组合使用，这里就不一一列出了，只写一下常用的组合：
+新生代采用 <code>Parallel(ParNew)</code>，老生代采用 <code>Concurrent Mark Sweep(CMS)</code>，JVM参数为：-XX:+UseConcMarkSweepGC -XX:+UseParNewGC
+</p>
+
+
+<hr />
+<p>
+<code>日期</code>：2015-1-6
+</p>
+
+<p>
+<code>参考资料</code>：
+</p>
+<ol>
+<li>
+<a href="http://jbutton.iteye.com/blog/1569746">深入理解JVM--JVM垃圾回收机制</a>
+
+<li>
+<a href="http://www.oracle.com/webfolder/technetwork/tutorials/obe/java/gc01/index.html">Java Garbage Collection Basics</a> 
+
+<li>
+<a href="http://www.artima.com/insidejvm/ed2/jvm2.html">The Java Virtual Machine  by Bill Venners</a>
+
+<li>
+<a href="http://blog.jamesdbloom.com/JVMInternals.html">JVM Internals</a>
+
+<li>
+<a href="http://imtiger.net/blog/2010/02/21/jvm-memory-and-gc/">Jvm内存模型以及垃圾收集策略解析系列（一）</a>
+
+</ol>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+</body>
+</html>
