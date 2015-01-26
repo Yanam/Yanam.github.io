@@ -105,101 +105,99 @@ java.lang.Object定义了三个方法：wait()、notify()、notifyAll()来实现
 
 <h4 id="toc_0.1.1.3">例子</h4>
 <pre class="brush:java">
-public class WaitNotifyTest {
-	private boolean flag=false;
-	
-	public boolean isFlag() {
-		return flag;
-	}
+/**
+ * Java Monitor的使用示例（通过wait()、notify()实现线程间通信,实现生产者消费者）
+ */
+public class JavaMonitor {
+    public static void main(String[] args) {
+        class Monitor {
+            private String temp;
+            private boolean flag = false;
+            public synchronized void add(String str) throws InterruptedException {
+                if(flag){
+                    System.out.println("[add] "+Thread.currentThread().getName()+" wait()");
+                    //当你调用wait或notify时候它首先要检查下当前线程是否是锁(监视器对象的锁)的拥有者，不是则抛出IllegalMonitorStateExcept，
+                    wait();
+                }
+                System.out.println("[add] "+str);
+                this.temp = str;
+                flag = true;
+                notify();
+            }
 
-	public void setFlag(boolean flag) {
-		this.flag = flag;
-	}
+            public synchronized void remove() throws InterruptedException {
+                if(!flag){
+                    System.out.println("[remove] "+Thread.currentThread().getName()+" wait()");
+                    wait();
+                }
+                System.out.println("[remove] "+temp);
+                this.temp = null;
+                flag = false;
+                notify();
+            }
+        }
 
-	public static void main(String[] args) throws InterruptedException {
-		WaitNotifyTest t = new WaitNotifyTest();
-		
-		Thread thread1 = new Thread(new WaitTask(t));
-		thread1.setName("waitTask1");
-		thread1.start();
-		Thread thread2 = new Thread(new WaitTask(t));
-		thread2.setName("waitTask2");
-		thread2.start();
-		Thread thread3 = new Thread(new WaitTask(t));
-		thread3.setName("waitTask3");
-		thread3.start();
-		Thread thread4 = new Thread(new NotifyTask(t));
-		thread4.setName("notifyTask1");
-		thread4.start();
-		
-		Thread.sleep(Integer.MAX_VALUE);
-	}
+        Monitor thing = new Monitor();
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true){
+                    try {
+                        thing.add(UUID.randomUUID().toString());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        },"addThread");
+        thread.start();
+
+
+        Thread thread2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true){
+                    try {
+                        thing.remove();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        },"removeThread");
+        thread2.start();
+
+    }
 }
 
-class WaitTask implements Runnable{
-	private WaitNotifyTest t;
-	public WaitTask(WaitNotifyTest t) {
-		this.t = t;
-	}
-	@Override
-	public void run() {
-		synchronized (t) {
-			if(!t.isFlag()){//false就等待
-				try {
-					System.out.println("waittask: "+Thread.currentThread().getName()+" wait");
-					t.wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			System.out.println("waittask:  "+Thread.currentThread().getName()+" wake up and set flag = false");
-			try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			t.setFlag(false);
-		}
-	}
-	
-}
-
-class NotifyTask implements Runnable{
-	private WaitNotifyTest t;
-	public NotifyTask(WaitNotifyTest t) {
-		this.t = t;
-	}
-	@Override
-	public void run() {
-		synchronized (t) {
-			if(!t.isFlag()){//false就等待
-				System.out.println("notifytask: "+Thread.currentThread().getName()+" set flag = true");
-				t.setFlag(true);
-			}
-			System.out.println("notifytask: "+Thread.currentThread().getName()+"  notify");
-			try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			t.notify();//  只唤醒一个线程，并且这个线程在获得监视器对象锁后执行，最后结果是：唤醒的线程执行结束，其他线程依然阻塞
-			//t.notifyAll();// 会唤醒所有线程，但只有获得锁的线程能够执行，最后结果是：唤醒的所有线程都执行结束
-		}
-	}
-	
-}
 </pre>
 
 <hr />
 <p>
-<code>日期</code>：2013-08-12、2014-06-16
+<code>日期</code>：2013-08-12、2014-06-16、2015-01-08
 </p>
 
 <p>
-<code>参考资料</code>：<a href="http://www.artima.com/insidejvm/ed2/threadsynch.html">Chapter 20 of Inside the Java Virtual Machine</a>、<a href="http://bbs.csdn.net/topics/80052746">深入探讨JVM</a>、<a href="http://ifeve.com/java-concurrency-constructs/">Java并发结构</a>、<a href="http://ifeve.com/thread-signaling/">Java并发性和多线程介绍--线程通信</a>、<a href="http://stackoverflow.com/questions/1036754/difference-between-wait-and-sleep">Difference between wait() and sleep()</a>
+<code>参考资料</code>：
 </p>
+<ul>
+<li>
+<a href="http://www.artima.com/insidejvm/ed2/threadsynch.html">Chapter 20 of Inside the Java Virtual Machine</a>
+
+<li>
+<a href="http://bbs.csdn.net/topics/80052746">深入探讨JVM</a>
+
+<li>
+<a href="http://ifeve.com/java-concurrency-constructs/">Java并发结构</a>
+
+<li>
+<a href="http://ifeve.com/thread-signaling/">Java并发性和多线程介绍--线程通信</a>  **
+
+<li>
+<a href="http://stackoverflow.com/questions/1036754/difference-between-wait-and-sleep">Difference between wait() and sleep()</a>
+
+</ul>
 
       </section>
     </div>
